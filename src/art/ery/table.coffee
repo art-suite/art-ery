@@ -35,9 +35,21 @@ module.exports = class Table extends BaseObject
 
   @getter "name"
 
-  get:    (key)         -> @_performAction "get",    new Request key
-  update: (key, record) -> @_performAction "update", new Request key, record
-  create: (key, record) -> @_performAction "create", new Request key, record
+  get:    (key)         -> @_performClientAction "get",    key
+  update: (key, record) -> @_performClientAction "update", key, record
+  create: (key, record) -> @_performClientAction "create", key, record
+
+  ###
+  SESSIONS -
+    server-side:
+      the Request needs to continaun the Session, if there is one
+      Response should have a session object as well, which could be different
+        than the Request session, in which case it updates the session.
+    client-side:
+      we'd like to be able to get and possibly subscribe to the session
+
+
+  ###
 
   ###
   OUT: Query instance
@@ -102,12 +114,18 @@ module.exports = class Table extends BaseObject
       response
 
     # preform afterHandlers
-    @_aferHandlers[action].forEach (handler) -> serializer.then handler
+    @_afterHandlers[action].forEach (handler) -> serializer.then handler
 
     # ensture we have a response
     serializer.catch toResponse
 
-    # if success, just return the data
-    serializer.then (response) ->
-      return response.data if response.status == "success"
-      repsponse
+  # client actions just return the data and update the local session object if successful
+  # otherwise, they "reject" the whole response object.
+  _performClientAction: (action, key, record) ->
+    @_performAction action, new Request key, record, @getSession()
+    .then (response) ->
+      if response.status == "success"
+        @setSession response.session
+        response.data
+      else
+        throw repsponse
