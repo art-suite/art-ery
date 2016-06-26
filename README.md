@@ -8,7 +8,7 @@ Client-code has many advantages over cloud-code:
 
 * easier to test
 * easier to debug
-* dramatically shorter code-compile-run development cycle
+* dramatically shorter build cycle
 * In short, it's *much* faster to develop.
 
 #### Why Cloud Code?
@@ -36,7 +36,6 @@ The basic idea of ArtEry is to develop your business-logic client-side with eith
 
 Benefits:
 
-* Fastest possible development
-* Cloud-side security
-* Cloud-side performance
-* Code replication reduction (DRY)
+* Fastest possible development (testing, debugging, build cycle)
+* Cloud-side security and performance
+* Elliminate code duplication
