@@ -1,6 +1,6 @@
-## ArtEry
+## ArtEry - 100% Client-Side Cloud-Code Development
 
-A pipelined business-logic framework for cloud-backed data. ArtEry conceptially allows you to write apps 100% as client-code, but with the security and performance of cloud-code.
+ArtEry conceptially allows you to write apps 100% as client-code, but with the security and performance of cloud-code. It is a pipelined business-logic framework for cloud-backed data.
 
 #### Why Client Code?
 
