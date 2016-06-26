@@ -23,18 +23,19 @@ Client-code has many advantages over cloud-code:
 
 #### Why Cloud Code?
 
-But, there are somethings that can't be done safely client-side:
+But, there are some things that can't be done safely client-side:
 
 * Authentication
 * Authorization
 * Validation
 
-Some things are more efficiently done in the cloud:
+And some requests are more efficient to process in the cloud:
 
-* Client-side requests which require multiple cloud-side requests
+* requests with require multiple cloud-side requests
   * client-to-cloud requests typically cost much more than cloud-to-cloud request
-* Requests which consume a bunch of data, reduce it, and output much less data
+* requests which consume a bunch of data, reduce it, and output much less data
   * cloud-to-client data-transfer typically costs much more than cloud-to-cloud
+* requests with a lot of computation
 
 #### Validations and Code Duplication
 
