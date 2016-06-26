@@ -2,9 +2,9 @@ Foundation = require 'art-foundation'
 Ery = require 'art-ery'
 
 {merge, log} = Foundation
-{Table} = Ery
+{Artery} = Ery
 
-module.exports = class SimpleArtery extends Table
+module.exports = class SimpleArtery extends Artery
 
   constructor: ->
     super

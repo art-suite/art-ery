@@ -4,8 +4,8 @@
 (module.exports = require './namespace')
 .includeInNamespace(require './_ery')
 .addModules
+  Artery:        require './artery'
   EryStatus:     require './ery_status'
   Request:       require './request'
   Response:      require './response'
-  Table:         require './table'
   TableRegistry: require './table_registry'

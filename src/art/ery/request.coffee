@@ -4,9 +4,9 @@ Foundation = require 'art-foundation'
 module.exports = class Request extends BaseObject
   constructor: (@_key, @_table, @_data, @_session) ->
 
-  @getter "key, table, data, session",
+  @getter "key, artery, data, session",
     inspectObjects: ->
       [
         {inspect: => @class.namespacePath}
-        key: @key, table: @table, data: @data, session: @session
+        key: @key, artery: @artery, data: @data, session: @session
       ]

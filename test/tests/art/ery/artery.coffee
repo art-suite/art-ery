@@ -2,7 +2,7 @@
 {missing} = require 'art-ery'
 SimpleArtery = require './simple_artery'
 
-suite "Art.Ery.Table", ->
+suite "Art.Ery.Artery", ->
   test "get -> missing", ->
     simpleArtery = new SimpleArtery
     simpleArtery.get "doesn't exist"

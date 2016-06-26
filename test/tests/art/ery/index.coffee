@@ -3,5 +3,5 @@
 
 (module.exports = require './namespace')
 .addModules
+  Artery:       require './artery'
   SimpleArtery: require './simple_artery'
-  Table:        require './table'

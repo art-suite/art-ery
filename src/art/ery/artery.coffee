@@ -20,7 +20,7 @@ toResponse = (responseOrError, request) ->
   else
     new Response request, missing, "request returned: #{responseOrError}"
 
-module.exports = class Table extends BaseObject
+module.exports = class Artery extends BaseObject
 
   constructor: ->
     @_beforeHandlers =
@@ -76,7 +76,7 @@ module.exports = class Table extends BaseObject
 
   request:
     key: string
-    table: Table instance
+    artery: Artery instance
     data: Object (if update or create)
 
   ###

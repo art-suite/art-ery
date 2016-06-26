@@ -1,7 +1,7 @@
 Foundation = require 'art-foundation'
 {BaseObject} = Foundation
 
-Table = require './table'
+Artery = require './artery'
 
 module.exports = class TableRegistry extends BaseObject
   @singletonClass()
@@ -11,4 +11,4 @@ module.exports = class TableRegistry extends BaseObject
     @_tables = {}
 
   getTable: (tableName) ->
-    @_tables[talleName] ||= new Table tableName
+    @_tables[talleName] ||= new Artery tableName
