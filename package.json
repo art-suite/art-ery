@@ -1,0 +1,15 @@
+{
+  "name": "art-cloud-code",
+  "version": "0.0.1",
+  "description": "Foundational abstraction layer for cloud-backed DB services",
+  "main": "index.coffee",
+  "dependencies": {
+    "art-foundation": "git://github.com/Imikimi-LLC/art-foundation.git"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "webpack-dev-server -d"
+  },
+  "author": "Shane Brinkman-Davis Delamore",
+  "license": "ISC"
+}
