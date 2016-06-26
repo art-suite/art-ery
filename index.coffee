@@ -1,1 +1,1 @@
-module.exports = require "./src/art/cloud_code"
+module.exports = require "./src/art/ery"
