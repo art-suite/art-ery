@@ -3,7 +3,7 @@ Foundation = require 'art-foundation'
 
 Artery = require './artery'
 
-module.exports = class TableRegistry extends BaseObject
+module.exports = class ArteryRegistry extends BaseObject
   @singletonClass()
   @getTable: (tableName) -> @singleton.getTable tableName
 

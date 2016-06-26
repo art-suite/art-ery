@@ -1,4 +1,4 @@
 module.exports = [
-  require './table_registry'
+  require './artery_registry'
   require './ery_status'
 ]
