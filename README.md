@@ -1,8 +1,6 @@
 ## ArtEry
 
-A pipelined business-logic framework for cloud-backed data.
-
-ArtEry conceptially allows you to write apps with 100% client code.
+A pipelined business-logic framework for cloud-backed data. ArtEry conceptially allows you to write apps 100% as client-code, but with the security and performance of cloud-code.
 
 #### Why Client Code?
 
