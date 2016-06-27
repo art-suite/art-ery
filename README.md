@@ -28,6 +28,8 @@ But, there are some things that can't be done safely client-side:
 * Authentication
 * Authorization
 * Validation
+* TimeStamps
+* Update Counts
 
 And some requests are more efficient to process in the cloud:
 

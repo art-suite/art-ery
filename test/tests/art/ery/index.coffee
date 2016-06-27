@@ -3,5 +3,8 @@
 
 (module.exports = require './namespace')
 .addModules
-  Artery:       require './artery'
-  SimpleArtery: require './simple_artery'
+  Artery:             require './artery'
+  ArteryHandlers:     require './artery_handlers'
+  SimpleArtery:       require './simple_artery'
+  SimpleValidator:    require './simple_validator'
+  ValidationHandlers: require './validation_handlers'
