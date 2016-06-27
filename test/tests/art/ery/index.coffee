@@ -8,5 +8,4 @@
   Request:            require './request'
   Response:           require './response'
   SimpleArtery:       require './simple_artery'
-  SimpleValidator:    require './simple_validator'
-  ValidationHandlers: require './validation_handlers'
+require './handlers'

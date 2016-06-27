@@ -1,19 +1,13 @@
-{log} = require 'art-foundation'
-{missing, Handler} = require 'art-ery'
-SimpleArtery = require './simple_artery'
-SimpleValidator = require './simple_validator'
+{log, Validator} = require 'art-foundation'
+{missing, Handlers} = require 'art-ery'
+SimpleArtery = require '../simple_artery'
 
-class VerificationHandler extends Handler
-  constructor: (fields) ->
-    @_validator = new SimpleValidator fields
+{ValidationHandler} = Handlers
 
-  beforeCreate: (request) -> request.withData @_validator.preCreate request.data
-  beforeUpdate: (request) -> request.withData @_validator.preUpdate request.data
-
-suite "Art.Ery.Validation Handlers", ->
+suite "Art.Ery.Artery.Handlers.ValidationHandler", ->
   test "preprocess", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new VerificationHandler
+    .addHandler new ValidationHandler
       foo: preprocess: (o) -> "#{o}#{o}"
 
     simpleArtery.create foo: 123
@@ -22,7 +16,7 @@ suite "Art.Ery.Validation Handlers", ->
 
   test "required field - missing", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new VerificationHandler
+    .addHandler new ValidationHandler
       foo: required: true
 
     simpleArtery.create bar: 123
@@ -35,7 +29,7 @@ suite "Art.Ery.Validation Handlers", ->
 
   test "required field - present", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new VerificationHandler
+    .addHandler new ValidationHandler
       foo: required: true
 
     simpleArtery.create foo: 123
@@ -44,8 +38,8 @@ suite "Art.Ery.Validation Handlers", ->
 
   test "validate - invalid", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new VerificationHandler
-      foo: SimpleValidator.fieldTypes.trimmedString
+    .addHandler new ValidationHandler
+      foo: Validator.fieldTypes.trimmedString
 
     simpleArtery.create foo: 123
     .then (response) ->
@@ -57,8 +51,8 @@ suite "Art.Ery.Validation Handlers", ->
 
   test "validate - valid with preprocessing", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new VerificationHandler
-      foo: SimpleValidator.fieldTypes.trimmedString
+    .addHandler new ValidationHandler
+      foo: Validator.fieldTypes.trimmedString
 
     simpleArtery.create foo: "  123  "
     .then (data) ->

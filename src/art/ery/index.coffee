@@ -10,3 +10,4 @@
   Handler:        require './handler'
   Request:        require './request'
   Response:       require './response'
+require './handlers'

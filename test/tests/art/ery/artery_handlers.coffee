@@ -1,29 +1,9 @@
 {log, isString} = require 'art-foundation'
-{missing, Handler} = require 'art-ery'
+{missing, Handler, Handlers} = require 'art-ery'
 SimpleArtery = require './simple_artery'
+{TimeStampHandler} = Handlers
 
-class TimeStampHandler extends Handler
-  beforeCreate: (request) ->
-    now = (new Date).toString()
-    request.withMergedData
-      createdAt: now
-      updatedAt: now
-
-  beforeUpdate: (request) ->
-    now = (new Date).toString()
-    request.withMergedData
-      updatedAt: now
-
-suite "Art.Ery.Artery Handlers Basic", ->
-  test "TimeStampHandler", ->
-    simpleArtery = new SimpleArtery()
-    .addHandler TimeStampHandler
-
-    simpleArtery.create {}
-    .then (savedData) ->
-      assert.ok isString savedData.createdAt
-
-suite "Art.Ery.Artery Handlers Order", ->
+suite "Art.Ery.Artery.Handlers.Order", ->
   orderLog = []
 
   class OrderTestHandler extends Handler
