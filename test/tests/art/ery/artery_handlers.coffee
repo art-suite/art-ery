@@ -1,24 +1,57 @@
 {log, isString} = require 'art-foundation'
-{missing} = require 'art-ery'
+{missing, Handler} = require 'art-ery'
 SimpleArtery = require './simple_artery'
 
-addTimeStamps = (artery) ->
-  artery.before "create", (request) ->
+class TimeStampHandler extends Handler
+  beforeCreate: (request) ->
     now = (new Date).toString()
     request.withMergedData
       createdAt: now
       updatedAt: now
 
-  artery.before "update", (request) ->
+  beforeUpdate: (request) ->
     now = (new Date).toString()
     request.withMergedData
       updatedAt: now
 
-suite "Art.Ery.Artery Handlers", ->
-  test "get -> missing", ->
-    simpleArtery = new SimpleArtery
-    addTimeStamps simpleArtery
+suite "Art.Ery.Artery Handlers Basic", ->
+  test "TimeStampHandler", ->
+    simpleArtery = new SimpleArtery()
+    .addHandler TimeStampHandler
 
-    simpleArtery.create()
+    simpleArtery.create {}
     .then (savedData) ->
       assert.ok isString savedData.createdAt
+
+suite "Art.Ery.Artery Handlers Order", ->
+  orderLog = []
+
+  class OrderTestHandler extends Handler
+    constructor: (@str) ->
+
+    beforeCreate: (request) ->
+      orderLog.push "beforeCreate #{@str}"
+      request.withData message: "#{request.data.message || ""}#{@str}"
+
+    afterCreate: (response) ->
+      orderLog.push "afterCreate #{@str}"
+      response
+
+  test "b > a > g > save > g > a > b", ->
+    orderLog = []
+    simpleArtery = new SimpleArtery()
+    .addHandler new OrderTestHandler "g"
+    .addHandler new OrderTestHandler "a"
+    .addHandler new OrderTestHandler "b"
+
+    simpleArtery.create {}
+    .then (savedData) ->
+      assert.eq orderLog, [
+        "beforeCreate b"
+        "beforeCreate a"
+        "beforeCreate g"
+        "afterCreate g"
+        "afterCreate a"
+        "afterCreate b"
+      ]
+      assert.eq savedData.message, "bag"

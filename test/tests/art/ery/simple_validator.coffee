@@ -1,6 +1,13 @@
 Foundation = require 'art-foundation'
 
-{merge, log, BaseObject, shallowClone} = Foundation
+{
+  merge, log, BaseObject, shallowClone
+  isNumber, isString, isPlainObject, isPlainArray
+} = Foundation
+
+idRegExpStr = "[a-z0-9]+"
+isId = (v) -> isString(v) && v.match ///^#{idRegExpStr}$///i
+isHexColor = (v) -> isString(v) && v.match /^#([a-f0-9]{3})|([a-f0-9]{6})/i
 
 module.exports = class SimpleValidator extends BaseObject
   # fieldTypes are just easy, pre-defined Objects with the right properties:

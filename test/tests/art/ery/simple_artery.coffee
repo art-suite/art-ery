@@ -2,9 +2,9 @@ Foundation = require 'art-foundation'
 Ery = require 'art-ery'
 
 {merge, log} = Foundation
-{Artery} = Ery
+{Artery, Handler} = Ery
 
-module.exports = class SimpleArtery extends Artery
+class SimpleFinalHandler extends Handler
 
   constructor: ->
     super
@@ -16,17 +16,22 @@ module.exports = class SimpleArtery extends Artery
       @_nextUniqueKey++ while @_store[@_nextUniqueKey]
       (@_nextUniqueKey++).toString()
 
-  _processGet: (request) -> @_store[request.key]
+  beforeGet: (request) -> @_store[request.key]
 
-  _processCreate: (request) ->
+  beforeCreate: (request) ->
     {nextUniqueKey} = @
     @_store[nextUniqueKey] = merge request.data, key: nextUniqueKey
 
-  _processUpdate: ({key, data}) ->
+  beforeUpdate: ({key, data}) ->
     if previousData = @_store[key]
       @_store[key] = merge previousData, data
 
-  _processDelete: ({key}) ->
+  beforeDelete: ({key}) ->
     if previousData = @_store[key]
       @_store[key] = null
       previousData
+
+module.exports = class SimpleArtery extends Artery
+  constructor: ->
+    super
+    @addHandler new SimpleFinalHandler

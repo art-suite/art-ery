@@ -7,5 +7,6 @@
   Artery:         require './artery'
   ArteryRegistry: require './artery_registry'
   EryStatus:      require './ery_status'
+  Handler:        require './handler'
   Request:        require './request'
   Response:       require './response'

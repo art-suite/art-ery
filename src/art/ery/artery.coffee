@@ -1,41 +1,18 @@
 Foundation = require 'art-foundation'
 {success, missing, failure} = require './ery_status'
-{BaseObject, reverseForEach, Promise, log, isPlainObject} = Foundation
+{BaseObject, reverseForEach, Promise, log, isPlainObject, inspect} = Foundation
 Response = require './response'
 Request = require './request'
+Handler = require './handler'
 
-toResponse = (responseOrError, request) ->
-
-  if responseOrError instanceof Response
-    responseOrError
-  else if (request = responseOrError) instanceof Request
-    new Response request, failure, "no response generated"
-  else if responseOrError instanceof Error
-    console.error responseOrError, responseOrError.stack
-    new Response request, failure, responseOrError
-  else if isPlainObject responseOrError
-    new Response request, success, responseOrError
-  else if responseOrError?
-    new Response request, failure, "request returned invalid data: #{responseOrError}"
-  else
-    new Response request, missing, "request returned: #{responseOrError}"
+{toResponse} = Response
 
 module.exports = class Artery extends BaseObject
 
   constructor: ->
-    @_beforeHandlers =
-      get:    [(request) => @_processGet request]
-      update: [(request) => @_processUpdate request]
-      create: [(request) => @_processCreate request]
-      delete: [(request) => @_processDelete request]
+    @_handlers = []
 
-    @_afterHandlers =
-      get: []
-      update: []
-      create: []
-      delete: []
-
-  @getter name: -> @class.getName()
+  @getter "handlers", name: -> @class.getName()
 
   get:    (key)       -> @_performClientAction "get",    key
   update: (key, data) -> @_performClientAction "update", key, data
@@ -68,35 +45,17 @@ module.exports = class Artery extends BaseObject
   @getter
     query: ->
 
-  ###
-  IN:
-    action: "get", "update", or "create"
-    handler: (request) -> request or promise returing request
-      or rejected promise returning response
 
-  request:
-    key: string
-    artery: Artery instance
-    data: Object (if update or create)
+  # IN: instanceof Handler or class extending Handler
+  # OUT: @
+  addHandler: (handler) ->
+    @_handlers.push handler = if handler instanceof Handler
+      handler
+    else
+      new handler
 
-  ###
-  before: (action, handler) -> @_beforeHandlers[action].push handler
-
-  ###
-  IN:
-    action: "get", "update", or "create"
-    handler: (response) -> response or promise returning a response
-
-  If response.status is anything but success, then further handlers are not called; that response is returned.
-
-  response:
-    request: the request
-    data: data or array of records
-    status: ArtFlux status value
-    error: information about the error if status == failure
-
-  ###
-  after: (action, handler) -> @_afterHandlers[action].push handler
+    throw "handler isn't a handler: #{inspect handler}" unless handler instanceof Handler
+    @
 
   ###################
   # Overrides
@@ -105,44 +64,37 @@ module.exports = class Artery extends BaseObject
   getSession: -> @_session ||= {}
   setSession: (@_session) ->
 
-  _processGet: (request) -> throw new Error "override @_processGet"
-  _processUpdate: (request) -> throw new Error "override @_processUpdate"
-  _processCreate: (request) -> throw new Error "override @_createKernel"
-  _processDelete: (request) -> throw new Error "override @_processDelete"
-
   ###################
   # PRIVATE
   ###################
+  ###
+  ###
   _performAction: (action, request) ->
-    serializer = new Promise.Serializer
+    {handlers} = @
+    handlerIndex = handlers.length - 1
 
-    toResponseWithRequest = (v) -> toResponse v, request
+    # IN: Request instance
+    # OUT:
+    #   promise.then (successful Response instance) ->
+    #   .catch (unsuccessful Response instance) ->
+    processNext = (request) ->
+      if handlerIndex < 0
+        Promise.resolve new Response request: request, status: failure, error: message: "no handler generated a Response"
+      else
+        handlers[handlerIndex--].process request, processNext
 
-    # put the request in the pipeline
-    serializer.then -> request
-
-    # perform beforeHandlers
-    reverseForEach @_beforeHandlers[action], (handler) -> serializer.then handler
-
-    # ensure we have a response
-    serializer.then toResponseWithRequest
-    serializer.catch toResponseWithRequest
-
-    # if the response was not success, skip all afterHandlers
-    serializer.then (response) ->
-      throw response if response.status != success
-      response
-
-    # preform afterHandlers
-    @_afterHandlers[action].forEach (handler) -> serializer.then handler
-
-    # ensture we have a response
-    serializer.catch toResponseWithRequest
+    processNext request
 
   # client actions just return the data and update the local session object if successful
   # otherwise, they "reject" the whole response object.
   _performClientAction: (action, key, data) ->
-    @_performAction action, new Request key, @, data, @getSession()
+    @_performAction action, new Request
+      action:   action
+      key:      key
+      artery:   @
+      data:     data
+      session:  @getSession()
+
     .then (response) =>
       {status, data, session} = response
       if status == success
