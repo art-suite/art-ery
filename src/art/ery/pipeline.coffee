@@ -3,7 +3,7 @@ Foundation = require 'art-foundation'
 {BaseObject, reverseForEach, Promise, log, isPlainObject, inspect} = Foundation
 Response = require './response'
 Request = require './request'
-Handler = require './handler'
+Filter = require './filter'
 
 {toResponse} = Response
 
@@ -46,15 +46,15 @@ module.exports = class Pipeline extends BaseObject
     query: ->
 
 
-  # IN: instanceof Handler or class extending Handler
+  # IN: instanceof Filter or class extending Filter
   # OUT: @
-  addHandler: (handler) ->
-    @_handlers.push handler = if handler instanceof Handler
-      handler
+  addFilter: (filter) ->
+    @_handlers.push filter = if filter instanceof Filter
+      filter
     else
-      new handler
+      new filter
 
-    throw "handler isn't a handler: #{inspect handler}" unless handler instanceof Handler
+    throw "filter isn't a filter: #{inspect filter}" unless filter instanceof Filter
     @
 
   ###################
@@ -79,7 +79,7 @@ module.exports = class Pipeline extends BaseObject
     #   .catch (unsuccessful Response instance) ->
     processNext = (request) ->
       if handlerIndex < 0
-        Promise.resolve new Response request: request, status: failure, error: message: "no handler generated a Response"
+        Promise.resolve new Response request: request, status: failure, error: message: "no filter generated a Response"
       else
         handlers[handlerIndex--].process request, processNext
 

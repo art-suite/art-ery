@@ -5,7 +5,7 @@ Response = require './response'
 {BaseObject, Promise, log} = Foundation
 {toResponse} = Response
 
-module.exports = class Handler extends BaseObject
+module.exports = class Filter extends BaseObject
 
   ###
   IN: Request instance

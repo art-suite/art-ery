@@ -1,7 +1,7 @@
 {log} = require 'art-foundation'
-Handler = require '../handler'
+Filter = require '../filter'
 
-module.exports = class TimeStampHandler extends Handler
+module.exports = class TimestampFilter extends Filter
   beforeCreate: (request) ->
     request.withMergedData
       createdAt: now = new Date

@@ -3,5 +3,5 @@
 
 (module.exports = require './namespace')
 .addModules
-  TimeStampHandler:  require './time_stamp_handler'
-  ValidationHandler: require './validation_handler'
+  TimestampFilter:  require './time_stamp_handler'
+  ValidationFilter: require './validation_handler'

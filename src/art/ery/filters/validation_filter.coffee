@@ -1,7 +1,7 @@
 {log, Validator} = require 'art-foundation'
-Handler = require '../handler'
+Filter = require '../filter'
 
-module.exports = class ValidationHandler extends Handler
+module.exports = class ValidationFilter extends Filter
   constructor: (fields) ->
     @_validator = new Validator fields
 

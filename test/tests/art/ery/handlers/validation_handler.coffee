@@ -1,13 +1,13 @@
 {log, Validator} = require 'art-foundation'
-{missing, Handlers} = require 'art-ery'
+{missing, Filters} = require 'art-ery'
 SimpleArtery = require '../simple_artery'
 
-{ValidationHandler} = Handlers
+{ValidationFilter} = Filters
 
-suite "Art.Ery.Pipeline.Handlers.ValidationHandler", ->
+suite "Art.Ery.Pipeline.Filters.ValidationFilter", ->
   test "preprocess", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new ValidationHandler
+    .addFilter new ValidationFilter
       foo: preprocess: (o) -> "#{o}#{o}"
 
     simpleArtery.create foo: 123
@@ -16,7 +16,7 @@ suite "Art.Ery.Pipeline.Handlers.ValidationHandler", ->
 
   test "required field - missing", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new ValidationHandler
+    .addFilter new ValidationFilter
       foo: required: true
 
     simpleArtery.create bar: 123
@@ -29,7 +29,7 @@ suite "Art.Ery.Pipeline.Handlers.ValidationHandler", ->
 
   test "required field - present", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new ValidationHandler
+    .addFilter new ValidationFilter
       foo: required: true
 
     simpleArtery.create foo: 123
@@ -38,7 +38,7 @@ suite "Art.Ery.Pipeline.Handlers.ValidationHandler", ->
 
   test "validate - invalid", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new ValidationHandler
+    .addFilter new ValidationFilter
       foo: Validator.fieldTypes.trimmedString
 
     simpleArtery.create foo: 123
@@ -51,7 +51,7 @@ suite "Art.Ery.Pipeline.Handlers.ValidationHandler", ->
 
   test "validate - valid with preprocessing", ->
     simpleArtery = new SimpleArtery()
-    .addHandler new ValidationHandler
+    .addFilter new ValidationFilter
       foo: Validator.fieldTypes.trimmedString
 
     simpleArtery.create foo: "  123  "

@@ -1,12 +1,12 @@
 {log, isString} = require 'art-foundation'
-{missing, Handler, Handlers} = require 'art-ery'
+{missing, Filter, Filters} = require 'art-ery'
 SimpleArtery = require './simple_artery'
-{TimeStampHandler} = Handlers
+{TimestampFilter} = Filters
 
-suite "Art.Ery.Pipeline.Handlers.Order", ->
+suite "Art.Ery.Pipeline.Filters.Order", ->
   orderLog = []
 
-  class OrderTestHandler extends Handler
+  class OrderTestHandler extends Filter
     constructor: (@str) ->
 
     beforeCreate: (request) ->
@@ -20,9 +20,9 @@ suite "Art.Ery.Pipeline.Handlers.Order", ->
   test "b > a > g > save > g > a > b", ->
     orderLog = []
     simpleArtery = new SimpleArtery()
-    .addHandler new OrderTestHandler "g"
-    .addHandler new OrderTestHandler "a"
-    .addHandler new OrderTestHandler "b"
+    .addFilter new OrderTestHandler "g"
+    .addFilter new OrderTestHandler "a"
+    .addFilter new OrderTestHandler "b"
 
     simpleArtery.create {}
     .then (savedData) ->

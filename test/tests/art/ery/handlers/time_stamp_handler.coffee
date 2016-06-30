@@ -1,12 +1,12 @@
 {log, isString} = require 'art-foundation'
-{missing, Handlers} = require 'art-ery'
+{missing, Filters} = require 'art-ery'
 SimpleArtery = require '../simple_artery'
-{TimeStampHandler} = Handlers
+{TimestampFilter} = Filters
 
-suite "Art.Ery.Pipeline.Handlers.TimeStampHandler", ->
+suite "Art.Ery.Pipeline.Filters.TimestampFilter", ->
   test "create", ->
     simpleArtery = new SimpleArtery()
-    .addHandler TimeStampHandler
+    .addFilter TimestampFilter
 
     simpleArtery.create {}
     .then (savedData) ->

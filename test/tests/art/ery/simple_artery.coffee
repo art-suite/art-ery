@@ -2,9 +2,9 @@ Foundation = require 'art-foundation'
 Ery = require 'art-ery'
 
 {merge, log} = Foundation
-{Pipeline, Handler} = Ery
+{Pipeline, Filter} = Ery
 
-class SimpleFinalHandler extends Handler
+class SimpleFinalHandler extends Filter
 
   constructor: ->
     super
@@ -34,4 +34,4 @@ class SimpleFinalHandler extends Handler
 module.exports = class SimpleArtery extends Pipeline
   constructor: ->
     super
-    @addHandler new SimpleFinalHandler
+    @addFilter new SimpleFinalHandler
