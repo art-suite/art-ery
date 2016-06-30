@@ -19,22 +19,6 @@ module.exports = class Request extends BaseObject
 
   @getter "type key pipeline session data"
 
-  # validate: ({type, key, pipeline, session, data}) ->
-
-  #   throw "invalid type: #{type}" unless type?.match /^(get|update|create|delete)$/
-  #   throw "invalid pipeline: #{inspect pipeline}" unless pipeline instanceof Neptune.Art.Ery.Pipeline
-  #   throw "invalid session: #{inspect session}" unless isObject session
-
-  #   if type == "create"
-  #     throw "'create' type should not have a key: #{inspect key}" if key?
-  #   else
-  #     throw "invalid key: #{inspect key}" unless isString key
-
-  #   if type == "get" || type == "delete"
-  #     throw "'#{type}' type should not have data: #{inspect data}" if data?
-  #   else
-  #     throw "invalid data: #{inspect data}" unless isObject data
-
   @getter
     inspectObjects: ->
       [
