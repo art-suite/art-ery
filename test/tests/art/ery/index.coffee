@@ -4,8 +4,8 @@
 (module.exports = require './namespace')
 .addModules
   ArteryClientBasics: require './artery_client_basics'
-  ArteryHandlers:     require './artery_handlers'
+  ArteryFilters:      require './artery_filters'
   Request:            require './request'
   Response:           require './response'
   SimpleArtery:       require './simple_artery'
-require './handlers'
+require './filters'
