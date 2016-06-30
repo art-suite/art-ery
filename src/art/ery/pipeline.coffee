@@ -7,7 +7,7 @@ Handler = require './handler'
 
 {toResponse} = Response
 
-module.exports = class Artery extends BaseObject
+module.exports = class Pipeline extends BaseObject
 
   constructor: ->
     @_handlers = []
@@ -91,7 +91,7 @@ module.exports = class Artery extends BaseObject
     @_performAction action, new Request
       action:   action
       key:      key
-      artery:   @
+      pipeline:   @
       data:     data
       session:  @getSession()
 

@@ -6,15 +6,15 @@ module.exports = class Request extends BaseObject
     @validate options
     @_action  = options.action
     @_key     = options.key
-    @_artery  = options.artery
+    @_pipeline  = options.pipeline
     @_session = options.session
     @_data    = options.data
 
-  @getter "action key artery session data"
+  @getter "action key pipeline session data"
 
-  validate: ({action, key, artery, session, data}) ->
+  validate: ({action, key, pipeline, session, data}) ->
     throw "invalid action: #{action}" unless action?.match /^(get|update|create|delete)$/
-    throw "invalid artery: #{inspect artery}" unless artery instanceof Neptune.Art.Ery.Artery
+    throw "invalid pipeline: #{inspect pipeline}" unless pipeline instanceof Neptune.Art.Ery.Pipeline
     throw "invalid session: #{inspect session}" unless isObject session
 
     if action == "create"
@@ -36,7 +36,7 @@ module.exports = class Request extends BaseObject
     props: ->
       action:   @action
       key:      @key
-      artery:   @artery
+      pipeline:   @pipeline
       session:  @session
       data:     @data
 

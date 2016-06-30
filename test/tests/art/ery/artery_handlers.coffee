@@ -3,7 +3,7 @@
 SimpleArtery = require './simple_artery'
 {TimeStampHandler} = Handlers
 
-suite "Art.Ery.Artery.Handlers.Order", ->
+suite "Art.Ery.Pipeline.Handlers.Order", ->
   orderLog = []
 
   class OrderTestHandler extends Handler

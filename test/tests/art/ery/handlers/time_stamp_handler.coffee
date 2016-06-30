@@ -3,7 +3,7 @@
 SimpleArtery = require '../simple_artery'
 {TimeStampHandler} = Handlers
 
-suite "Art.Ery.Artery.Handlers.TimeStampHandler", ->
+suite "Art.Ery.Pipeline.Handlers.TimeStampHandler", ->
   test "create", ->
     simpleArtery = new SimpleArtery()
     .addHandler TimeStampHandler

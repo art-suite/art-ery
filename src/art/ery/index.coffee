@@ -4,10 +4,10 @@
 (module.exports = require './namespace')
 .includeInNamespace(require './_ery')
 .addModules
-  Artery:         require './artery'
-  ArteryRegistry: require './artery_registry'
-  EryStatus:      require './ery_status'
-  Handler:        require './handler'
-  Request:        require './request'
-  Response:       require './response'
+  EryStatus:        require './ery_status'
+  Handler:          require './handler'
+  Pipeline:         require './pipeline'
+  PipelineRegistry: require './pipeline_registry'
+  Request:          require './request'
+  Response:         require './response'
 require './handlers'

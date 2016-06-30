@@ -1,5 +1,5 @@
 {log} = require 'art-foundation'
-{Response, Request, Artery, success, failure} = require 'art-ery'
+{Response, Request, Pipeline, success, failure} = require 'art-ery'
 
 suite "Art.Ery.Response Validation", ->
   test "new Response - invalid", ->
@@ -10,7 +10,7 @@ suite "Art.Ery.Response Validation", ->
       status: success
       request: new Request
         action: "create"
-        artery: new Artery
+        pipeline: new Pipeline
         session: {}
         data: {}
       data: {}
@@ -20,7 +20,7 @@ suite "Art.Ery.Response Validation", ->
       status: success
       request: new Request
         action: "create"
-        artery: new Artery
+        pipeline: new Pipeline
         session: {}
         data: {}
 
@@ -29,7 +29,7 @@ suite "Art.Ery.Response Validation", ->
       status: failure
       request: new Request
         action: "create"
-        artery: new Artery
+        pipeline: new Pipeline
         session: {}
         data: {}
       error: {}
@@ -39,6 +39,6 @@ suite "Art.Ery.Response Validation", ->
       status: failure
       request: new Request
         action: "create"
-        artery: new Artery
+        pipeline: new Pipeline
         session: {}
         data: {}

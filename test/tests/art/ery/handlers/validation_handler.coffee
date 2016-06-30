@@ -4,7 +4,7 @@ SimpleArtery = require '../simple_artery'
 
 {ValidationHandler} = Handlers
 
-suite "Art.Ery.Artery.Handlers.ValidationHandler", ->
+suite "Art.Ery.Pipeline.Handlers.ValidationHandler", ->
   test "preprocess", ->
     simpleArtery = new SimpleArtery()
     .addHandler new ValidationHandler
