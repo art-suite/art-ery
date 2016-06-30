@@ -14,10 +14,10 @@ module.exports = class Pipeline extends BaseObject
 
   @getter "handlers", name: -> @class.getName()
 
-  get:    (key)       -> @_performClientAction "get",    key
-  update: (key, data) -> @_performClientAction "update", key, data
-  create: (data)      -> @_performClientAction "create", null, data
-  delete: (key)       -> @_performClientAction "delete", key
+  get:    (key)       -> @_performClientRequest "get",    key
+  update: (key, data) -> @_performClientRequest "update", key, data
+  create: (data)      -> @_performClientRequest "create", null, data
+  delete: (key)       -> @_performClientRequest "delete", key
 
   ###
   SESSIONS -
@@ -69,7 +69,7 @@ module.exports = class Pipeline extends BaseObject
   ###################
   ###
   ###
-  _performAction: (action, request) ->
+  _performRequest: (type, request) ->
     {handlers} = @
     handlerIndex = handlers.length - 1
 
@@ -87,9 +87,9 @@ module.exports = class Pipeline extends BaseObject
 
   # client actions just return the data and update the local session object if successful
   # otherwise, they "reject" the whole response object.
-  _performClientAction: (action, key, data) ->
-    @_performAction action, new Request
-      action:   action
+  _performClientRequest: (type, key, data) ->
+    @_performRequest type, new Request
+      type:   type
       key:      key
       pipeline:   @
       data:     data

@@ -9,7 +9,7 @@ suite "Art.Ery.Response Validation", ->
     new Response
       status: success
       request: new Request
-        action: "create"
+        type: "create"
         pipeline: new Pipeline
         session: {}
         data: {}
@@ -19,7 +19,7 @@ suite "Art.Ery.Response Validation", ->
     assert.throws -> new Response
       status: success
       request: new Request
-        action: "create"
+        type: "create"
         pipeline: new Pipeline
         session: {}
         data: {}
@@ -28,7 +28,7 @@ suite "Art.Ery.Response Validation", ->
     new Response
       status: failure
       request: new Request
-        action: "create"
+        type: "create"
         pipeline: new Pipeline
         session: {}
         data: {}
@@ -38,7 +38,7 @@ suite "Art.Ery.Response Validation", ->
     assert.throws -> new Response
       status: failure
       request: new Request
-        action: "create"
+        type: "create"
         pipeline: new Pipeline
         session: {}
         data: {}

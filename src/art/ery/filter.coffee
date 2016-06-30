@@ -49,7 +49,7 @@ module.exports = class Filter extends BaseObject
   ###
   _processBefore: (request) ->
     Promise.then =>
-      switch request.action
+      switch request.type
         when "get"    then @beforeGet request
         when "create" then @beforeCreate request
         when "update" then @beforeUpdate request
@@ -69,7 +69,7 @@ module.exports = class Filter extends BaseObject
   ###
   _processAfter: (response) ->
     Promise.then =>
-      switch response.request.action
+      switch response.request.type
         when "get"    then @afterGet response
         when "create" then @afterCreate response
         when "update" then @afterUpdate response

@@ -5,63 +5,39 @@ suite "Art.Ery.Request Validation", ->
   test "new Request - invalid", ->
     assert.throws -> new Request
 
-  test "new Request action: 'get' - valid", ->
+  test "new Request type: 'get' - valid", ->
     new Request
-      action: "get"
+      type: "get"
       key: "123"
       pipeline: new Pipeline
       session: {}
 
-  test "new Request action: 'get' - invalid", ->
-    assert.throws -> new Request
-      action: "get"
-      key: "123"
-      pipeline: new Pipeline
-      session: {}
-      data: {}
-
-  test "new Request action: 'create' - valid", ->
+  test "new Request type: 'create' - valid", ->
     new Request
-      action: "create"
+      type: "create"
       pipeline: new Pipeline
       session: {}
       data: {}
 
-  test "new Request action: 'create' - invalid", ->
-    assert.throws -> new Request
-      action: "create"
-      key: "123"
-      pipeline: new Pipeline
-      session: {}
-      data: {}
-
-  test "new Request action: 'update' - valid", ->
+  test "new Request type: 'update' - valid", ->
     new Request
-      action: "update"
+      type: "update"
       key: "123"
       pipeline: new Pipeline
       session: {}
       data: {}
 
-  test "new Request action: 'delete' - valid", ->
+  test "new Request type: 'delete' - valid", ->
     new Request
-      action: "delete"
+      type: "delete"
       key: "123"
       pipeline: new Pipeline
       session: {}
-
-  test "new Request action: 'delete' - invalid", ->
-    assert.throws -> new Request
-      action: "delete"
-      key: "123"
-      pipeline: new Pipeline
-      session: {}
-      data: {}
 
 suite "Art.Ery.Request properties", ->
   test "getKey", ->
     request = new Request
-      action: "get"
+      type: "get"
       key: "123"
       pipeline: new Pipeline
       session: {}
@@ -70,7 +46,7 @@ suite "Art.Ery.Request properties", ->
 suite "Art.Ery.Request withData", ->
   test "withData", ->
     request = new Request
-      action: "create"
+      type: "create"
       pipeline: new Pipeline
       session: {}
       data: {}
@@ -81,7 +57,7 @@ suite "Art.Ery.Request withData", ->
 
   test "withMergedData", ->
     request = new Request
-      action: "create"
+      type: "create"
       pipeline: new Pipeline
       session: {}
       data: bing: "bong"
