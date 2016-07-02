@@ -1,6 +1,6 @@
 {
   "name": "art-ery",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "A pipelined business-logic framework for cloud-backed data. ArtEry conceptially allows you to write apps 100% as client-code, but with the security and performance of cloud-code.",
   "main": "index.coffee",
   "dependencies": {
