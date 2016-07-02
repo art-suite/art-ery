@@ -54,8 +54,10 @@ module.exports = class Pipeline extends BaseObject
     class HandlerFilter extends Filter
     @filter HandlerFilter
     for name, handler of map
-      @_clientApiRequest name
-      HandlerFilter.before name, handler
+      do (name, handler) =>
+        @_clientApiRequest name
+        HandlerFilter.before name, (request) ->
+          handler.call request.pipeline, request
 
   ###################
   # Session

@@ -51,7 +51,7 @@ module.exports = class Response extends BaseObject
           new Response request: request, status: failure, error: message: "request returned invalid data: #{inspect data}"
 
       else
-        new Response request: request, status: missing, error: data || message: "could not find data for key: #{inspect request.key}"
+        new Response request: request, status: missing, error: data || message: "missing data for key: #{inspect request.key}"
 
     .then (response) =>
       if response.isSuccessful

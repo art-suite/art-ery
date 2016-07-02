@@ -6,6 +6,9 @@ Ery = require 'art-ery'
 
 class SimpleFinalFilter extends Filter
 
+
+module.exports = class SimplePipeline extends Pipeline
+
   constructor: ->
     super
     @_store = {}
@@ -16,7 +19,7 @@ class SimpleFinalFilter extends Filter
       @_nextUniqueKey++ while @_store[@_nextUniqueKey]
       (@_nextUniqueKey++).toString()
 
-  @before
+  @handlers
     get: ({key}) ->
       @_store[key]
 
@@ -32,6 +35,3 @@ class SimpleFinalFilter extends Filter
       if previousData = @_store[key]
         @_store[key] = null
         previousData
-
-module.exports = class SimplePipeline extends Pipeline
-  @filter SimpleFinalFilter

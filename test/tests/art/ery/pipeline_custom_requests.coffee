@@ -9,7 +9,6 @@ suite "Art.Ery.Pipeline.Custom Requests", ->
           result: request.data.double + request.data.double
 
     pipeline = new MyPipeline
-    log pipeline.filters[0].before
     pipeline.myCustomRequest double: "bar"
     .then (response) ->
       assert.eq response, result: "barbar"
@@ -24,7 +23,6 @@ suite "Art.Ery.Pipeline.Custom Requests", ->
           request.withData double: request.data.double.toUpperCase()
 
     pipeline = new MyPipeline
-    log pipeline.filters
     pipeline.myCustomRequest double: "bar"
     .then (response) ->
       assert.eq response, result: "BARBAR"

@@ -46,4 +46,4 @@ module.exports = class Request extends BaseObject
   ###
   withMergedData: (data) ->
     Promise.resolve(data).then (resolvedData) =>
-      new Request log merge @props, data: merge @data, resolvedData
+      new Request merge @props, data: merge @data, resolvedData
