@@ -1,14 +1,14 @@
 {log, isString} = require 'art-foundation'
 {missing, Filters} = require 'art-ery'
-SimpleArtery = require '../simple_artery'
+SimplePipeline = require '../simple_pipeline'
 {TimestampFilter} = Filters
 
 suite "Art.Ery.Pipeline.Filters.TimestampFilter", ->
   test "create", ->
-    simpleArtery = new SimpleArtery()
+    simplePipeline = new SimplePipeline()
     .addFilter TimestampFilter
 
-    simpleArtery.create {}
+    simplePipeline.create {}
     .then (savedData) ->
       assert.ok savedData.createdAt instanceof Date
       assert.ok savedData.updatedAt instanceof Date

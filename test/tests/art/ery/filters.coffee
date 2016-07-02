@@ -1,6 +1,6 @@
 {log, isString} = require 'art-foundation'
 {missing, Filter, Filters} = require 'art-ery'
-SimpleArtery = require './simple_artery'
+SimplePipeline = require './simple_pipeline'
 {TimestampFilter} = Filters
 
 suite "Art.Ery.Pipeline.Filters.Order", ->
@@ -19,12 +19,12 @@ suite "Art.Ery.Pipeline.Filters.Order", ->
 
   test "b > a > g > save > g > a > b", ->
     orderLog = []
-    simpleArtery = new SimpleArtery()
+    simplePipeline = new SimplePipeline()
     .addFilter new OrderTestHandler "g"
     .addFilter new OrderTestHandler "a"
     .addFilter new OrderTestHandler "b"
 
-    simpleArtery.create {}
+    simplePipeline.create {}
     .then (savedData) ->
       assert.eq orderLog, [
         "beforeCreate b"

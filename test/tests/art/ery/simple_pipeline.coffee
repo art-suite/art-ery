@@ -4,7 +4,7 @@ Ery = require 'art-ery'
 {merge, log} = Foundation
 {Pipeline, Filter} = Ery
 
-class SimpleFinalHandler extends Filter
+class SimpleFinalFilter extends Filter
 
   constructor: ->
     super
@@ -31,7 +31,7 @@ class SimpleFinalHandler extends Filter
       @_store[key] = null
       previousData
 
-module.exports = class SimpleArtery extends Pipeline
+module.exports = class SimplePipeline extends Pipeline
   constructor: ->
     super
-    @addFilter new SimpleFinalHandler
+    @addFilter new SimpleFinalFilter
