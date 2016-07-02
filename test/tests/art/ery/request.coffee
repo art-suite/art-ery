@@ -1,7 +1,7 @@
 {log} = require 'art-foundation'
 {Request, Pipeline} = require 'art-ery'
 
-suite "Art.Ery.Request Validation", ->
+suite "Art.Ery.Request.Validation", ->
   test "new Request - invalid", ->
     assert.throws -> new Request
 
@@ -34,7 +34,7 @@ suite "Art.Ery.Request Validation", ->
       pipeline: new Pipeline
       session: {}
 
-suite "Art.Ery.Request properties", ->
+suite "Art.Ery.Request.properties", ->
   test "getKey", ->
     request = new Request
       type: "get"
@@ -43,7 +43,7 @@ suite "Art.Ery.Request properties", ->
       session: {}
     assert.eq request.getKey(), "123"
 
-suite "Art.Ery.Request withData", ->
+suite "Art.Ery.Request.withData", ->
   test "withData", ->
     request = new Request
       type: "create"

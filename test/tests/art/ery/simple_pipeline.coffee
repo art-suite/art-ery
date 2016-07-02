@@ -16,22 +16,22 @@ class SimpleFinalFilter extends Filter
       @_nextUniqueKey++ while @_store[@_nextUniqueKey]
       (@_nextUniqueKey++).toString()
 
-  beforeGet: (request) -> @_store[request.key]
+  @before
+    get: ({key}) ->
+      @_store[key]
 
-  beforeCreate: (request) ->
-    {nextUniqueKey} = @
-    @_store[nextUniqueKey] = merge request.data, key: nextUniqueKey
+    create: (request) ->
+      {nextUniqueKey} = @
+      @_store[nextUniqueKey] = merge request.data, key: nextUniqueKey
 
-  beforeUpdate: ({key, data}) ->
-    if previousData = @_store[key]
-      @_store[key] = merge previousData, data
+    update: ({key, data}) ->
+      if previousData = @_store[key]
+        @_store[key] = merge previousData, data
 
-  beforeDelete: ({key}) ->
-    if previousData = @_store[key]
-      @_store[key] = null
-      previousData
+    delete: ({key}) ->
+      if previousData = @_store[key]
+        @_store[key] = null
+        previousData
 
 module.exports = class SimplePipeline extends Pipeline
-  constructor: ->
-    super
-    @addFilter new SimpleFinalFilter
+  @filter SimpleFinalFilter

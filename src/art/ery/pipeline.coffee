@@ -1,77 +1,77 @@
 Foundation = require 'art-foundation'
 {success, missing, failure} = require './ery_status'
-{BaseObject, reverseForEach, Promise, log, isPlainObject, inspect} = Foundation
+{BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect} = Foundation
 Response = require './response'
 Request = require './request'
 Filter = require './filter'
 
 {toResponse} = Response
 
+
 module.exports = class Pipeline extends BaseObject
 
+  @instantiateFilter: instantiateFilter = (filter) ->
+    if isClass filter                 then new filter
+    else if isFunction filter         then filter @
+    else if filter instanceof Filter  then filter
+    else if isPlainObject filter
+      class AnonymousFilter extends Filter
+        @before filter.before
+        @after filter.after
+      new AnonymousFilter
+    else throw "invalid filter: #{inspect filter}"
+
+  @getFilters: -> @getPrototypePropertyExtendedByInheritance "classFilters", []
+
+  ######################
+  # constructor
+  ######################
   constructor: ->
-    @_handlers = []
+    super
+    @_filters = for filter in @class.getFilters()
+      instantiateFilter filter
 
-  @getter "handlers", name: -> @class.getName()
+  @getter "filters"
 
-  get:    (key)       -> @_performClientRequest "get",    key
-  update: (key, data) -> @_performClientRequest "update", key, data
-  create: (data)      -> @_performClientRequest "create", null, data
-  delete: (key)       -> @_performClientRequest "delete", key
+  ######################
+  # Add Filters
+  ######################
 
-  ###
-  SESSIONS -
-    server-side:
-      the Request needs to continaun the Session, if there is one
-      Response should have a session object as well, which could be different
-        than the Request session, in which case it updates the session.
-    client-side:
-      we'd like to be able to get and possibly subscribe to the session
-
-
-  ###
-
-  ###
-  OUT: Query instance
-
-  Ex:
-    {query} = myTable
-    query.equal "myField", 123
-    query.process()
-    .then (records) ->
-    , (response) ->
-      {data, status, error} = response
-  ###
-  @getter
-    query: ->
-
-
-  # IN: instanceof Filter or class extending Filter
+  # IN: instanceof Filter or class extending Filter or function returning instance of Filter
   # OUT: @
-  addFilter: (filter) ->
-    @_handlers.push filter = if filter instanceof Filter
-      filter
-    else
-      new filter
+  @filter: (filter) -> @getFilters().push filter; @
+  filter: (filter)  -> @getFilters().push instantiateFilter filter; @
 
-    throw "filter isn't a filter: #{inspect filter}" unless filter instanceof Filter
-    @
+  ###
+  handlers are merely the "pearl-filter" - the action that happens
+   - after all before-filters and
+   - before all after-filters
+
+  IN: map from request-types to request handlers:
+    (request) -> request OR response OR result which will be converted to a response
+  ###
+  @handlers: (map) ->
+    class HandlerFilter extends Filter
+    @filter HandlerFilter
+    for name, handler of map
+      @_clientApiRequest name
+      HandlerFilter.before name, handler
 
   ###################
-  # Overrides
+  # Session
+  # (override OK)
   ###################
-
   getSession: -> @_session ||= {}
   setSession: (@_session) ->
 
   ###################
   # PRIVATE
   ###################
-  ###
-  ###
-  _performRequest: (type, request) ->
-    {handlers} = @
-    handlerIndex = handlers.length - 1
+  _performRequest: (request) ->
+    {type} = request
+    {filters} = @
+    # log _performRequest: request: request, filters: filters
+    handlerIndex = filters.length - 1
 
     # IN: Request instance
     # OUT:
@@ -81,17 +81,23 @@ module.exports = class Pipeline extends BaseObject
       if handlerIndex < 0
         Promise.resolve new Response request: request, status: failure, error: message: "no filter generated a Response"
       else
-        handlers[handlerIndex--].process request, processNext
+        filters[handlerIndex--].process request, processNext
 
     processNext request
 
   # client actions just return the data and update the local session object if successful
   # otherwise, they "reject" the whole response object.
-  _performClientRequest: (type, key, data) ->
-    @_performRequest type, new Request
-      type:   type
+  _performClientRequest: (type, keyOrData, data) ->
+    if !data && keyOrData && !isString keyOrData
+      key = null
+      data = keyOrData
+    else
+      key = keyOrData
+
+    @_performRequest new Request
+      type:     type
       key:      key
-      pipeline:   @
+      pipeline: @
       data:     data
       session:  @getSession()
 
@@ -102,3 +108,11 @@ module.exports = class Pipeline extends BaseObject
         data
       else
         throw response
+
+  @_clientApiRequest: (requestType) ->
+    @::[requestType] ||= (keyOrData, data) -> @_performClientRequest requestType, keyOrData, data
+
+  @_clientApiRequest "get"
+  @_clientApiRequest "update"
+  @_clientApiRequest "create"
+  @_clientApiRequest "delete"

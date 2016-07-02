@@ -2,10 +2,62 @@ Foundation = require 'art-foundation'
 Request = require './request'
 Response = require './response'
 
-{BaseObject, Promise, log} = Foundation
+{BaseObject, Promise, log, isPlainObject} = Foundation
 {toResponse} = Response
 
 module.exports = class Filter extends BaseObject
+
+  @getBeforeFilters: -> @getPrototypePropertyExtendedByInheritance "classBeforeFilters", {}
+  @getAfterFilters:  -> @getPrototypePropertyExtendedByInheritance "classAfterFilters", {}
+
+  @getter
+    beforeFilters: -> @class.getBeforeFilters()
+    afterFilters:  -> @class.getAfterFilters()
+
+  ###
+  IN: requestType, requestFilter
+  IN: map from requestTypes to requestFilters
+
+  requestFilter: (request) ->
+    IN: Request instance
+    OUT: return a Promise returning one of the list below OR just return one of the list below:
+      Request instance
+      Response instance
+      anythingElse -> toResponse anythingElse
+
+    To reject a request:
+    - throw an error
+    - return a rejected promise
+    - or create a Response object with the appropriate fields
+  ###
+  @before: (a, b) ->
+    beforeFilters = @getBeforeFilters()
+    if isPlainObject map = a
+      beforeFilters[type] = filterFunction for type, filterFunction of map
+    else if a && b
+      beforeFilters[a] = b
+
+  ###
+  IN: requestType, responseFilter
+  IN: map from requestTypes to responseFilter
+
+  responseFilter: (response) ->
+    IN: Response instance
+    OUT: return a Promise returning one of the list below OR just return one of the list below:
+      Response instance
+      anythingElse -> toResponse anythingElse
+
+    To reject a request:
+    - throw an error
+    - return a rejected promise
+    - or create a Response object with the appropriate fields
+  ###
+  @after: (a, b) ->
+    afterFilters = @getAfterFilters()
+    if isPlainObject map = a
+      afterFilters[type] = filterFunction for type, filterFunction of map
+    else if a && b
+      afterFilters[a] = b
 
   ###
   IN: Request instance
@@ -27,18 +79,6 @@ module.exports = class Filter extends BaseObject
       @_processAfter response
 
   ####################
-  # Overrides
-  ####################
-  beforeGet:    (request) -> request
-  beforeCreate: (request) -> request
-  beforeUpdate: (request) -> request
-  beforeDelete: (request) -> request
-  afterGet:     (response) -> response
-  afterCreate:  (response) -> response
-  afterUpdate:  (response) -> response
-  afterDelete:  (response) -> response
-
-  ####################
   # PRIVATE
   ####################
 
@@ -49,18 +89,17 @@ module.exports = class Filter extends BaseObject
   ###
   _processBefore: (request) ->
     Promise.then =>
-      switch request.type
-        when "get"    then @beforeGet request
-        when "create" then @beforeCreate request
-        when "update" then @beforeUpdate request
-        when "delete" then @beforeDelete request
+      if beforeFilter = @beforeFilters[request.type]
+        beforeFilter.call @, request
+      else
+        # pass-through if no filter
+        request
     .then (beforeResult) ->
       if beforeResult instanceof Request
         beforeResult
       else
         toResponse beforeResult, request
-    .catch (e) ->
-      toResponse e, request, true
+    .catch (e) => toResponse e, request, true
 
   ###
   OUT:
@@ -69,12 +108,10 @@ module.exports = class Filter extends BaseObject
   ###
   _processAfter: (response) ->
     Promise.then =>
-      switch response.request.type
-        when "get"    then @afterGet response
-        when "create" then @afterCreate response
-        when "update" then @afterUpdate response
-        when "delete" then @afterDelete response
-    .then (afterResult) =>
-      toResponse afterResult, response.request
-    .catch (e) ->
-      toResponse e, response.request, true
+      if afterFilter = @afterFilters[response.request.type]
+        afterFilter.call @, response
+      else
+        # pass-through if no filter
+        response
+    .then (afterResult) => toResponse afterResult, response.request
+    .catch (e)          => toResponse e, response.request, true

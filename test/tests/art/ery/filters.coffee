@@ -6,23 +6,23 @@ SimplePipeline = require './simple_pipeline'
 suite "Art.Ery.Pipeline.Filters.Order", ->
   orderLog = []
 
-  class OrderTestHandler extends Filter
+  class OrderTestFilter extends Filter
     constructor: (@str) ->
 
-    beforeCreate: (request) ->
+    @before create: (request) ->
       orderLog.push "beforeCreate #{@str}"
       request.withData message: "#{request.data.message || ""}#{@str}"
 
-    afterCreate: (response) ->
+    @after create: (response) ->
       orderLog.push "afterCreate #{@str}"
       response
 
   test "b > a > g > save > g > a > b", ->
     orderLog = []
     simplePipeline = new SimplePipeline()
-    .addFilter new OrderTestHandler "g"
-    .addFilter new OrderTestHandler "a"
-    .addFilter new OrderTestHandler "b"
+    .filter new OrderTestFilter "g"
+    .filter new OrderTestFilter "a"
+    .filter new OrderTestFilter "b"
 
     simplePipeline.create {}
     .then (savedData) ->

@@ -2,7 +2,7 @@
 {missing} = require 'art-ery'
 SimplePipeline = require './simple_pipeline'
 
-suite "Art.Ery.Pipeline Client Basics", ->
+suite "Art.Ery.Pipeline.Client", ->
   test "get -> missing", ->
     simplePipeline = new SimplePipeline
     simplePipeline.get "doesn't exist"

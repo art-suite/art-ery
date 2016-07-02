@@ -3,8 +3,9 @@
 
 (module.exports = require './namespace')
 .addModules
-  Filters:           require './filters'
-  PipelineClientApi: require './pipeline_client_api'
-  Request:           require './request'
-  Response:          require './response'
-  SimplePipeline:    require './simple_pipeline'
+  Filters:                require './filters'
+  PipelineClient:         require './pipeline_client'
+  PipelineCustomRequests: require './pipeline_custom_requests'
+  Request:                require './request'
+  Response:               require './response'
+  SimplePipeline:         require './simple_pipeline'
