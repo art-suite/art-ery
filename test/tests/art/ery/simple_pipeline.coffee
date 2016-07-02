@@ -4,9 +4,6 @@ Ery = require 'art-ery'
 {merge, log} = Foundation
 {Pipeline, Filter} = Ery
 
-class SimpleFinalFilter extends Filter
-
-
 module.exports = class SimplePipeline extends Pipeline
 
   constructor: ->
