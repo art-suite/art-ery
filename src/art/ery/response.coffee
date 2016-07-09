@@ -24,9 +24,9 @@ module.exports = class Response extends BaseObject
 
   @getter "status error data request",
     isSuccessful: -> @_status == success
-    inspectObjects: ->
+    inspectedObjects: ->
       [
-        {inspect: => @class.namespacePath}
+        @class.namespacePath
         @props
       ]
     props: -> request: @request, status: @status, data: @data, error: @error

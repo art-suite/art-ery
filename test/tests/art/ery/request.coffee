@@ -1,4 +1,4 @@
-{log} = require 'art-foundation'
+{log, formattedInspect} = require 'art-foundation'
 {Request, Pipeline} = require 'art-ery'
 
 suite "Art.Ery.Request.Validation", ->
@@ -11,6 +11,17 @@ suite "Art.Ery.Request.Validation", ->
       key: "123"
       pipeline: new Pipeline
       session: {}
+
+  test "formattedInspect new Request", ->
+    request = new Request
+      type: "get"
+      key: "123"
+      pipeline: new Pipeline
+      session: {}
+    log
+      inspectedObjects: request.inspectedObjects
+    log formattedInspect(request)
+    assert.eq formattedInspect(request), ""
 
   test "new Request type: 'create' - valid", ->
     new Request

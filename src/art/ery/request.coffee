@@ -20,15 +20,16 @@ module.exports = class Request extends BaseObject
   @getter "type key pipeline session data"
 
   @getter
-    inspectObjects: ->
+    inspectedObjects: ->
+      log "ArtEry.Request inspectedObjects"
       [
-        {inspect: => @class.namespacePath}
+        @class.namespacePath
         @props
       ]
     props: ->
-      type:   @type
+      pipeline: @pipeline
+      type:     @type
       key:      @key
-      pipeline:   @pipeline
       session:  @session
       data:     @data
 
