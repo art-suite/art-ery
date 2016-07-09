@@ -4,7 +4,7 @@ SimplePipeline = require '../simple_pipeline'
 
 {ValidationFilter} = Filters
 
-suite "Art.Ery.Pipeline.Filters.ValidationFilter", ->
+suite "Art.Ery.Filters.ValidationFilter", ->
   test "preprocess", ->
     simplePipeline = new SimplePipeline()
     .addFilter new ValidationFilter
