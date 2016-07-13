@@ -32,6 +32,7 @@ module.exports = class Pipeline extends BaseObject
       instantiateFilter filter
 
   @getter "filters"
+  @property "tableName"
 
   ######################
   # Add Filters
