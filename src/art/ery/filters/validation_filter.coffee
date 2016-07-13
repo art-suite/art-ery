@@ -5,5 +5,6 @@ module.exports = class ValidationFilter extends Filter
   constructor: (fields) ->
     @_validator = new Validator fields
 
-  beforeCreate: (request) -> request.withData @_validator.preCreate request.data
-  beforeUpdate: (request) -> request.withData @_validator.preUpdate request.data
+  @before
+    create: (request) -> request.withData @_validator.preCreate request.data
+    update: (request) -> request.withData @_validator.preUpdate request.data

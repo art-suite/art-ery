@@ -7,7 +7,7 @@ SimplePipeline = require '../simple_pipeline'
 suite "Art.Ery.Filters.ValidationFilter", ->
   test "preprocess", ->
     simplePipeline = new SimplePipeline()
-    .addFilter new ValidationFilter
+    .filter new ValidationFilter
       foo: preprocess: (o) -> "#{o}#{o}"
 
     simplePipeline.create foo: 123
@@ -16,7 +16,7 @@ suite "Art.Ery.Filters.ValidationFilter", ->
 
   test "required field - missing", ->
     simplePipeline = new SimplePipeline()
-    .addFilter new ValidationFilter
+    .filter new ValidationFilter
       foo: required: true
 
     simplePipeline.create bar: 123
@@ -29,7 +29,7 @@ suite "Art.Ery.Filters.ValidationFilter", ->
 
   test "required field - present", ->
     simplePipeline = new SimplePipeline()
-    .addFilter new ValidationFilter
+    .filter new ValidationFilter
       foo: required: true
 
     simplePipeline.create foo: 123
@@ -38,7 +38,7 @@ suite "Art.Ery.Filters.ValidationFilter", ->
 
   test "validate - invalid", ->
     simplePipeline = new SimplePipeline()
-    .addFilter new ValidationFilter
+    .filter new ValidationFilter
       foo: Validator.fieldTypes.trimmedString
 
     simplePipeline.create foo: 123
@@ -51,7 +51,7 @@ suite "Art.Ery.Filters.ValidationFilter", ->
 
   test "validate - valid with preprocessing", ->
     simplePipeline = new SimplePipeline()
-    .addFilter new ValidationFilter
+    .filter new ValidationFilter
       foo: Validator.fieldTypes.trimmedString
 
     simplePipeline.create foo: "  123  "

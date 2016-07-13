@@ -21,7 +21,14 @@ suite "Art.Ery.Request.Validation", ->
     log
       inspectedObjects: request.inspectedObjects
     log formattedInspect(request)
-    assert.eq formattedInspect(request), ""
+    assert.eq formattedInspect(request),   """
+      Neptune.Art.Ery.Request
+      pipeline: <Neptune.Art.Ery.Pipeline>
+      type:     get
+      key:      123
+      session:  {}
+      data:     undefined
+      """
 
   test "new Request type: 'create' - valid", ->
     new Request

@@ -1,6 +1,6 @@
 {log, isString} = require 'art-foundation'
 {missing, Filter, Filters} = require 'art-ery'
-SimplePipeline = require './simple_pipeline'
+SimplePipeline = require '../simple_pipeline'
 {TimestampFilter} = Filters
 
 suite "Art.Ery.Pipeline.Filters.Order", ->

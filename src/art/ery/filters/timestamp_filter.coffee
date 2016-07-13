@@ -2,11 +2,13 @@
 Filter = require '../filter'
 
 module.exports = class TimestampFilter extends Filter
-  beforeCreate: (request) ->
-    request.withMergedData
-      createdAt: now = new Date
-      updatedAt: now
+  @before
+    create: (request) ->
+      log beforeCreate: request
+      request.withMergedData
+        createdAt: now = new Date
+        updatedAt: now
 
-  beforeUpdate: (request) ->
-    request.withMergedData
-      updatedAt: new Date
+    update: (request) ->
+      request.withMergedData
+        updatedAt: new Date

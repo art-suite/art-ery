@@ -3,12 +3,13 @@
 SimplePipeline = require '../simple_pipeline'
 {TimestampFilter} = Filters
 
-suite "Art.Ery.Pipeline.Filters.TimestampFilter", ->
+suite "Art.Ery.Filters.TimestampFilter", ->
   test "create", ->
     simplePipeline = new SimplePipeline()
-    .addFilter TimestampFilter
+    .filter TimestampFilter
 
     simplePipeline.create {}
     .then (savedData) ->
+      log savedData
       assert.ok savedData.createdAt instanceof Date
       assert.ok savedData.updatedAt instanceof Date
