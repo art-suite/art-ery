@@ -2,7 +2,7 @@ Foundation = require 'art-foundation'
 Request = require './request'
 Response = require './response'
 
-{BaseObject, Promise, log, isPlainObject, mergeInto, merge} = Foundation
+{BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone} = Foundation
 {toResponse} = Response
 
 module.exports = class Filter extends BaseObject
@@ -35,12 +35,7 @@ module.exports = class Filter extends BaseObject
     - return a rejected promise
     - or create a Response object with the appropriate fields
   ###
-  @before: (a, b) ->
-    beforeFilters = @getBeforeFilters()
-    if isPlainObject map = a
-      beforeFilters[type] = filterFunction for type, filterFunction of map
-    else if a && b
-      beforeFilters[a] = b
+  @before: (a, b) -> addFilters @getBeforeFilters(), a, b
 
   ###
   IN: requestType, responseFilter
@@ -57,22 +52,26 @@ module.exports = class Filter extends BaseObject
     - return a rejected promise
     - or create a Response object with the appropriate fields
   ###
-  @after: (a, b) ->
-    afterFilters = @getAfterFilters()
+  @after: (a, b) -> addFilters @getAfterFilters(), a, b
+
+  addFilters = (filters, a, b) ->
     if isPlainObject map = a
-      afterFilters[type] = filterFunction for type, filterFunction of map
+      filters[type] = filterFunction for type, filterFunction of map
     else if a && b
-      afterFilters[a] = b
+      filters[a] = b
 
   #################################
   # class instance methods
   #################################
-  @getter "fields",
-    beforeFilters: -> @class.getBeforeFilters()
-    afterFilters:  -> @class.getAfterFilters()
+  @getter "fields beforeFilters afterFilters"
 
   constructor: ->
     @_fields = merge @class.getFields(), @_fields
+    @_beforeFilters = shallowClone @class.getBeforeFilters()
+    @_afterFilters  = shallowClone @class.getAfterFilters()
+
+  before: (a, b) -> addFilters @getBeforeFilters(), a, b
+  after:  (a, b) -> addFilters @getAfterFilters(), a, b
 
   ###
   IN: Request instance
