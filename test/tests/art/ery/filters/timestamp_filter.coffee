@@ -9,7 +9,16 @@ suite "Art.Ery.Filters.TimestampFilter", ->
     .filter TimestampFilter
 
     simplePipeline.create {}
-    .then (savedData) ->
-      log savedData
-      assert.ok savedData.createdAt instanceof Date
-      assert.ok savedData.updatedAt instanceof Date
+    .then ({createdAt, updatedAt, key}) ->
+      assert.isNumber createdAt
+      assert.isNumber updatedAt
+      assert.eq createdAt, updatedAt
+      key
+
+    .then (key) ->
+      simplePipeline.update key, foo: "bar"
+
+    .then ({createdAt, updatedAt}) ->
+      assert.isNumber createdAt
+      assert.isNumber updatedAt
+      assert.gt updatedAt, createdAt

@@ -6,9 +6,9 @@ module.exports = class TimestampFilter extends Filter
     create: (request) ->
       log beforeCreate: request
       request.withMergedData
-        createdAt: now = new Date
+        createdAt: now = Date.now()
         updatedAt: now
 
     update: (request) ->
       request.withMergedData
-        updatedAt: new Date
+        updatedAt: Date.now()
