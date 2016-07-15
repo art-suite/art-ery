@@ -1,12 +1,15 @@
 Foundation = require 'art-foundation'
-{success, missing, failure} = require './ery_status'
-{BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect} = Foundation
 Response = require './response'
 Request = require './request'
 Filter = require './filter'
+{
+  BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
+  CommunicationStatus
+  merge
+} = Foundation
 
+{success, missing, failure} = CommunicationStatus
 {toResponse} = Response
-
 
 module.exports = class Pipeline extends BaseObject
 
@@ -28,10 +31,12 @@ module.exports = class Pipeline extends BaseObject
   ######################
   constructor: ->
     super
-    @_filters = for filter in @class.getFilters()
-      instantiateFilter filter
+    @_fields = {}
+    @_filters = []
 
-  @getter "filters"
+    @filter filter for filter in @class.getFilters()
+
+  @getter "filters fields"
   @property "tableName"
 
   ######################
@@ -41,7 +46,10 @@ module.exports = class Pipeline extends BaseObject
   # IN: instanceof Filter or class extending Filter or function returning instance of Filter
   # OUT: @
   @filter: (filter) -> @getFilters().push filter; @
-  filter: (filter)  -> @getFilters().push instantiateFilter filter; @
+  filter: (filter) ->
+    @getFilters().push filter = instantiateFilter filter
+    @_fields = merge @_fields, filter.fields
+    @
 
   ###
   handlers are merely the "pearl-filter" - the action that happens

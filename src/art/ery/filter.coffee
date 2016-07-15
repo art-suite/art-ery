@@ -2,17 +2,22 @@ Foundation = require 'art-foundation'
 Request = require './request'
 Response = require './response'
 
-{BaseObject, Promise, log, isPlainObject} = Foundation
+{BaseObject, Promise, log, isPlainObject, mergeInto, merge} = Foundation
 {toResponse} = Response
 
 module.exports = class Filter extends BaseObject
 
+  ################
+  # class inheritable props
+  ################
   @getBeforeFilters: -> @getPrototypePropertyExtendedByInheritance "classBeforeFilters", {}
   @getAfterFilters:  -> @getPrototypePropertyExtendedByInheritance "classAfterFilters", {}
+  @getFields:        -> @getPrototypePropertyExtendedByInheritance "classFields", {}
 
-  @getter
-    beforeFilters: -> @class.getBeforeFilters()
-    afterFilters:  -> @class.getAfterFilters()
+  ############################
+  # Class Declaration API
+  ############################
+  @fields: (fields) -> mergeInto @getFields(), fields
 
   ###
   IN: requestType, requestFilter
@@ -58,6 +63,16 @@ module.exports = class Filter extends BaseObject
       afterFilters[type] = filterFunction for type, filterFunction of map
     else if a && b
       afterFilters[a] = b
+
+  #################################
+  # class instance methods
+  #################################
+  @getter "fields",
+    beforeFilters: -> @class.getBeforeFilters()
+    afterFilters:  -> @class.getAfterFilters()
+
+  constructor: ->
+    @_fields = merge @class.getFields(), @_fields
 
   ###
   IN: Request instance

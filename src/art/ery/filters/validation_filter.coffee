@@ -2,8 +2,9 @@
 Filter = require '../filter'
 
 module.exports = class ValidationFilter extends Filter
-  constructor: (fields) ->
-    @_validator = new Validator fields
+  constructor: (@_fields) ->
+    super
+    @_validator = new Validator @_fields
 
   @before
     create: (request) -> request.withData @_validator.preCreate request.data

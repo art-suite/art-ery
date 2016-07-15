@@ -1,9 +1,16 @@
-{log, isString} = require 'art-foundation'
+{log, isString, Validator} = require 'art-foundation'
 {missing, Filters} = require 'art-ery'
 SimplePipeline = require '../simple_pipeline'
 {TimestampFilter} = Filters
 
 suite "Art.Ery.Filters.TimestampFilter", ->
+  test "fields are set correctly", ->
+    simplePipeline = new SimplePipeline()
+    .filter TimestampFilter
+
+    assert.eq simplePipeline.fields.createdAt, Validator.fieldTypes.timestamp
+    assert.eq simplePipeline.fields.updatedAt, Validator.fieldTypes.timestamp
+
   test "create", ->
     simplePipeline = new SimplePipeline()
     .filter TimestampFilter

@@ -5,6 +5,19 @@ SimplePipeline = require '../simple_pipeline'
 {ValidationFilter} = Filters
 
 suite "Art.Ery.Filters.ValidationFilter", ->
+  test "fields are set correctly", ->
+    simplePipeline = new SimplePipeline()
+    .filter new ValidationFilter
+      foo: foo = preprocess: (o) -> "#{o}#{o}"
+    .filter new ValidationFilter fields =
+      bar: bar = validate: (v) -> (v | 0) == v
+      id: id = Validator.fieldTypes.id
+
+    assert.eq simplePipeline.fields,
+      foo: foo
+      bar: bar
+      id: id
+
   test "preprocess", ->
     simplePipeline = new SimplePipeline()
     .filter new ValidationFilter
