@@ -29,14 +29,18 @@ module.exports = class Pipeline extends BaseObject
   ######################
   # constructor
   ######################
-  constructor: ->
+  constructor: (options) ->
     super
     @_fields = {}
     @_filters = []
 
+    if options
+      @_queries = options.queries || {}
+      @_actions = options.actions || {}
+
     @filter filter for filter in @class.getFilters()
 
-  @getter "filters fields"
+  @getter "filters fields queries actions"
   @property "tableName"
 
   ######################
