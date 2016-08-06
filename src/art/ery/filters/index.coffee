@@ -4,4 +4,5 @@
 module.exports = require './namespace'
 .addModules
   TimestampFilter:  require './timestamp_filter' 
+  UuidFilter:       require './uuid_filter'      
   ValidationFilter: require './validation_filter'
