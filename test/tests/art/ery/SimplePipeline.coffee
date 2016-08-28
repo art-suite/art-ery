@@ -1,13 +1,17 @@
 Foundation = require 'art-foundation'
 Ery = require 'art-ery'
 
-{merge, log, CommunicationStatus} = Foundation
+{merge, log, CommunicationStatus, wordsArray} = Foundation
 {missing} = CommunicationStatus
 {Pipeline, Filter} = Ery
 
 module.exports = class SimplePipeline extends Pipeline
 
   @suite: ->
+    test "clientApiMethodList", ->
+      simplePipeline = new SimplePipeline
+      assert.eq simplePipeline.clientApiMethodList, wordsArray "get create update delete"
+
     test "get -> missing", ->
       simplePipeline = new SimplePipeline
       simplePipeline.get "doesn't exist"

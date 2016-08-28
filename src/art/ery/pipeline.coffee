@@ -25,6 +25,7 @@ module.exports = class Pipeline extends BaseObject
     else throw "invalid filter: #{inspect filter} #{filter instanceof Filter}"
 
   @getFilters: -> @getPrototypePropertyExtendedByInheritance "classFilters", []
+  @getClientApiMethodList: -> @getPrototypePropertyExtendedByInheritance "classClientApiMethodList", []
 
   ######################
   # constructor
@@ -45,6 +46,8 @@ module.exports = class Pipeline extends BaseObject
 
   @getter "filters fields queries actions"
   @property "tableName"
+  @getter
+    clientApiMethodList: -> @class.getClientApiMethodList()
 
   ######################
   # Add Filters
@@ -126,9 +129,10 @@ module.exports = class Pipeline extends BaseObject
         throw response
 
   @_clientApiRequest: (requestType) ->
+    @getClientApiMethodList().push requestType unless requestType in @getClientApiMethodList()
     @::[requestType] ||= (keyOrData, data) -> @_performClientRequest requestType, keyOrData, data
 
-  @_clientApiRequest "get"
-  @_clientApiRequest "update"
-  @_clientApiRequest "create"
-  @_clientApiRequest "delete"
+  # @_clientApiRequest "get"
+  # @_clientApiRequest "update"
+  # @_clientApiRequest "create"
+  # @_clientApiRequest "delete"

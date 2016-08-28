@@ -1,4 +1,4 @@
-{log, isString, present, CommunicationStatus} = require 'art-foundation'
+{log, isString, present, CommunicationStatus, wordsArray} = require 'art-foundation'
 {Response, Request, Pipeline, Session} = require 'art-ery'
 {success, failure, missing} = CommunicationStatus
 
@@ -7,6 +7,10 @@ isPresentString = (s) -> isString(s) && present s
 module.exports = class AuthPipeline extends Pipeline
 
   @suite: ->
+    test "clientApiMethodList", ->
+      p = new AuthPipeline
+      assert.eq p.clientApiMethodList, wordsArray "authenticate"
+
     test "auth success", ->
       # NOTE: a new Session is provided here only for testing - to ensure a clean session
       # Most the time you just want the default, global session:
