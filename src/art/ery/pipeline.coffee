@@ -1,7 +1,7 @@
 Foundation = require 'art-foundation'
-Response = require './response'
-Request = require './request'
-Filter = require './filter'
+Response = require './Response'
+Request = require './Request'
+Filter = require './Filter'
 {
   BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
   CommunicationStatus
@@ -18,11 +18,10 @@ module.exports = class Pipeline extends BaseObject
     else if isFunction filter         then filter @
     else if filter instanceof Filter  then filter
     else if isPlainObject filter
-      class AnonymousFilter extends Filter
+      new class AnonymousFilter extends Filter
         @before filter.before
         @after filter.after
-      new AnonymousFilter
-    else throw "invalid filter: #{inspect filter}"
+    else throw "invalid filter: #{inspect filter} #{filter instanceof Filter}"
 
   @getFilters: -> @getPrototypePropertyExtendedByInheritance "classFilters", []
 

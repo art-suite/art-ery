@@ -1,4 +1,4 @@
 module.exports = [
-  require './ery_status'
-  require './filters'
+  require './EryStatus'
+  require './Filters'
 ]

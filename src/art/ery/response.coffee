@@ -1,7 +1,7 @@
 Foundation = require 'art-foundation'
-Request = require './request'
+Request = require './Request'
 {BaseObject, inspect, isPlainObject, log} = Foundation
-{success, missing, failure, validStatus} = require './ery_status'
+{success, missing, failure, validStatus} = require './EryStatus'
 
 module.exports = class Response extends BaseObject
   constructor: (options) ->

@@ -1,5 +1,5 @@
 {log, Validator} = require 'art-foundation'
-Filter = require '../filter'
+Filter = require '../Filter'
 Uuid = require 'uuid'
 
 module.exports = class UuidFilter extends Filter

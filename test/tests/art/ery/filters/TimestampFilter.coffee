@@ -1,6 +1,6 @@
 {log, isString, Validator} = require 'art-foundation'
 {TimestampFilter} = require 'art-ery'
-SimplePipeline = require '../simple_pipeline'
+SimplePipeline = require '../SimplePipeline'
 
 suite "Art.Ery.Filters.TimestampFilter", ->
   test "fields are set correctly", ->

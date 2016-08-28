@@ -1,6 +1,6 @@
 {log} = require 'art-foundation'
 {missing} = require 'art-ery'
-SimplePipeline = require './simple_pipeline'
+SimplePipeline = require '../SimplePipeline'
 
 suite "Art.Ery.Pipeline.Client", ->
   test "get -> missing", ->

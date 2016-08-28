@@ -1,5 +1,5 @@
 {log, Validator} = require 'art-foundation'
-Filter = require '../filter'
+Filter = require '../Filter'
 
 module.exports = class TimestampFilter extends Filter
   @before

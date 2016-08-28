@@ -1,13 +1,13 @@
 {log, isString} = require 'art-foundation'
 {missing, Filter, Filters} = require 'art-ery'
-SimplePipeline = require '../simple_pipeline'
+SimplePipeline = require '../SimplePipeline'
 {TimestampFilter} = Filters
 
-suite "Art.Ery.Pipeline.Filters.Order", ->
+suite "Art.Ery.Filters.Order", ->
   orderLog = []
 
   class OrderTestFilter extends Filter
-    constructor: (@str) ->
+    constructor: (@str) -> super
 
     @before create: (request) ->
       orderLog.push "beforeCreate #{@str}"

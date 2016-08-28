@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
-Request = require './request'
-Response = require './response'
+Request = require './Request'
+Response = require './Response'
 
 {BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone} = Foundation
 {toResponse} = Response
@@ -103,7 +103,7 @@ module.exports = class Filter extends BaseObject
   ###
   _processBefore: (request) ->
     Promise.then =>
-      if beforeFilter = @beforeFilters[request.type]
+      if beforeFilter = @_beforeFilters[request.type]
         beforeFilter.call @, request
       else
         # pass-through if no filter
@@ -122,7 +122,7 @@ module.exports = class Filter extends BaseObject
   ###
   _processAfter: (response) ->
     Promise.then =>
-      if afterFilter = @afterFilters[response.request.type]
+      if afterFilter = @_afterFilters[response.request.type]
         afterFilter.call @, response
       else
         # pass-through if no filter

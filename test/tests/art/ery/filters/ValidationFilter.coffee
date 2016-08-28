@@ -1,6 +1,6 @@
 {log, isString, Validator} = require 'art-foundation'
 {ValidationFilter} = require 'art-ery'
-SimplePipeline = require '../simple_pipeline'
+SimplePipeline = require '../SimplePipeline'
 
 suite "Art.Ery.Filters.ValidationFilter", ->
   test "fields are set correctly", ->
