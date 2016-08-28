@@ -3,8 +3,10 @@
 
 module.exports = require './namespace'
 .addModules
+  AuthPipeline:   require './AuthPipeline'  
   Request:        require './Request'       
-  Response:       require './Response'      
+  Response:       require './response'      
+  Session:        require './Session'       
   SimplePipeline: require './SimplePipeline'
 require './Filters'
 require './Pipeline'

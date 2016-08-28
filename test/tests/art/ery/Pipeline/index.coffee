@@ -3,5 +3,4 @@
 
 module.exports = require './namespace'
 .addModules
-  Client:         require './Client'        
   CustomRequests: require './CustomRequests'

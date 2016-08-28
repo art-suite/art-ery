@@ -2,6 +2,7 @@ Foundation = require 'art-foundation'
 Response = require './Response'
 Request = require './Request'
 Filter = require './Filter'
+Session = require './Session'
 {
   BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
   CommunicationStatus
@@ -34,8 +35,11 @@ module.exports = class Pipeline extends BaseObject
     @_filters = []
 
     if options
+      @_session = options.session
       @_queries = options.queries || {}
       @_actions = options.actions || {}
+
+    @_session ||= Session.singleton
 
     @filter filter for filter in @class.getFilters()
 
@@ -75,8 +79,7 @@ module.exports = class Pipeline extends BaseObject
   # Session
   # (override OK)
   ###################
-  getSession: -> @_session ||= {}
-  setSession: (@_session) ->
+  @getter "session"
 
   ###################
   # PRIVATE
@@ -84,7 +87,6 @@ module.exports = class Pipeline extends BaseObject
   _performRequest: (request) ->
     {type} = request
     {filters} = @
-    # log _performRequest: request: request, filters: filters
     handlerIndex = filters.length - 1
 
     # IN: Request instance
@@ -113,12 +115,12 @@ module.exports = class Pipeline extends BaseObject
       key:      key
       pipeline: @
       data:     data
-      session:  @getSession()
+      session:  @session.data
 
     .then (response) =>
       {status, data, session} = response
       if status == success
-        @setSession session if session
+        @session.data = session if session
         data
       else
         throw response

@@ -1,5 +1,6 @@
-{log} = require 'art-foundation'
-{Response, Request, Pipeline, success, failure} = require 'art-ery'
+{log, CommunicationStatus} = require 'art-foundation'
+{Response, Request, Pipeline} = require 'art-ery'
+{success, failure} = CommunicationStatus
 
 module.exports = suite: validation: ->
   test "new Response - invalid", ->

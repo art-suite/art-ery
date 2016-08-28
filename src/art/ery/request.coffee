@@ -1,5 +1,7 @@
 Foundation = require 'art-foundation'
-{BaseObject, merge, inspect, isString, isObject, log, Validator} = Foundation
+{BaseObject, merge, inspect, isString, isObject, log, Validator, CommunicationStatus} = Foundation
+ArtEry = require './namespace'
+{success, missing, failure, validStatus} = CommunicationStatus
 
 validator = new Validator
   type:     type: "string", required: true
@@ -21,7 +23,6 @@ module.exports = class Request extends BaseObject
 
   @getter
     inspectedObjects: ->
-      log "ArtEry.Request inspectedObjects"
       [
         @class.namespacePath
         @props
@@ -40,6 +41,30 @@ module.exports = class Request extends BaseObject
   withData: (data) ->
     Promise.resolve(data).then (resolvedData) =>
       new Request merge @props, data: resolvedData
+
+  # return a new success-Response
+  success: (responseProps) ->
+    new ArtEry.Response merge responseProps,
+      status: success
+      data: responseProps.data || {}
+      request: @
+
+  # return a new failure-Response
+  failure: (responseProps) ->
+    new ArtEry.Response merge responseProps,
+      status: failure
+      error: if isString responseProps.error
+          message: responseProps.error
+        else
+          responseProps.error
+      request: @
+
+  # return a new missing-Response
+  missing: (responseProps) ->
+    new ArtEry.Response merge responseProps,
+      status: missing
+      request: @
+
 
   ###
   IN: data can be a plainObject or a promise returning a plainObject
