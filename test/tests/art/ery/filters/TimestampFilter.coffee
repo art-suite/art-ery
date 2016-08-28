@@ -2,7 +2,7 @@
 {TimestampFilter} = require 'art-ery'
 SimplePipeline = require '../SimplePipeline'
 
-suite "Art.Ery.Filters.TimestampFilter", ->
+module.exports = suite: ->
   test "fields are set correctly", ->
     simplePipeline = new SimplePipeline()
     .filter TimestampFilter

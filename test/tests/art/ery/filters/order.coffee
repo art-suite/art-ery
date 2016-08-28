@@ -3,7 +3,7 @@
 SimplePipeline = require '../SimplePipeline'
 {TimestampFilter} = Filters
 
-suite "Art.Ery.Filters.Order", ->
+module.exports = suite: ->
   orderLog = []
 
   class OrderTestFilter extends Filter

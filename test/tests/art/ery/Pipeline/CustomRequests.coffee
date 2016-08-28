@@ -1,7 +1,7 @@
 {log} = require 'art-foundation'
 {missing, Pipeline} = require 'art-ery'
 
-suite "Art.Ery.Pipeline.Custom Requests", ->
+module.exports = suite: ->
   test "myCustomRequest", ->
     class MyPipeline extends Pipeline
       @handlers

@@ -2,7 +2,7 @@
 {UuidFilter} = require 'art-ery'
 SimplePipeline = require '../SimplePipeline'
 
-suite "Art.Ery.Filters.UuidFilter", ->
+module.exports = suite: ->
   test "fields are set correctly", ->
     simplePipeline = new SimplePipeline()
     .filter UuidFilter

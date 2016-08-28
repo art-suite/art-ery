@@ -1,7 +1,7 @@
 {log} = require 'art-foundation'
 {Response, Request, Pipeline, success, failure} = require 'art-ery'
 
-suite "Art.Ery.Response.Validation", ->
+module.exports = suite: validation: ->
   test "new Response - invalid", ->
     assert.throws -> new Response {}
 
