@@ -12,7 +12,7 @@ Session = require './Session'
 {success, missing, failure} = CommunicationStatus
 {toResponse} = Response
 
-module.exports = class Pipeline extends BaseObject
+module.exports = class Pipeline extends require './ArtEryBaseObject'
 
   @instantiateFilter: instantiateFilter = (filter) ->
     if isClass filter                 then new filter

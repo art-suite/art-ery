@@ -16,7 +16,7 @@ successValidator = new Validator
   session:  "object"
 , exclusive: true
 
-module.exports = class Response extends BaseObject
+module.exports = class Response extends require './ArtEryBaseObject'
   constructor: (options) ->
     @validate options
     {@request, @status, @data, @session, @error} = options

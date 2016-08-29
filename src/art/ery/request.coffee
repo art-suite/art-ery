@@ -10,7 +10,7 @@ validator = new Validator
   data:     "object"
   key:      "string"
 
-module.exports = class Request extends BaseObject
+module.exports = class Request extends require './ArtEryBaseObject'
   constructor: (options) ->
     validator.preCreateSync options
     @_type      = options.type

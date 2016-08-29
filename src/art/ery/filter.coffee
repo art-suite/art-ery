@@ -5,7 +5,7 @@ Response = require './Response'
 {BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone} = Foundation
 {toResponse} = Response
 
-module.exports = class Filter extends BaseObject
+module.exports = class Filter extends require './ArtEryBaseObject'
 
   ################
   # class inheritable props
