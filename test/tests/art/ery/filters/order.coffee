@@ -1,7 +1,6 @@
 {log, isString} = require 'art-foundation'
-{missing, Filter, Filters} = require 'art-ery'
+{Filter} = Neptune.Art.Ery
 SimplePipeline = require '../SimplePipeline'
-{TimestampFilter} = Filters
 
 module.exports = suite: ->
   orderLog = []

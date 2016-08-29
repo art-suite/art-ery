@@ -1,31 +1,34 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{BaseObject, inspect, isPlainObject, log, CommunicationStatus} = Foundation
-{success, missing, failure, validStatus} = CommunicationStatus
+{BaseObject, inspect, isPlainObject, log, CommunicationStatus, Validator} = Foundation
+{success, missing, failure} = CommunicationStatus
+
+failureValidator = new Validator
+  request:  required: instanceof: Request
+  status:   required: "communicationStatus"
+  error:    required: "object"
+, exclusive: true
+
+successValidator = new Validator
+  request:  required: instanceof: Request
+  status:   required: "communicationStatus"
+  data:     required: "object"
+  session:  "object"
+, exclusive: true
 
 module.exports = class Response extends BaseObject
   constructor: (options) ->
     @validate options
-    @_request = options.request
-    @_status = options.status
-    @_data = options.data
-    @_session = options.session
-    @_error = options.error
+    {@request, @status, @data, @session, @error} = options
 
   validate: (options)->
-    {request, status, data, error, session} = options
-    throw "invalid status: #{inspect status}" unless validStatus status
-    throw "invalid request: #{inspect request}" unless request instanceof Request
-    if status == success
-      throw "invalid data: #{inspect data}" unless isPlainObject data
-      throw "session, if present, must be an object: #{inspect session}" if session && !isPlainObject session
-      throw "error not expected for status: '#{status}'" if error
+    if options.status == success
+      successValidator.preCreateSync options
     else
-      throw "data not expected for status: '#{status}'" if data
-      throw "session can only be set on status == success" if session
-      throw "error must be an object: #{inspect error}" unless isPlainObject error
+      failureValidator.preCreateSync options
 
-  @getter "status error data request session",
+  @property "request status data session error"
+  @getter
     isSuccessful: -> @_status == success
     inspectedObjects: ->
       [

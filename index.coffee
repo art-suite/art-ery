@@ -1,1 +1,1 @@
-module.exports = require "./src/art/ery"
+module.exports = require "./src/Art/Ery"

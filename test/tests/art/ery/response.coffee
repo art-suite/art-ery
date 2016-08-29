@@ -1,5 +1,5 @@
 {log, CommunicationStatus} = require 'art-foundation'
-{Response, Request, Pipeline} = require 'art-ery'
+{Response, Request, Pipeline} = Neptune.Art.Ery
 {success, failure} = CommunicationStatus
 
 module.exports = suite: validation: ->

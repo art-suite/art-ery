@@ -1,10 +1,17 @@
 {log, formattedInspect} = require 'art-foundation'
-{Request, Pipeline} = require 'art-ery'
+{Request, Pipeline} = Neptune.Art.Ery
 
 module.exports = suite:
   validation: ->
     test "new Request - invalid", ->
       assert.throws -> new Request
+
+    test "new Request - missing session", ->
+      assert.throws ->
+        new Request
+          type: "get"
+          key: "123"
+          pipeline: new Pipeline
 
     test "new Request type: 'get' - valid", ->
       new Request

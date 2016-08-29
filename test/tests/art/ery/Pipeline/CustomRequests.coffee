@@ -1,5 +1,5 @@
 {log} = require 'art-foundation'
-{missing, Pipeline} = require 'art-ery'
+{missing, Pipeline} = Neptune.Art.Ery
 
 module.exports = suite: ->
   test "myCustomRequest", ->

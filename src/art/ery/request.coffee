@@ -4,11 +4,11 @@ ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
 validator = new Validator
-  type:     type: "string", required: true
-  pipeline: instanceof: Neptune.Art.Ery.Pipeline, required: true
-  session:  type: "object", required: true
-  data:     type: "object"
-  key:      "id"
+  type:     required: "string"
+  pipeline: required: instanceof: Neptune.Art.Ery.Pipeline
+  session:  required: "object"
+  data:     "object"
+  key:      "string"
 
 module.exports = class Request extends BaseObject
   constructor: (options) ->

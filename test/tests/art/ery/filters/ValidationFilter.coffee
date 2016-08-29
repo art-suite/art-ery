@@ -1,5 +1,5 @@
 {log, isString, Validator} = require 'art-foundation'
-{ValidationFilter} = require 'art-ery'
+{ValidationFilter} = Neptune.Art.Ery.Filters
 SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
@@ -35,8 +35,9 @@ module.exports = suite: ->
       throw "should not succeed"
     .catch (response) ->
       assert.eq response.error,
-        invalidFields: []
-        missingFields: ["foo"]
+        invalidFields:  []
+        missingFields:  ["foo"]
+        fields:         bar: 123
 
   test "required field - present", ->
     simplePipeline = new SimplePipeline()
@@ -59,6 +60,7 @@ module.exports = suite: ->
       assert.eq response.error,
         invalidFields: ["foo"]
         missingFields: []
+        fields: foo: 123
 
   test "validate - valid with preprocessing", ->
     simplePipeline = new SimplePipeline()
