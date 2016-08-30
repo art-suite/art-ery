@@ -9,7 +9,7 @@ module.exports = class AuthPipeline extends Pipeline
   @suite: ->
     test "clientApiMethodList", ->
       p = new AuthPipeline
-      assert.eq p.clientApiMethodList, wordsArray "authenticate"
+      assert.eq p.clientApiMethodList, wordsArray "authenticate get"
 
     test "auth success", ->
       # NOTE: a new Session is provided here only for testing - to ensure a clean session
@@ -29,6 +29,17 @@ module.exports = class AuthPipeline extends Pipeline
         assert.eq response.status, failure
         assert.isString response.error.message
 
+    test "auth then get", ->
+      # NOTE: a new Session is provided here only for testing - to ensure a clean session
+      # Most the time you just want the default, global session:
+      #   auth = new AuthPipeline()
+      auth = new AuthPipeline session: new Session
+      auth.get()
+      .then (v) -> assert.eq v, {}
+      .then     -> auth.authenticate username: "bar", password: "bar"
+      .then     -> auth.get()
+      .then (v) -> assert.eq v, username: "bar"
+
   ###
   a stupid authentication test
   ###
@@ -45,3 +56,8 @@ module.exports = class AuthPipeline extends Pipeline
         request.failure error: message
       else
         request.success session: username: data.username
+
+    # in order for this to work in production,
+    # it has to be handled client-side
+    # and that means it has to be a filter with higher priority than the highest server-side filter.
+    get: ({session}) -> session
