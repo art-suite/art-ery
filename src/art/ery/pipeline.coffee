@@ -66,7 +66,7 @@ module.exports = class Pipeline extends require './ArtEryBaseObject'
 
   # OVERRIDE
   # OUT: queryModelName: queryOptions map
-  getQueriesForIndexes: -> {}
+  getAutoDefinedQueries: -> {}
 
   ######################
   # Add Filters

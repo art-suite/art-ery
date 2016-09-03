@@ -39,7 +39,7 @@ module.exports = class ArtEryFluxModel extends FluxModel
     @_pipeline = @class._pipeline
     @_queryModels = {}
     @queries @_pipeline.queries
-    @queries @_pipeline.getQueriesForIndexes(), true
+    @queries @_pipeline.getAutoDefinedQueries(), true
     @actions @_pipeline.actions
 
   keyFromData: (data) ->
