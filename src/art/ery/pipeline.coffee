@@ -64,6 +64,10 @@ module.exports = class Pipeline extends require './ArtEryBaseObject'
   @getter
     clientApiMethodList: -> @class.getClientApiMethodList()
 
+  # OVERRIDE
+  # OUT: queryModelName: queryOptions map
+  getQueriesForIndexes: -> {}
+
   ######################
   # Add Filters
   ######################

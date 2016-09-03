@@ -37,7 +37,9 @@ module.exports = class ArtEryFluxModel extends FluxModel
     super
     @_updateSerializers = {}
     @_pipeline = @class._pipeline
+    @_queryModels = {}
     @queries @_pipeline.queries
+    @queries @_pipeline.getQueriesForIndexes(), true
     @actions @_pipeline.actions
 
   keyFromData: (data) ->
@@ -53,20 +55,27 @@ module.exports = class ArtEryFluxModel extends FluxModel
   every record returned should get sent through the after-pipeline
   as-if it were a "get" request
   ###
-  queries: (map) ->
-    @_queryModels = for modelName, options of map
-      if isFunction options
-        options = query: options
-      {_pipeline} = @
-      recordsModel = @
-      throw new Error "query required" unless isFunction options.query
+  queries: (map, ignoreAlreadyDefinedWarning) ->
+    for modelName, options of map
+      @defineQuery modelName, options, ignoreAlreadyDefinedWarning
 
-      new class ArtEryQueryFluxModelChild extends ArtEryQueryFluxModel
-        @_name: upperCamelCase modelName
+  defineQuery: (modelName, options, ignoreAlreadyDefinedWarning) ->
+    if @_queryModels[modelName]
+      console.warn "query already defined! #{@getName()}: #{modelName}" unless ignoreAlreadyDefinedWarning
+      return
 
-        @::[k] = v for k, v of options
-        _pipeline: _pipeline
-        _recordsModel: recordsModel
+    {_pipeline} = @
+    recordsModel = @
+    options = query: options if isFunction options
+    throw new Error "query required" unless isFunction options.query
+
+    log "ArtEryFluxModel#defineQuery() model: #{@getName()}, queryModel: #{modelName}"
+    @_queryModels[modelName] = new class ArtEryQueryFluxModelChild extends ArtEryQueryFluxModel
+      @_name: upperCamelCase modelName
+
+      @::[k] = v for k, v of options
+      _pipeline: _pipeline
+      _recordsModel: recordsModel
 
   ###
   TODO:
@@ -134,7 +143,7 @@ module.exports = class ArtEryFluxModel extends FluxModel
     updateSerializer
 
   _updateQueries: (updatedRecord) ->
-    queryModel.localUpdate updatedRecord for queryModel in @_queryModels
+    queryModel.localUpdate updatedRecord for modelName, queryModel of @_queryModels
     null
 
   fluxStoreEntryUpdated: ({key, fluxRecord}) ->

@@ -9,8 +9,8 @@ module.exports = [
     linkFields = {}
     otherFields = {}
     for k, v of fields
-      {linkTo, required} = v
-      if linkTo
+      {linkTo, link, required} = v
+      if linkTo || link
         linkFields[k] = v
         idFieldName = k + "Id"
         otherFields[idFieldName] = type: "trimmedString", required: !!required

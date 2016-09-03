@@ -31,7 +31,7 @@ defineModule module, ->
       data = merge data
       promises = for fieldName, {idFieldName, linkTo, include} of @_linkFields when include && id = data[idFieldName]
         Promise.resolve()
-        .then => id && getNamedPipeline(linkTo).get id
+        .then => id && getNamedPipeline(linkTo || fieldName).get id
         .then (value) -> data[fieldName] = if value? then value else null
         .catch (error) ->
           console.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. linkTo: #{linkTo}. Error: #{error}", error
