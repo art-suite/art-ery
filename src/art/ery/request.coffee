@@ -42,6 +42,14 @@ module.exports = class Request extends require './ArtEryBaseObject'
     Promise.resolve(data).then (resolvedData) =>
       new Request merge @props, data: resolvedData
 
+  ###
+  IN: data can be a plainObject or a promise returning a plainObject
+  OUT: promise.then (newRequestWithNewData) ->
+  ###
+  withMergedData: (data) ->
+    Promise.resolve(data).then (resolvedData) =>
+      new Request merge @props, data: merge @data, resolvedData
+
   # return a new success-Response
   success: (responseProps) ->
     new ArtEry.Response merge responseProps,
@@ -64,12 +72,3 @@ module.exports = class Request extends require './ArtEryBaseObject'
     new ArtEry.Response merge responseProps,
       status: missing
       request: @
-
-
-  ###
-  IN: data can be a plainObject or a promise returning a plainObject
-  OUT: promise.then (newRequestWithNewData) ->
-  ###
-  withMergedData: (data) ->
-    Promise.resolve(data).then (resolvedData) =>
-      new Request merge @props, data: merge @data, resolvedData

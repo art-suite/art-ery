@@ -22,9 +22,12 @@ module.exports = class Pipeline extends require './ArtEryBaseObject'
   # for testing
   @_resetNamedPipelines: -> @_namedPipelines = {}
 
+  @getNamedPipelines: => @_namedPipelines
   @getNamedPipeline: (name) =>
     throw new Error "named pipeline does not exist: #{name}" unless pl = @_namedPipelines[name]
     pl
+
+  @getter pipelines: -> Pipeline.getNamedPipelines()
 
   @instantiateFilter: instantiateFilter = (filter) ->
     if isClass filter                 then new filter

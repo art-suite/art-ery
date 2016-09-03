@@ -33,6 +33,14 @@ module.exports = class Response extends require './ArtEryBaseObject'
     Promise.resolve(data).then (resolvedData) =>
       new Response merge @props, data: resolvedData
 
+  ###
+  IN: data can be a plainObject or a promise returning a plainObject
+  OUT: promise.then (newRequestWithNewData) ->
+  ###
+  withMergedData: (data) ->
+    Promise.resolve(data).then (resolvedData) =>
+      new Response merge @props, data: merge @data, resolvedData
+
   @property "request status data session error"
   @getter
     isSuccessful: -> @_status == success

@@ -65,6 +65,9 @@ module.exports = class Filter extends require './ArtEryBaseObject'
   #################################
   @getter "fields beforeFilters afterFilters"
 
+  @getter
+    pipelines: -> Neptine.Art.Ery.Pipeline.getNamedPipelines()
+
   constructor: ->
     @_fields = merge @class.getFields(), @_fields
     @_beforeFilters = shallowClone @class.getBeforeFilters()
