@@ -36,25 +36,25 @@ module.exports = class SimplePipeline extends Pipeline
     test "create returns new record", ->
       simplePipeline = new SimplePipeline
       simplePipeline.create foo: "bar"
-      .then (data) -> assert.eq data, foo: "bar", key: "0"
+      .then (data) -> assert.eq data, foo: "bar", id: "0"
 
     test "create -> get", ->
       simplePipeline = new SimplePipeline
       simplePipeline.create foo: "bar"
-      .then ({key}) -> simplePipeline.get key
-      .then (data) -> assert.eq data, foo: "bar", key: "0"
+      .then ({id}) -> simplePipeline.get id
+      .then (data) -> assert.eq data, foo: "bar", id: "0"
 
     test "create -> update", ->
       simplePipeline = new SimplePipeline
       simplePipeline.create foo: "bar"
-      .then ({key}) -> simplePipeline.update key, fooz: "baz"
-      .then (data) -> assert.eq data, foo: "bar", fooz: "baz", key: "0"
+      .then ({id}) -> simplePipeline.update id, fooz: "baz"
+      .then (data) -> assert.eq data, foo: "bar", fooz: "baz", id: "0"
 
     test "create -> delete", ->
       simplePipeline = new SimplePipeline
       simplePipeline.create foo: "bar"
-      .then ({key}) -> simplePipeline.delete key
-      .then ({key}) -> simplePipeline.get key
+      .then ({id}) -> simplePipeline.delete id
+      .then ({id}) -> simplePipeline.get id
       .then (response) -> throw new Error "shouldn't succeed"
       .catch (response) -> assert.eq response.status, missing
 
@@ -74,7 +74,7 @@ module.exports = class SimplePipeline extends Pipeline
 
     create: (request) ->
       {nextUniqueKey} = @
-      @_store[nextUniqueKey] = merge request.data, key: nextUniqueKey
+      @_store[nextUniqueKey] = merge request.data, id: nextUniqueKey
 
     update: ({key, data}) ->
       if previousData = @_store[key]

@@ -15,14 +15,14 @@ module.exports = suite: ->
     .filter TimestampFilter
 
     simplePipeline.create {}
-    .then ({createdAt, updatedAt, key}) ->
+    .then ({createdAt, updatedAt, id}) ->
       assert.isNumber createdAt
       assert.isNumber updatedAt
       assert.eq createdAt, updatedAt
-      key
+      id
 
-    .then (key) ->
-      simplePipeline.update key, foo: "bar"
+    .then (id) ->
+      simplePipeline.update id, foo: "bar"
 
     .then ({createdAt, updatedAt}) ->
       assert.isNumber createdAt

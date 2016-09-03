@@ -7,12 +7,24 @@ Session = require './Session'
   BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
   CommunicationStatus
   merge
+  isPlainArray
 } = Foundation
 
 {success, missing, failure} = CommunicationStatus
 {toResponse} = Response
 
 module.exports = class Pipeline extends require './ArtEryBaseObject'
+  @_namedPipelines = {}
+  @addNamedPipeline: (name, pipeline) =>
+    throw new Error "named pipeline already exists: #{name}" if @_namedPipelines[name]
+    @_namedPipelines[name] = pipeline
+
+  # for testing
+  @_resetNamedPipelines: -> @_namedPipelines = {}
+
+  @getNamedPipeline: (name) =>
+    throw new Error "named pipeline does not exist: #{name}" unless pl = @_namedPipelines[name]
+    pl
 
   @instantiateFilter: instantiateFilter = (filter) ->
     if isClass filter                 then new filter
@@ -57,9 +69,13 @@ module.exports = class Pipeline extends require './ArtEryBaseObject'
   # OUT: @
   @filter: (filter) -> @getFilters().push filter; @
   filter: (filter) ->
-    @getFilters().push filter = instantiateFilter filter
-    @_fields = merge @_fields, filter.fields
-    @
+    if isPlainArray filter
+      @filter f for f in filter
+      @
+    else
+      @getFilters().push filter = instantiateFilter filter
+      @_fields = merge @_fields, filter.fields
+      @
 
   ###
   handlers are merely the "pearl-filter" - the action that happens

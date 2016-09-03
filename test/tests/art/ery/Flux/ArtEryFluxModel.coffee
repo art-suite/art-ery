@@ -9,6 +9,7 @@ module.exports = suite: ->
   Chat = null
   chat = null
   setup ->
+    Neptune.Art.Ery.Pipeline._resetNamedPipelines()
     Flux._reset()
     {chat} = class Chat extends ArtEryFluxModel
       @pipeline new SimplePipeline

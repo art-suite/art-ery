@@ -23,12 +23,12 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 
 {FluxModel} = Flux
 
-
 module.exports = class ArtEryFluxModel extends FluxModel
 
   @pipeline: (@_pipeline) ->
     @register()
     @_pipeline.tableName = @getName()
+    Neptune.Art.Ery.Pipeline.addNamedPipeline @getName(), @_pipeline
     @_pipeline
 
   @getter "pipeline"

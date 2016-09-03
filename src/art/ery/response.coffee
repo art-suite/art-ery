@@ -1,20 +1,18 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{BaseObject, inspect, isPlainObject, log, CommunicationStatus, Validator} = Foundation
+{BaseObject, inspect, isPlainObject, log, CommunicationStatus, Validator, merge} = Foundation
 {success, missing, failure} = CommunicationStatus
 
 failureValidator = new Validator
   request:  required: instanceof: Request
   status:   required: "communicationStatus"
   error:    required: "object"
-, exclusive: true
 
 successValidator = new Validator
   request:  required: instanceof: Request
   status:   required: "communicationStatus"
   data:     required: "object"
   session:  "object"
-, exclusive: true
 
 module.exports = class Response extends require './ArtEryBaseObject'
   constructor: (options) ->
@@ -26,6 +24,14 @@ module.exports = class Response extends require './ArtEryBaseObject'
       successValidator.preCreateSync options
     else
       failureValidator.preCreateSync options
+
+  ###
+  IN: data can be a plainObject or a promise returning a plainObject
+  OUT: promise.then (newRequestWithNewData) ->
+  ###
+  withData: (data) ->
+    Promise.resolve(data).then (resolvedData) =>
+      new Response merge @props, data: resolvedData
 
   @property "request status data session error"
   @getter
