@@ -1,5 +1,5 @@
 Foundation = require 'art-foundation'
-Flux = require 'art-flux'
+{Flux} = Neptune.Art
 ArtEry = require 'art-ery'
 
 {

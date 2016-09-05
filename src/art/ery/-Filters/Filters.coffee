@@ -17,7 +17,6 @@ module.exports = [
       else
         otherFields[k] = v
 
-    log linkFields: linkFields, otherFields: otherFields
     [
       new UuidFilter
       new TimestampFilter

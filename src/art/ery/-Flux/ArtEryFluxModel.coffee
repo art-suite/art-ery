@@ -1,5 +1,6 @@
 Foundation = require 'art-foundation'
-Flux = require 'art-flux'
+{Flux} = Neptune.Art
+throw new Error "Neptune.Art.Flux not loaded. Please pre-require Flux or Flux/web_worker." unless Flux
 ArtEry = require 'art-ery'
 ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 
