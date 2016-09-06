@@ -3,17 +3,22 @@ Response = require './Response'
 Request = require './Request'
 Filter = require './Filter'
 Session = require './Session'
+
+PipelineRegistry = require './PipelineRegistry'
+
 {
   BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
   CommunicationStatus
   merge
   isPlainArray
+  decapitalize
+  defineModule
 } = Foundation
 
 {success, missing, failure} = CommunicationStatus
 {toResponse} = Response
 
-module.exports = class Pipeline extends require './ArtEryBaseObject'
+defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @_namedPipelines = {}
   @addNamedPipeline: (name, pipeline) =>
     throw new Error "named pipeline already exists: #{name}" if @_namedPipelines[name]
@@ -22,12 +27,18 @@ module.exports = class Pipeline extends require './ArtEryBaseObject'
   # for testing
   @_resetNamedPipelines: -> @_namedPipelines = {}
 
+  @register: ->
+    @singletonClass()
+    PipelineRegistry.register @
+
+  @postCreate: ({hotReloaded}) ->
+    @register() unless hotReloaded
+    super
+
   @getNamedPipelines: => @_namedPipelines
   @getNamedPipeline: (name) =>
     throw new Error "named pipeline does not exist: #{name}" unless pl = @_namedPipelines[name]
     pl
-
-  @getter pipelines: -> Pipeline.getNamedPipelines()
 
   @instantiateFilter: instantiateFilter = (filter) ->
     if isClass filter                 then new filter
@@ -45,24 +56,23 @@ module.exports = class Pipeline extends require './ArtEryBaseObject'
   ######################
   # constructor
   ######################
-  constructor: (options) ->
+  constructor: (@_options = {}) ->
     super
     @_fields = {}
     @_filters = []
 
-    if options
-      @_session = options.session
-      @_queries = options.queries || {}
-      @_actions = options.actions || {}
-
-    @_session ||= Session.singleton
-
     @filter filter for filter in @class.getFilters()
 
-  @getter "filters fields queries actions"
-  @property "tableName"
-  @getter
+  @getter "filters fields options",
+    pipelines: -> Pipeline.getNamedPipelines()
     clientApiMethodList: -> @class.getClientApiMethodList()
+    tableName: -> @name
+
+  @getter
+    name:    -> @_name    ||= @_options.name    || decapitalize @class.getName()
+    queries: -> @_queries ||= @_options.queries || {}
+    actions: -> @_actions ||= @_options.actions || {}
+    session: -> @_session ||= @_options.session || Session.singleton
 
   ###
   OVERRIDE
@@ -103,12 +113,6 @@ module.exports = class Pipeline extends require './ArtEryBaseObject'
         @_clientApiRequest name
         HandlerFilter.before name, (request) ->
           handler.call request.pipeline, request
-
-  ###################
-  # Session
-  # (override OK)
-  ###################
-  @getter "session"
 
   ###################
   # PRIVATE
