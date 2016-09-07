@@ -28,7 +28,6 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 defineModule module, class ArtEryFluxModel extends FluxModel
 
   @pipeline: (@_pipeline) ->
-    log setPipeline: @_pipeline
 
   @getter "pipeline"
 
