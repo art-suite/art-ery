@@ -19,6 +19,7 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
   arrayWithElementReplaced
   formattedInspect
   defineModule
+  createWithPostCreate
 } = Foundation
 
 {missing, failure, success, pending} = CommunicationStatus
@@ -27,9 +28,13 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 
 defineModule module, class ArtEryFluxModel extends FluxModel
 
-  @pipeline: (@_pipeline) ->
+  @defineModelsForAllPipelines: ->
+    for name, pipeline of ArtEry.pipelines
+      createWithPostCreate class AnonymouseArtErtFluxModel extends ArtEryFluxModel
+        @_name: upperCamelCase name
+        @pipeline pipeline
 
-  @getter "pipeline"
+  @pipeline: (@_pipeline) ->
 
   @postCreate: ->
     if @_pipeline

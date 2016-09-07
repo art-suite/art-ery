@@ -33,7 +33,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     PipelineRegistry.register @
 
   @postCreate: ({hotReloaded}) ->
-    @register() unless hotReloaded
+    @register() unless hotReloaded || @ == Pipeline
     super
 
   @getNamedPipelines: => @_namedPipelines
