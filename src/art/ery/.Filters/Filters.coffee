@@ -1,4 +1,4 @@
-{log} = require 'art-foundation'
+{log, isString, isFunction} = require 'art-foundation'
 UuidFilter = require './UuidFilter'
 TimestampFilter = require './TimestampFilter'
 ValidationFilter = require './ValidationFilter'
@@ -9,11 +9,12 @@ module.exports = [
     linkFields = {}
     otherFields = {}
     for k, v of fields
-      {linkTo, link, required} = v
-      if linkTo || link
+      # NOTE: In node, something adds a native function, "link", to strings.
+      # So, we need to strictly test for == true.
+      if v.link == true || v.required?.link == true
         linkFields[k] = v
         idFieldName = k + "Id"
-        otherFields[idFieldName] = type: "trimmedString", required: !!required
+        otherFields[idFieldName] = fieldType: "trimmedString", required: !!v.required
       else
         otherFields[k] = v
 

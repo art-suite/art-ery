@@ -13,6 +13,7 @@ PipelineRegistry = require './PipelineRegistry'
   isPlainArray
   decapitalize
   defineModule
+  Validator
 } = Foundation
 
 {success, missing, failure} = CommunicationStatus
@@ -67,6 +68,12 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     pipelines: -> Pipeline.getNamedPipelines()
     clientApiMethodList: -> @class.getClientApiMethodList()
     tableName: -> @name
+    normalizedFields: ->
+      nf = {}
+      {normalizeFieldType} = Validator
+      for k, v of @fields
+        nf[k] = normalizeFieldType v
+      nf
 
   @getter
     name:    -> @_name    ||= @_options.name    || decapitalize @class.getName()

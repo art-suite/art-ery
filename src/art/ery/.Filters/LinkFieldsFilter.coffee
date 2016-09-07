@@ -13,7 +13,7 @@ defineModule module, ->
       for fieldName, props of @_linkFields
 
         @_fields[props.idFieldName = fieldName + "Id"] =
-          type: "trimmedString"
+          fieldType: "trimmedString"
           required: !!props.required
 
       @_validator = new Validator @_fields
@@ -22,7 +22,7 @@ defineModule module, ->
     normalizeDataBeforeWrite: (data) ->
       data = merge data
       for fieldName, {idFieldName} of @_linkFields
-        data[idFieldName] = data[fieldName].id if data[fieldName].id
+        data[idFieldName] = data[fieldName].id if data[fieldName]?.id
         delete data[fieldName]
       data
 

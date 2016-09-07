@@ -18,21 +18,25 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
   arrayWith
   arrayWithElementReplaced
   formattedInspect
+  defineModule
 } = Foundation
 
 {missing, failure, success, pending} = CommunicationStatus
 
 {FluxModel} = Flux
 
-module.exports = class ArtEryFluxModel extends FluxModel
+defineModule module, class ArtEryFluxModel extends FluxModel
 
   @pipeline: (@_pipeline) ->
-    @register()
-    @_pipeline.tableName = @getName()
-    Neptune.Art.Ery.Pipeline.addNamedPipeline @getName(), @_pipeline
-    @_pipeline
+    log setPipeline: @_pipeline
 
   @getter "pipeline"
+
+  @postCreate: ->
+    if @_pipeline
+      super
+    else
+      @
 
   constructor: ->
     super
