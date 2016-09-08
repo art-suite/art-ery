@@ -1,43 +1,47 @@
-{log, isString, Validator} = require 'art-foundation'
-{Pipeline, Filters} = Neptune.Art.Ery
+{log, createWithPostCreate, isString, Validator} = require 'art-foundation'
+{Pipeline, Filters, pipelines} = Neptune.Art.Ery
 {LinkFieldsFilter} = Filters
 SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
-  test "fields are set correctly", ->
-    simplePipeline = new SimplePipeline()
-    .filter new LinkFieldsFilter fields =
-      user: linkTo: "user", required: true
-      post: linkTo: "post"
+  setup ->
+    Neptune.Art.Ery.PipelineRegistry._reset()
 
-    assert.eq simplePipeline.fields,
-      userId:  type: "trimmedString", required: true
-      postId:  type: "trimmedString", required: false
+  test "fields are set correctly", ->
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter new LinkFieldsFilter fields =
+        user: required: link: "user"
+        post: link: "post"
+
+    assert.eq MyPipeline.getFields(),
+      userId:  fieldType: "trimmedString", required: true
+      postId:  fieldType: "trimmedString", required: false
 
   test "linked objects get converted to ids for writing", ->
-    simplePipeline = new SimplePipeline()
-    .filter new LinkFieldsFilter fields =
-      user: linkTo: "user", required: true
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter new LinkFieldsFilter fields =
+        user: link: "user", required: true
 
-    simplePipeline.create
+    pipelines.myPipeline.create
       user: id: "abc123", name: "George"
     .then (data) ->
       assert.eq data, userId: "abc123", id: "0"
 
   test "included fields work", ->
-    Pipeline.addNamedPipeline "user", userPipeline = new SimplePipeline()
+    createWithPostCreate class User extends SimplePipeline
+      ;
 
-    postPipeline = new SimplePipeline()
-    .filter new LinkFieldsFilter fields =
-      user: linkTo: "user", required: true, include: true
+    createWithPostCreate class PostPipeline extends SimplePipeline
+      @filter new LinkFieldsFilter fields =
+        user: link: "user", required: true, include: true
 
-    userPipeline.create
+    pipelines.user.create
       name: "George"
     .then (user) ->
       assert.eq user, name: "George", id: "0"
-      postPipeline.create user: user, message: "hi there!"
+      pipelines.postPipeline.create user: user, message: "hi there!"
     .then (post) ->
       assert.eq post, userId: "0", id: "0", message: "hi there!"
-      postPipeline.get "0"
+      pipelines.postPipeline.get "0"
     .then (post) ->
       assert.eq post, userId: "0", id: "0", message: "hi there!", user: name: "George", id: "0"

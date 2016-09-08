@@ -1,10 +1,10 @@
-{log, isString, present, CommunicationStatus, wordsArray} = require 'art-foundation'
+{defineModule, log, isString, present, CommunicationStatus, wordsArray} = require 'art-foundation'
 {Response, Request, Pipeline, Session} = Neptune.Art.Ery
 {success, failure, missing} = CommunicationStatus
 
 isPresentString = (s) -> isString(s) && present s
 
-module.exports = class AuthPipeline extends Pipeline
+defineModule module, class AuthPipeline extends Pipeline
 
   @suite: ->
     test "clientApiMethodList", ->

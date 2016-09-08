@@ -41,8 +41,10 @@ module.exports = class Response extends require './ArtEryBaseObject'
     Promise.resolve(data).then (resolvedData) =>
       new Response merge @props, data: merge @data, resolvedData
 
+  toString: -> "ArtEry.Response(#{@_status}): #{@message}"
   @property "request status data session error"
   @getter
+    message: -> @data?.message || @error?.message
     isSuccessful: -> @_status == success
     inspectedObjects: ->
       [

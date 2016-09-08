@@ -10,14 +10,15 @@ module.exports = class Filter extends require './ArtEryBaseObject'
   ################
   # class inheritable props
   ################
-  @getBeforeFilters: -> @getPrototypePropertyExtendedByInheritance "classBeforeFilters", {}
-  @getAfterFilters:  -> @getPrototypePropertyExtendedByInheritance "classAfterFilters", {}
-  @getFields:        -> @getPrototypePropertyExtendedByInheritance "classFields", {}
+  @extendableProperty
+    beforeFilters: {}
+    afterFilters: {}
+    fields: {}
 
   ############################
   # Class Declaration API
   ############################
-  @fields: (fields) -> mergeInto @getFields(), fields
+  @fields: @extendFields
 
   ###
   IN: requestType, requestFilter
@@ -35,7 +36,8 @@ module.exports = class Filter extends require './ArtEryBaseObject'
     - return a rejected promise
     - or create a Response object with the appropriate fields
   ###
-  @before: (a, b) -> addFilters @getBeforeFilters(), a, b
+  @before: (a, b) -> @extendBeforeFilters a, b if a
+  before: (a, b) -> @extendBeforeFilters a, b if a
 
   ###
   IN: requestType, responseFilter
@@ -52,29 +54,12 @@ module.exports = class Filter extends require './ArtEryBaseObject'
     - return a rejected promise
     - or create a Response object with the appropriate fields
   ###
-  @after: (a, b) -> addFilters @getAfterFilters(), a, b
-
-  addFilters = (filters, a, b) ->
-    if isPlainObject map = a
-      filters[type] = filterFunction for type, filterFunction of map
-    else if a && b
-      filters[a] = b
+  @after: (a, b) -> @extendAfterFilters a, b if a
+  after: (a, b) -> @extendAfterFilters a, b if a
 
   #################################
   # class instance methods
   #################################
-  @getter "fields beforeFilters afterFilters"
-
-  @getter
-    pipelines: -> Neptune.Art.Ery.Pipeline.getNamedPipelines()
-
-  constructor: ->
-    @_fields = merge @class.getFields(), @_fields
-    @_beforeFilters = shallowClone @class.getBeforeFilters()
-    @_afterFilters  = shallowClone @class.getAfterFilters()
-
-  before: (a, b) -> addFilters @getBeforeFilters(), a, b
-  after:  (a, b) -> addFilters @getAfterFilters(), a, b
 
   ###
   IN: Request instance
@@ -85,7 +70,7 @@ module.exports = class Filter extends require './ArtEryBaseObject'
   ###
   process: (request, processNext) ->
 
-    @_processBefore request
+    @processBefore request
     .then (beforeResult) =>
       if beforeResult instanceof Request
         processNext beforeResult
@@ -93,20 +78,16 @@ module.exports = class Filter extends require './ArtEryBaseObject'
         beforeResult # Response instance
 
     .then (response) =>
-      @_processAfter response
-
-  ####################
-  # PRIVATE
-  ####################
+      @processAfter response
 
   ###
   OUT:
     promise.then (Request or successful Response instance) ->
     .catch (unsuccessful Response instance) ->
   ###
-  _processBefore: (request) ->
+  processBefore: (request) ->
     Promise.then =>
-      if beforeFilter = @_beforeFilters[request.type]
+      if beforeFilter = @beforeFilters[request.type]
         beforeFilter.call @, request
       else
         # pass-through if no filter
@@ -123,9 +104,9 @@ module.exports = class Filter extends require './ArtEryBaseObject'
     promise.then (successful Response instance) ->
     .catch (unsuccessful Response instance) ->
   ###
-  _processAfter: (response) ->
+  processAfter: (response) ->
     Promise.then =>
-      if afterFilter = @_afterFilters[response.request.type]
+      if afterFilter = @afterFilters[response.request.type]
         afterFilter.call @, response
       else
         # pass-through if no filter

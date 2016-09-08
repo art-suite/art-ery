@@ -1,23 +1,26 @@
-{log, isString} = require 'art-foundation'
+{log, isString, createWithPostCreate} = require 'art-foundation'
 {UuidFilter, TimestampFilter, ValidationFilter} = Neptune.Art.Ery.Filters
 {ArtEryFluxModel} = Neptune.Art.Ery.Flux
-Flux = require 'art-flux'
 SimplePipeline = require '../SimplePipeline'
+
+{Flux} = Neptune.Art
 
 module.exports = suite: ->
   orderLog = []
   Chat = null
   chat = null
   setup ->
-    Neptune.Art.Ery.Pipeline._resetNamedPipelines()
+    Neptune.Art.Ery.PipelineRegistry._reset()
     Flux._reset()
-    {chat} = class Chat extends ArtEryFluxModel
-      @pipeline new SimplePipeline
-      .filter     new UuidFilter
-      .filter     new TimestampFilter
-      .filter     new ValidationFilter
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter     new UuidFilter
+      @filter     new TimestampFilter
+      @filter     new ValidationFilter
         user:     "trimmedString"
         message:  "trimmedString"
+
+    {chat} = createWithPostCreate class Chat extends ArtEryFluxModel
+      @pipeline MyPipeline.singleton
 
   test "chat instanceof FluxModel", ->
     assert.eq Flux.models.chat, chat

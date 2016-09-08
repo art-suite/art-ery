@@ -4,3 +4,4 @@
 module.exports = require './namespace'
 .addModules
   CustomRequests: require './CustomRequests'
+  Handlers:       require './Handlers'      

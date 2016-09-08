@@ -3,9 +3,8 @@
 
 module.exports = require './namespace'
 .addModules
-  CreateDatabaseFilters: require './createDatabaseFilters'
-  LinkFieldsFilter:      require './LinkFieldsFilter'     
-  Order:                 require './Order'                
-  TimestampFilter:       require './TimestampFilter'      
-  UuidFilter:            require './UuidFilter'           
-  ValidationFilter:      require './ValidationFilter'     
+  LinkFieldsFilter: require './LinkFieldsFilter'
+  TimestampFilter:  require './TimestampFilter' 
+  Tools:            require './Tools'           
+  UuidFilter:       require './UuidFilter'      
+  ValidationFilter: require './ValidationFilter'

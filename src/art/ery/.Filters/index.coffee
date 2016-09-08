@@ -6,5 +6,6 @@ module.exports = require './namespace'
 .addModules
   LinkFieldsFilter: require './LinkFieldsFilter'
   TimestampFilter:  require './TimestampFilter' 
+  Tools:            require './Tools'           
   UuidFilter:       require './UuidFilter'      
   ValidationFilter: require './ValidationFilter'

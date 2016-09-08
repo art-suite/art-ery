@@ -1,9 +1,9 @@
-{log} = require 'art-foundation'
+{log, createWithPostCreate} = require 'art-foundation'
 {missing, Pipeline} = Neptune.Art.Ery
 
 module.exports = suite: ->
   test "myCustomRequest", ->
-    class MyPipeline extends Pipeline
+    createWithPostCreate class MyPipeline extends Pipeline
       @handlers
         myCustomRequest: (request) ->
           result: request.data.double + request.data.double
@@ -14,7 +14,7 @@ module.exports = suite: ->
       assert.eq response, result: "barbar"
 
   test "myCustomRequest with filter", ->
-    class MyPipeline extends Pipeline
+    createWithPostCreate class MyPipeline extends Pipeline
       @handlers
         myCustomRequest: (request) ->
           result: request.data.double + request.data.double

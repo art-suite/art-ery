@@ -4,6 +4,7 @@
 module.exports = require './namespace'
 .addModules
   AuthPipeline:   require './AuthPipeline'  
+  FilterBase:     require './FilterBase'    
   Request:        require './Request'       
   Response:       require './response'      
   Session:        require './Session'       

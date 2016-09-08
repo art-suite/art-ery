@@ -5,7 +5,11 @@ defineModule module, class PipelineRegistry extends BaseObject
 
   # returns the singleton
   @register: (PipelineClass) ->
-    {singleton} = PipelineClass
+    {singleton, _aliases} = PipelineClass
+
+    _aliases && for alias in _aliases
+      pipelines[alias] = singleton
+
     pipelines[singleton.name] = singleton
 
   # used for testing

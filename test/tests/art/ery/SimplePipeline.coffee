@@ -1,11 +1,11 @@
 Foundation = require 'art-foundation'
 Ery = Neptune.Art.Ery
 
-{merge, log, CommunicationStatus, wordsArray} = Foundation
+{merge, log, createWithPostCreate, CommunicationStatus, wordsArray} = Foundation
 {missing} = CommunicationStatus
 {Pipeline, Filter} = Ery
 
-module.exports = class SimplePipeline extends Pipeline
+module.exports = createWithPostCreate class SimplePipeline extends Pipeline
 
   @suite: ->
     test "clientApiMethodList", ->
@@ -70,6 +70,7 @@ module.exports = class SimplePipeline extends Pipeline
 
   @handlers
     get: ({key}) ->
+      log "yup, you're in simple pipeline!"
       @_store[key]
 
     create: (request) ->

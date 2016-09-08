@@ -24,17 +24,27 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 
 {missing, failure, success, pending} = CommunicationStatus
 
-{FluxModel} = Flux
+{FluxModel, models} = Flux
 
 defineModule module, class ArtEryFluxModel extends FluxModel
 
+  createModel = (name, pipeline, aliases) ->
+    klass = createWithPostCreate class AnonymouseArtErtFluxModel extends ArtEryFluxModel
+      @_name: upperCamelCase name
+      @pipeline pipeline
+      @aliases aliases if aliases
+    klass.singleton
+
   @defineModelsForAllPipelines: ->
     for name, pipeline of ArtEry.pipelines
-      createWithPostCreate class AnonymouseArtErtFluxModel extends ArtEryFluxModel
-        @_name: upperCamelCase name
-        @pipeline pipeline
+      if aliases = pipeline.aliases
+        # log "aliases of #{name}", aliases
+        name = pipeline.getName()
+        createModel name, pipeline, aliases unless models[name]
+      else
+        createModel name, pipeline
 
-  @pipeline: (@_pipeline) ->
+  @pipeline: (@_pipeline) -> @_pipeline
 
   @postCreate: ->
     if @_pipeline
@@ -48,7 +58,6 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     @_pipeline = @class._pipeline
     @_queryModels = {}
     @queries @_pipeline.queries
-    @queries @_pipeline.getAutoDefinedQueries(), true
     @actions @_pipeline.actions
 
   keyFromData: (data) ->

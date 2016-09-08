@@ -1,4 +1,5 @@
 {BaseObject} = require 'art-foundation'
+ArtEry = require './namespace'
 
 module.exports = class ArtEryBaseObject extends BaseObject
   @getter
@@ -6,3 +7,4 @@ module.exports = class ArtEryBaseObject extends BaseObject
 
     # returns true if we are a productionEnvironment.
     productionEnvironment: -> false
+    pipelines: -> ArtEry.pipelines

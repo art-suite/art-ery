@@ -1,36 +1,37 @@
-{log, isString, Validator} = require 'art-foundation'
+{log, isString, createWithPostCreate, Validator} = require 'art-foundation'
 {ValidationFilter} = Neptune.Art.Ery.Filters
 SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
   test "fields are set correctly", ->
-    simplePipeline = new SimplePipeline()
-    .filter new ValidationFilter
-      foo: foo = preprocess: (o) -> "#{o}#{o}"
-    .filter new ValidationFilter fields =
-      bar: bar = validate: (v) -> (v | 0) == v
-      id: id = Validator.fieldTypes.id
+    foo = bar = id = null
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter new ValidationFilter
+        foo: foo = preprocess: (o) -> "#{o}#{o}"
+      @filter new ValidationFilter fields =
+        bar: bar = validate: (v) -> (v | 0) == v
+        id: id = Validator.fieldTypes.id
 
-    assert.eq simplePipeline.fields,
+    assert.eq MyPipeline.singleton.fields,
       foo: foo
       bar: bar
       id: id
 
   test "preprocess", ->
-    simplePipeline = new SimplePipeline()
-    .filter new ValidationFilter
-      foo: preprocess: (o) -> "#{o}#{o}"
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter new ValidationFilter
+        foo: preprocess: (o) -> "#{o}#{o}"
 
-    simplePipeline.create foo: 123
+    MyPipeline.singleton.create foo: 123
     .then (response) ->
       assert.eq response.foo, "123123"
 
   test "required field - missing", ->
-    simplePipeline = new SimplePipeline()
-    .filter new ValidationFilter
-      foo: required: true
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter new ValidationFilter
+        foo: required: true
 
-    simplePipeline.create bar: 123
+    MyPipeline.singleton.create bar: 123
     .then (data) ->
       throw "should not succeed"
     .catch (response) ->
@@ -40,20 +41,20 @@ module.exports = suite: ->
         fields:         bar: 123
 
   test "required field - present", ->
-    simplePipeline = new SimplePipeline()
-    .filter new ValidationFilter
-      foo: required: true
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter new ValidationFilter
+        foo: required: true
 
-    simplePipeline.create foo: 123
+    MyPipeline.singleton.create foo: 123
     .then (data) ->
       assert.eq data.foo, 123
 
   test "validate - invalid", ->
-    simplePipeline = new SimplePipeline()
-    .filter new ValidationFilter
-      foo: Validator.fieldTypes.trimmedString
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter new ValidationFilter
+        foo: Validator.fieldTypes.trimmedString
 
-    simplePipeline.create foo: 123
+    MyPipeline.singleton.create foo: 123
     .then (response) ->
       throw "should not succeed"
     .catch (response) ->
@@ -63,10 +64,10 @@ module.exports = suite: ->
         fields: foo: 123
 
   test "validate - valid with preprocessing", ->
-    simplePipeline = new SimplePipeline()
-    .filter new ValidationFilter
-      foo: Validator.fieldTypes.trimmedString
+    createWithPostCreate class MyPipeline extends SimplePipeline
+      @filter new ValidationFilter
+        foo: Validator.fieldTypes.trimmedString
 
-    simplePipeline.create foo: "  123  "
+    MyPipeline.singleton.create foo: "  123  "
     .then (data) ->
       assert.eq data.foo, "123"

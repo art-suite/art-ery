@@ -3,10 +3,12 @@ Response = require './Response'
 Request = require './Request'
 Filter = require './Filter'
 Session = require './Session'
+HandlerFilter = require './HandlerFilter'
 
 PipelineRegistry = require './PipelineRegistry'
 
 {
+  compactFlatten
   BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
   CommunicationStatus
   merge
@@ -14,32 +16,23 @@ PipelineRegistry = require './PipelineRegistry'
   decapitalize
   defineModule
   Validator
+  mergeInto
 } = Foundation
 
 {success, missing, failure} = CommunicationStatus
 {toResponse} = Response
 
 defineModule module, class Pipeline extends require './ArtEryBaseObject'
-  @_namedPipelines = {}
-  @addNamedPipeline: (name, pipeline) =>
-    throw new Error "named pipeline already exists: #{name}" if @_namedPipelines[name]
-    @_namedPipelines[name] = pipeline
-
-  # for testing
-  @_resetNamedPipelines: -> @_namedPipelines = {}
 
   @register: ->
     @singletonClass()
     PipelineRegistry.register @
 
   @postCreate: ({hotReloaded}) ->
+    @_initClientApiRequest()
+    @_initFields()
     @register() unless hotReloaded || @ == Pipeline
     super
-
-  @getNamedPipelines: => @_namedPipelines
-  @getNamedPipeline: (name) =>
-    throw new Error "named pipeline does not exist: #{name}" unless pl = @_namedPipelines[name]
-    pl
 
   @instantiateFilter: instantiateFilter = (filter) ->
     if isClass filter                 then new filter
@@ -51,22 +44,60 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
         @after filter.after
     else throw "invalid filter: #{inspect filter} #{filter instanceof Filter}"
 
-  @getFilters: -> @getPrototypePropertyExtendedByInheritance "classFilters", []
-  @getClientApiMethodList: -> @getPrototypePropertyExtendedByInheritance "classClientApiMethodList", []
+  @extendableProperty
+    queries: {}
+    filters: [new HandlerFilter]
+    handlers: {}
+    aliases: {}
+    clientApiMethodList: []
+    fields: {}
+
+  ###
+  INPUT: zero or more strings or arrays of strings
+    - arbitrary nesting of arrays is OK
+    - nulls are OK, they are ignored
+  OUTPUT: null
+
+  NOTE: @aliases can be called multiple times.
+
+  example:
+    class Post extends Pipeline
+      @aliases "chapterPost"
+
+  purpose:
+    - declare alternative names to access this pipeline.
+    - allows you to use the shortest form of FluxComponent subscriptions for each alias:
+        @subscriptions "chapterPost"
+      in addition to the pipeline's class name:
+        @subscriptions "post"
+  ###
+  @aliases: ->
+    aliases = @getAliases()
+    aliases[alias] = true for alias in compactFlatten arguments
+    @
+
+  preprocessFilter = (filter) ->
+    if isPlainArray filter
+      instantiateFilter f for f in filter
+    else
+      instantiateFilter filter
+
+  @query:     (queries)  -> @extendQueries  queries
+  @handler:   (handlers) -> @extendHandlers handlers
+  @filter:    (filter)   -> @extendFilters preprocessFilter filter
+
+  @getter
+    aliases: -> Object.keys @class.getAliases()
 
   ######################
   # constructor
   ######################
   constructor: (@_options = {}) ->
     super
-    @_fields = {}
-    @_filters = []
 
-    @filter filter for filter in @class.getFilters()
+    @_defineQueryHandlers()
 
-  @getter "filters fields options",
-    pipelines: -> Pipeline.getNamedPipelines()
-    clientApiMethodList: -> @class.getClientApiMethodList()
+  @getter "options",
     tableName: -> @name
     normalizedFields: ->
       nf = {}
@@ -76,10 +107,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       nf
 
   @getter
-    name:    -> @_name    ||= @_options.name    || decapitalize @class.getName()
-    queries: -> @_queries ||= @_options.queries || {}
-    actions: -> @_actions ||= @_options.actions || {}
-    session: -> @_session ||= @_options.session || Session.singleton
+    name:     -> @_name     ||= @_options.name    || decapitalize @class.getName()
+    session:  -> @_session  ||= @_options.session || Session.singleton
 
   ###
   OVERRIDE
@@ -92,52 +121,45 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   # Add Filters
   ######################
 
-  # IN: instanceof Filter or class extending Filter or function returning instance of Filter
-  # OUT: @
-  @filter: (filter) -> @getFilters().push filter; @
-  filter: (filter) ->
-    if isPlainArray filter
-      @filter f for f in filter
-      @
-    else
-      @getFilters().push filter = instantiateFilter filter
-      @_fields = merge @_fields, filter.fields
-      @
 
   ###
-  handlers are merely the "pearl-filter" - the action that happens
+  handlers are merely the "pearl" filter - the action that happens
    - after all before-filters and
    - before all after-filters
 
   IN: map from request-types to request handlers:
     (request) -> request OR response OR result which will be converted to a response
   ###
-  @handlers: (map) ->
-    class HandlerFilter extends Filter
-    @filter HandlerFilter
-    for name, handler of map
-      do (name, handler) =>
-        @_clientApiRequest name
-        HandlerFilter.before name, (request) ->
-          handler.call request.pipeline, request
+  @handlers: @extendHandlers
 
   ###################
   # PRIVATE
   ###################
+  _defineQueryHandlers: ->
+    handlers = {}
+    for k, v of @queries
+      handlers[k] = if isFunction v then v else
+        v = v.query
+        unless isFunction v
+          throw new Error "query delaration must be a function or have a 'query' property that is a function"
+        v
+    # @handlers handlers
+
   _performRequest: (request) ->
     {type} = request
     {filters} = @
-    handlerIndex = filters.length - 1
+    filterIndex = filters.length - 1
 
     # IN: Request instance
     # OUT:
     #   promise.then (successful Response instance) ->
     #   .catch (unsuccessful Response instance) ->
     processNext = (request) ->
-      if handlerIndex < 0
-        Promise.resolve new Response request: request, status: failure, error: message: "no filter generated a Response"
-      else
-        filters[handlerIndex--].process request, processNext
+      Promise.then ->
+        if filterIndex < 0
+          new Response request: request, status: failure, error: message: "no Filter generated a Response for request type: #{request.type}"
+        else
+          filters[filterIndex--].process request, processNext
 
     processNext request
 
@@ -166,10 +188,12 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
         throw response
 
   @_clientApiRequest: (requestType) ->
-    @getClientApiMethodList().push requestType unless requestType in @getClientApiMethodList()
+    @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()
     @::[requestType] ||= (keyOrData, data) -> @_performClientRequest requestType, keyOrData, data
 
-  # @_clientApiRequest "get"
-  # @_clientApiRequest "update"
-  # @_clientApiRequest "create"
-  # @_clientApiRequest "delete"
+  @_initClientApiRequest: ->
+    for name, handler of @getHandlers()
+      @_clientApiRequest name
+
+  @_initFields: ->
+    @extendFields filter.fields for filter in @getFilters()

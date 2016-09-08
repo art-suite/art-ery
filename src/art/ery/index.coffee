@@ -6,6 +6,7 @@ module.exports = require './namespace'
 .addModules
   ArtEryBaseObject: require './ArtEryBaseObject'
   Filter:           require './Filter'          
+  HandlerFilter:    require './HandlerFilter'   
   Pipeline:         require './Pipeline'        
   PipelineRegistry: require './PipelineRegistry'
   Request:          require './Request'         
