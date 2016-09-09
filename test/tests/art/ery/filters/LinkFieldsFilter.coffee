@@ -1,4 +1,4 @@
-{log, createWithPostCreate, isString, Validator} = require 'art-foundation'
+{log, createWithPostCreate, isString, Validator, Promise} = require 'art-foundation'
 {Pipeline, Filters, pipelines} = Neptune.Art.Ery
 {LinkFieldsFilter} = Filters
 SimplePipeline = require '../SimplePipeline'
@@ -45,3 +45,37 @@ module.exports = suite: ->
       pipelines.postPipeline.get "0"
     .then (post) ->
       assert.eq post, userId: "0", id: "0", message: "hi there!", user: name: "George", id: "0"
+
+  test "included fields works on record-array-results", ->
+    createWithPostCreate class User extends SimplePipeline
+      ;
+
+    userId1 = null
+    userId2 = null
+    createWithPostCreate class PostPipeline extends SimplePipeline
+      @handler
+        getSampleData: (request) ->
+          [
+            {userId: userId1, message: "Hi!"}
+            {userId: userId2, message: "Howdy!"}
+          ]
+      @filter new LinkFieldsFilter
+        user: link: "user", required: true, include: true
+
+    Promise.all([
+      pipelines.user.create(name: "George").then (user) -> userId1 = user.id
+      pipelines.user.create(name: "Frank").then (user) -> userId2 = user.id
+    ])
+    .then (post) -> pipelines.postPipeline.getSampleData()
+    .then (post) ->
+      assert.eq post, [
+        {
+          userId:  "0"
+          message: "Hi!"
+          user:    name: "George", id: "0"
+        },{
+          userId:  "1"
+          message: "Howdy!"
+          user:    name: "Frank", id: "1"
+        }
+      ]

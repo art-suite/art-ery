@@ -38,7 +38,6 @@ defineModule module, class ArtEryFluxModel extends FluxModel
   @defineModelsForAllPipelines: ->
     for name, pipeline of ArtEry.pipelines
       if aliases = pipeline.aliases
-        # log "aliases of #{name}", aliases
         name = pipeline.getName()
         createModel name, pipeline, aliases unless models[name]
       else
@@ -87,7 +86,6 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     options = query: options if isFunction options
     throw new Error "query required" unless isFunction options.query
 
-    log "ArtEryFluxModel#defineQuery() model: #{@getName()}, queryModel: #{modelName}"
     @_queryModels[modelName] = new class ArtEryQueryFluxModelChild extends ArtEryQueryFluxModel
       @_name: upperCamelCase modelName
 

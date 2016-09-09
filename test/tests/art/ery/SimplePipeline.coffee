@@ -70,7 +70,6 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
 
   @handlers
     get: ({key}) ->
-      log "yup, you're in simple pipeline!"
       @_store[key]
 
     create: (request) ->

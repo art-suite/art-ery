@@ -1,4 +1,4 @@
-{log, Validator, defineModule, merge, isString, shallowClone} = require 'art-foundation'
+{log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
 Filter = require '../Filter'
 
 defineModule module, ->
@@ -19,7 +19,6 @@ defineModule module, ->
 
     # returns a new object
     normalizeDataBeforeWrite: (data) ->
-      log normalizeDataBeforeWrite: data
       data = merge data
       for fieldName, {idFieldName} of @_linkFields
         data[idFieldName] = data[fieldName].id if data[fieldName]?.id
@@ -37,12 +36,12 @@ defineModule module, ->
       @_linkFields = lf
 
     # OUT: promise.then -> new data
-    normalizeDataAfterRead: (data) ->
+    includeLinkedFields: (data) ->
       data = shallowClone data
       promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = data[idFieldName]
-        Promise.resolve()
-        .then          => id && @pipelines[pipelineName].get id
-        .then (value)  -> data[fieldName] = if value? then value else null
+        Promise
+        .then           => id && @pipelines[pipelineName].get id
+        .then (value)   -> data[fieldName] = if value? then value else null
         .catch (response) ->
           console.error response.error
           console.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
@@ -58,4 +57,12 @@ defineModule module, ->
     # and have it detect is data is an array
     # Idealy, we'd also use the bulkGet feature
     @after
-      get: (response) -> response.withData @normalizeDataAfterRead response.data
+      all: (response) ->
+        switch response.request.type
+          when "create", "update" then response
+          else
+            {data} = response
+            response.withData if isPlainArray data
+              Promise.all(@includeLinkedFields record for record in data)
+            else
+              @includeLinkedFields response.data

@@ -136,7 +136,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###################
   @_defineQueryHandlers: ->
     for k, v of @getQueries()
-      log _defineQueryHandlers: extendHandlers: k
       @extendHandlers k, if isFunction v then v else
         v = v.query
         unless isFunction v

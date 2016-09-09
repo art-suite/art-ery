@@ -7,7 +7,6 @@ module.exports = suite: ->
       @handlers foo: (request) -> foo: 1, bar: 2
 
     p = new MyPipeline
-    log filters: p.filters
     assert.eq p.filters.length, 1
     p.foo()
     .then (data) ->
@@ -19,7 +18,6 @@ module.exports = suite: ->
       @handlers bar: (request) -> {}
 
     p = new MyPipeline
-    log filters: p.filters
     assert.eq p.filters.length, 1
 
   test "query handlers", ->

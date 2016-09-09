@@ -80,7 +80,6 @@ module.exports = class Response extends require './ArtEryBaseObject'
         new Response request: request, status: missing, error: data || message: "missing data for key: #{inspect request.key}"
 
     .catch (e) =>
-      log "response catch!", e
       console.error e, e.stack
       return Promise.reject e if e instanceof Response
       new Response request: request, status: failure, error: error: data, message: data.toString()
