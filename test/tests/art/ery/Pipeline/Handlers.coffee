@@ -21,3 +21,27 @@ module.exports = suite: ->
     p = new MyPipeline
     log filters: p.filters
     assert.eq p.filters.length, 1
+
+  test "query handlers", ->
+    createWithPostCreate class Post extends Pipeline
+      @query postByUserId: (request) ->
+        [request.key, 1, 2, 3]
+
+    assert.eq Post.post.clientApiMethodList, ["postByUserId"]
+    Post.post.postByUserId("foo")
+    .then (results) ->
+      assert.eq results, ["foo", 1, 2, 3]
+
+  test "query handlers with after-all filter", ->
+    createWithPostCreate class Post extends Pipeline
+      @query postByUserId: (request) ->
+        [request.key, 1, 2, 3]
+
+      @filter
+        after: all: (response) ->
+          response.withData ("#{a} #{a}" for a in response.data)
+
+    assert.eq Post.post.clientApiMethodList, ["postByUserId"]
+    Post.post.postByUserId("foo")
+    .then (results) ->
+      assert.eq results, ["foo foo", "1 1", "2 2", "3 3"]

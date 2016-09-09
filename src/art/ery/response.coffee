@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{BaseObject, inspect, isPlainObject, log, CommunicationStatus, Validator, merge} = Foundation
+{BaseObject, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType} = Foundation
 {success, missing, failure} = CommunicationStatus
 
 failureValidator = new Validator
@@ -11,7 +11,7 @@ failureValidator = new Validator
 successValidator = new Validator
   request:  required: instanceof: Request
   status:   required: "communicationStatus"
-  data:     required: "object"
+  data:     required: true, validate: (a) -> isJsonType a
   session:  "object"
 
 module.exports = class Response extends require './ArtEryBaseObject'
@@ -67,26 +67,21 @@ module.exports = class Response extends require './ArtEryBaseObject'
     Promise.resolve data
     .then =>
       throw "request required" unless request
-
       throw data if data instanceof Error
-      if data instanceof Response
-        data
-      else if !reject && data?
-        if isPlainObject data
-          new Response request: request, status: success, data: data
-        else
-          new Response request: request, status: failure, error: message: "request returned invalid data: #{inspect data}"
 
+      if reject
+        new Response request: request, status: failure, error: data
+      else if data?
+        if data instanceof Response
+          data
+        else
+          new Response request: request, status: success, data: data
       else
         new Response request: request, status: missing, error: data || message: "missing data for key: #{inspect request.key}"
 
-    .then (response) =>
-      if response.isSuccessful
-        Promise.resolve response
-      else
-        Promise.reject response
     .catch (e) =>
-      return Promise.reject e if e instanceof Response
+      log "response catch!", e
       console.error e, e.stack
+      return Promise.reject e if e instanceof Response
       new Response request: request, status: failure, error: error: data, message: data.toString()
 

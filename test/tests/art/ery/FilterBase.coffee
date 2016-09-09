@@ -63,3 +63,33 @@ module.exports = suite:
         ]
         assert.eq savedData.message, "bag"
 
+  all: ->
+
+    class OrderTestFilter extends Filter
+      constructor: (@str) -> super
+
+      @before all: (request) ->
+        request.withData message: "#{if m = request.data.message then "#{m}\n" else ""}before_#{request.type}(#{@str})"
+
+      @after all: (response) ->
+        response.withData message: "#{if m = response.data.message then "#{m}\n" else ""}after_#{response.request.type}(#{@str})"
+
+    test "before and after all", ->
+      orderLog = []
+      createWithPostCreate class MyPipeline extends SimplePipeline
+        @filter new OrderTestFilter "g"
+        @filter new OrderTestFilter "a"
+        @filter new OrderTestFilter "b"
+
+      MyPipeline.singleton.create {}
+      .then (savedData) ->
+        assert.eq savedData.message, """
+          before_create(b)
+          before_create(a)
+          before_create(g)
+          after_create(g)
+          after_create(a)
+          after_create(b)
+          """
+
+

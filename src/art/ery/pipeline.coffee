@@ -29,9 +29,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     PipelineRegistry.register @
 
   @postCreate: ({hotReloaded}) ->
+    @register() unless hotReloaded || @ == Pipeline
+    @_defineQueryHandlers()
     @_initClientApiRequest()
     @_initFields()
-    @register() unless hotReloaded || @ == Pipeline
     super
 
   @instantiateFilter: instantiateFilter = (filter) ->
@@ -95,8 +96,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   constructor: (@_options = {}) ->
     super
 
-    @_defineQueryHandlers()
-
   @getter "options",
     tableName: -> @name
     normalizedFields: ->
@@ -135,15 +134,14 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###################
   # PRIVATE
   ###################
-  _defineQueryHandlers: ->
-    handlers = {}
-    for k, v of @queries
-      handlers[k] = if isFunction v then v else
+  @_defineQueryHandlers: ->
+    for k, v of @getQueries()
+      log _defineQueryHandlers: extendHandlers: k
+      @extendHandlers k, if isFunction v then v else
         v = v.query
         unless isFunction v
           throw new Error "query delaration must be a function or have a 'query' property that is a function"
         v
-    # @handlers handlers
 
   _performRequest: (request) ->
     {type} = request
