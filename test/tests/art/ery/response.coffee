@@ -14,16 +14,6 @@ module.exports = suite: validation: ->
         pipeline: new Pipeline
         session: {}
         data: {}
-      data: {}
-
-  test "new Response - success - invalid", ->
-    assert.throws -> new Response
-      status: success
-      request: new Request
-        type: "create"
-        pipeline: new Pipeline
-        session: {}
-        data: {}
 
   test "new Response - failure - valid", ->
     new Response

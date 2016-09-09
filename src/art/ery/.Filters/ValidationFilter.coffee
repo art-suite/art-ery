@@ -7,5 +7,5 @@ module.exports = class ValidationFilter extends Filter
     @_validator = new Validator @_fields
 
   @before
-    create: (request) -> request.withData @_validator.preCreate request.data
-    update: (request) -> request.withData @_validator.preUpdate request.data
+    create: (request) -> request.withData @_validator.preCreate request.data, context: "ValidationFilter for #{request.pipeline.getName()} fields"
+    update: (request) -> request.withData @_validator.preUpdate request.data, context: "ValidationFilter for #{request.pipeline.getName()} fields"

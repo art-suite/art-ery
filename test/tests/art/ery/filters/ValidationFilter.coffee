@@ -36,9 +36,8 @@ module.exports = suite: ->
       throw "should not succeed"
     .catch (response) ->
       assert.eq response.error,
-        invalidFields:  []
-        missingFields:  ["foo"]
-        fields:         bar: 123
+        validationFailure: "preCreate: ValidationFilter for myPipeline fields missing"
+        missingFields:     foo: undefined
 
   test "required field - present", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
@@ -59,9 +58,8 @@ module.exports = suite: ->
       throw "should not succeed"
     .catch (response) ->
       assert.eq response.error,
-        invalidFields: ["foo"]
-        missingFields: []
-        fields: foo: 123
+        validationFailure: "preCreate: ValidationFilter for myPipeline fields invalid"
+        invalidFields:     foo: 123
 
   test "validate - valid with preprocessing", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
