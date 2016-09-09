@@ -3,4 +3,5 @@
 
 module.exports = require './namespace'
 .addModules
-  ArtEryFluxModel: require './ArtEryFluxModel'
+  ArtEryFluxModel:      require './ArtEryFluxModel'     
+  ArtEryQueryFluxModel: require './ArtEryQueryFluxModel'

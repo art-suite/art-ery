@@ -92,8 +92,10 @@ defineModule module, class ArtEryFluxModel extends FluxModel
       @_name: upperCamelCase modelName
 
       @::[k] = v for k, v of options
-      _pipeline: _pipeline
-      _recordsModel: recordsModel
+      _pipeline:      _pipeline
+      _recordsModel:  recordsModel
+
+      query: (key) -> @_pipeline[modelName] key
 
   ###
   TODO:
