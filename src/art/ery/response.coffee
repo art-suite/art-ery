@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{BaseObject, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType} = Foundation
+{BaseObject, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect} = Foundation
 {success, missing, failure} = CommunicationStatus
 
 failureValidator = new Validator
@@ -11,19 +11,19 @@ failureValidator = new Validator
 successValidator = new Validator
   request:  required: instanceof: Request
   status:   required: "communicationStatus"
-  data:     required: true, validate: (a) -> isJsonType a
+  data:     validate: (a) -> a == undefined || isJsonType a
   session:  "object"
 
 module.exports = class Response extends require './ArtEryBaseObject'
   constructor: (options) ->
-    @validate options
+    @_validateConstructorOptions options
     {@request, @status, @data, @session, @error} = options
 
-  validate: (options)->
+  _validateConstructorOptions: (options)->
     if options.status == success
-      successValidator.preCreateSync options
+      successValidator.preCreateSync options, context: "success-Response options"
     else
-      failureValidator.preCreateSync options
+      failureValidator.preCreateSync options, context: "failure-Response options"
 
   ###
   IN: data can be a plainObject or a promise returning a plainObject
@@ -63,13 +63,24 @@ module.exports = class Response extends require './ArtEryBaseObject'
     promise.then (successful Response instance) ->
     .catch (unsuccessful Response instance) ->
   ###
-  @toResponse: (data, request, reject) ->
+  @toResponse: (data, request, isFailure) ->
     Promise.resolve data
+    .then (_data) -> data = _data
+    .catch (e) =>
+      Promise.reject if e instanceof Response
+        console.error "ArtEry.toResponse data is already a failing response object: #{formattedInspect e}"
+        e
+      else
+        console.error "ArtEry.toResponse error: #{formattedInspect e}", e.stack
+        new Response request: request, status: failure, error: error: data, message: data.toString()
     .then =>
       throw "request required" unless request
-      throw data if data instanceof Error
+      if data instanceof Error
+        console.error "ArtEry.toResponse data was Error: #{formattedInspect data}", data.stack
+        throw data
 
-      if reject
+      if isFailure
+        console.error "ArtEry.toResponse #{formattedInspect request: request, status: failure, error: data}"
         new Response request: request, status: failure, error: data
       else if data?
         if data instanceof Response
@@ -78,9 +89,3 @@ module.exports = class Response extends require './ArtEryBaseObject'
           new Response request: request, status: success, data: data
       else
         new Response request: request, status: missing, error: data || message: "missing data for key: #{inspect request.key}"
-
-    .catch (e) =>
-      console.error e, e.stack
-      return Promise.reject e if e instanceof Response
-      new Response request: request, status: failure, error: error: data, message: data.toString()
-

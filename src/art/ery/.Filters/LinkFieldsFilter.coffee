@@ -63,6 +63,7 @@ defineModule module, ->
           else
             {data} = response
             response.withData if isPlainArray data
+              # TODO: use bulkGet for efficiency
               Promise.all(@includeLinkedFields record for record in data)
             else
               @includeLinkedFields response.data

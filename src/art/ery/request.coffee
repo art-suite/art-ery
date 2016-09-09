@@ -12,7 +12,7 @@ validator = new Validator
 
 module.exports = class Request extends require './ArtEryBaseObject'
   constructor: (options) ->
-    validator.preCreateSync options
+    validator.preCreateSync options, context: "Request options"
     @_type      = options.type
     @_key       = options.key
     @_pipeline  = options.pipeline
