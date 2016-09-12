@@ -26,7 +26,7 @@ module.exports = suite: ->
         [request.key, 1, 2, 3]
 
     assert.eq Post.post.clientApiMethodList, ["postByUserId"]
-    Post.post.postByUserId("foo")
+    Post.post.postByUserId key: "foo"
     .then (results) ->
       assert.eq results, ["foo", 1, 2, 3]
 
@@ -40,6 +40,6 @@ module.exports = suite: ->
           response.withData ("#{a} #{a}" for a in response.data)
 
     assert.eq Post.post.clientApiMethodList, ["postByUserId"]
-    Post.post.postByUserId("foo")
+    Post.post.postByUserId key: "foo"
     .then (results) ->
       assert.eq results, ["foo foo", "1 1", "2 2", "3 3"]

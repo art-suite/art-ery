@@ -1,5 +1,5 @@
 Foundation = require 'art-foundation'
-{BaseObject, merge, inspect, isString, isObject, log, Validator, CommunicationStatus} = Foundation
+{BaseObject, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith} = Foundation
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
@@ -13,13 +13,11 @@ validator = new Validator
 module.exports = class Request extends require './ArtEryBaseObject'
   constructor: (options) ->
     validator.preCreateSync options, context: "Request options"
-    @_type      = options.type
-    @_key       = options.key
-    @_pipeline  = options.pipeline
-    @_session   = options.session
-    @_data      = options.data
+    {@type, @key, @pipeline, @session, @data, @beforeFilterLog} = options
 
-  @getter "type key pipeline session data"
+  addBeforeFilterLog: (filter) -> @_beforeFilterLog = arrayWith @_beforeFilterLog, filter
+
+  @property "type key pipeline session data beforeFilterLog"
 
   @getter
     inspectedObjects: ->
@@ -27,12 +25,19 @@ module.exports = class Request extends require './ArtEryBaseObject'
         @class.namespacePath
         @props
       ]
+    beforeFilterLog: -> @_beforeFilterLog || []
+    filterLog: ->
+      [before..., handler] = @beforeFilterLog
+      before: before
+      handler: handler
+
     props: ->
-      pipeline: @pipeline
-      type:     @type
-      key:      @key
-      session:  @session
-      data:     @data
+      pipeline:        @pipeline
+      type:            @type
+      key:             @key
+      session:         @session
+      data:            @data
+      beforeFilterLog: @beforeFilterLog
 
   ###
   IN: data can be a plainObject or a promise returning a plainObject

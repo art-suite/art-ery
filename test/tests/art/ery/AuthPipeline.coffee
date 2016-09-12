@@ -16,13 +16,13 @@ defineModule module, class AuthPipeline extends Pipeline
       # Most the time you just want the default, global session:
       #   auth = new AuthPipeline()
       auth = new AuthPipeline session: new Session
-      auth.authenticate username: "bar", password: "bar"
+      auth.authenticate data: username: "bar", password: "bar"
       .then ->
         assert.eq auth.session.data, username: "bar"
 
     test "auth failure", ->
       auth = new AuthPipeline()
-      auth.authenticate username: "bar", password: "baz"
+      auth.authenticate data: username: "bar", password: "baz"
       .then ->
         throw new Error "should not succeed"
       .catch (response) ->
@@ -36,7 +36,7 @@ defineModule module, class AuthPipeline extends Pipeline
       auth = new AuthPipeline session: new Session
       auth.get()
       .then (v) -> assert.eq v, {}
-      .then     -> auth.authenticate username: "bar", password: "bar"
+      .then     -> auth.authenticate data: username: "bar", password: "bar"
       .then     -> auth.get()
       .then (v) -> assert.eq v, username: "bar"
 

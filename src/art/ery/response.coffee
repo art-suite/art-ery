@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{BaseObject, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect} = Foundation
+{BaseObject, arrayWith, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect} = Foundation
 {success, missing, failure} = CommunicationStatus
 
 failureValidator = new Validator
@@ -17,7 +17,9 @@ successValidator = new Validator
 module.exports = class Response extends require './ArtEryBaseObject'
   constructor: (options) ->
     @_validateConstructorOptions options
-    {@request, @status, @data, @session, @error} = options
+    {@request, @status, @data, @session, @error, @afterFilterLog} = options
+
+  addAfterFilterLog: (filter) -> @_afterFilterLog = arrayWith @_afterFilterLog, filter
 
   _validateConstructorOptions: (options)->
     if options.status == success
@@ -42,8 +44,13 @@ module.exports = class Response extends require './ArtEryBaseObject'
       new Response merge @props, data: merge @data, resolvedData
 
   toString: -> "ArtEry.Response(#{@_status}): #{@message}"
-  @property "request status data session error"
+  @property "request status data session error afterFilterLog"
   @getter
+    beforeFilterLog: -> @request.beforeFilterLog
+    afterFilterLog: -> @_afterFilterLog || []
+    filterLog: ->
+      merge @request.filterLog,
+        after:  @afterFilterLog
     message: -> @data?.message || @error?.message
     isSuccessful: -> @_status == success
     inspectedObjects: ->
@@ -52,11 +59,12 @@ module.exports = class Response extends require './ArtEryBaseObject'
         @props
       ]
     props: ->
-      request: @request
-      status: @status
-      data: @data
-      session: @session
-      error: @error
+      request:        @request
+      status:         @status
+      data:           @data
+      session:        @session
+      error:          @error
+      afterFilterLog: @afterFilterLog
 
   ###
   OUT:

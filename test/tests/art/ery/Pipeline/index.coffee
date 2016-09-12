@@ -5,4 +5,5 @@ module.exports = require './namespace'
 .addModules
   CustomRequests: require './CustomRequests'
   Failures:       require './Failures'      
+  Filters:        require './Filters'       
   Handlers:       require './Handlers'      

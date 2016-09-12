@@ -41,6 +41,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     else if filter instanceof Filter  then filter
     else if isPlainObject filter
       new class AnonymousFilter extends Filter
+        @_name: filter.name
         @before filter.before
         @after filter.after
     else throw "invalid filter: #{inspect filter} #{filter instanceof Filter}"
@@ -162,31 +163,32 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   # client actions just return the data and update the local session object if successful
   # otherwise, they "reject" the whole response object.
-  _performClientRequest: (type, keyOrData, data) ->
-    if !data && keyOrData && !isString keyOrData
-      key = null
-      data = keyOrData
-    else
-      key = keyOrData
+  ###
+  options
+    all the Request options are valid here
+    returnResponseObject: true [default: false]
+      if true, the response object is returned, otherwise, just the data field is returned.
+  ###
+  noOptions = {}
+  _performClientRequest: (type, options = noOptions) ->
+    {returnResponseObject} = options
 
-    @_performRequest new Request
+    @_performRequest new Request merge options,
       type:     type
-      key:      key
       pipeline: @
-      data:     data
       session:  @session.data
 
     .then (response) =>
       {status, data, session} = response
       if status == success
         @session.data = session if session
-        data
+        if returnResponseObject then response else data
       else
         throw response
 
   @_clientApiRequest: (requestType) ->
     @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()
-    @::[requestType] ||= (keyOrData, data) -> @_performClientRequest requestType, keyOrData, data
+    @::[requestType] ||= (options) -> @_performClientRequest requestType, options
 
   @_initClientApiRequest: ->
     for name, handler of @getHandlers()

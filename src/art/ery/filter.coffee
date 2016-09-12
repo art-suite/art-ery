@@ -62,6 +62,9 @@ module.exports = class Filter extends require './ArtEryBaseObject'
   # class instance methods
   #################################
 
+  @getter
+    name: -> @class.getName()
+
   ###
   IN: Request instance
     processNext: ->
@@ -90,6 +93,7 @@ module.exports = class Filter extends require './ArtEryBaseObject'
   processBefore: (request) ->
     Promise.then =>
       if beforeFilter = @beforeFilters[request.type] || @beforeFilters.all
+        request.addBeforeFilterLog @
         beforeFilter.call @, request
       else
         # pass-through if no filter
@@ -109,6 +113,7 @@ module.exports = class Filter extends require './ArtEryBaseObject'
   processAfter: (response) ->
     Promise.then =>
       if afterFilter = @afterFilters[response.request.type] || @afterFilters.all
+        response.addAfterFilterLog @
         afterFilter.call @, response
       else
         # pass-through if no filter

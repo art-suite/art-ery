@@ -28,8 +28,9 @@ module.exports = suite: createDatabaseFilters: ->
         message: requiredPresent: "trimmedString"
 
     MyPipeline.singleton.create
-      user: id: "abc123", name: "George"
-      message: "Hi!"
+      data:
+        user: id: "abc123", name: "George"
+        message: "Hi!"
     .then (data) ->
       assert.eq data.message, "Hi!"
       assert.eq data.userId, "abc123"

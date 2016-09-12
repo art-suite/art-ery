@@ -35,26 +35,26 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
 
     test "create returns new record", ->
       simplePipeline = new SimplePipeline
-      simplePipeline.create foo: "bar"
+      simplePipeline.create data: foo: "bar"
       .then (data) -> assert.eq data, foo: "bar", id: "0"
 
     test "create -> get", ->
       simplePipeline = new SimplePipeline
-      simplePipeline.create foo: "bar"
-      .then ({id}) -> simplePipeline.get id
+      simplePipeline.create data: foo: "bar"
+      .then ({id}) -> simplePipeline.get key: id
       .then (data) -> assert.eq data, foo: "bar", id: "0"
 
     test "create -> update", ->
       simplePipeline = new SimplePipeline
-      simplePipeline.create foo: "bar"
-      .then ({id}) -> simplePipeline.update id, fooz: "baz"
+      simplePipeline.create data: foo: "bar"
+      .then ({id}) -> simplePipeline.update key: id, data: fooz: "baz"
       .then (data) -> assert.eq data, foo: "bar", fooz: "baz", id: "0"
 
     test "create -> delete", ->
       simplePipeline = new SimplePipeline
-      simplePipeline.create foo: "bar"
-      .then ({id}) -> simplePipeline.delete id
-      .then ({id}) -> simplePipeline.get id
+      simplePipeline.create data: foo: "bar"
+      .then ({id}) -> simplePipeline.delete key: id
+      .then ({id}) -> simplePipeline.get key: id
       .then (response) -> throw new Error "shouldn't succeed"
       .catch (response) -> assert.eq response.status, missing
 

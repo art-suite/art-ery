@@ -22,7 +22,7 @@ module.exports = suite: ->
       @filter new ValidationFilter
         foo: preprocess: (o) -> "#{o}#{o}"
 
-    MyPipeline.singleton.create foo: 123
+    MyPipeline.singleton.create data: foo: 123
     .then (response) ->
       assert.eq response.foo, "123123"
 
@@ -31,7 +31,7 @@ module.exports = suite: ->
       @filter new ValidationFilter
         foo: required: true
 
-    MyPipeline.singleton.create bar: 123
+    MyPipeline.singleton.create data: bar: 123
     .then (data) ->
       throw "should not succeed"
     .catch (response) ->
@@ -44,7 +44,7 @@ module.exports = suite: ->
       @filter new ValidationFilter
         foo: required: true
 
-    MyPipeline.singleton.create foo: 123
+    MyPipeline.singleton.create data: foo: 123
     .then (data) ->
       assert.eq data.foo, 123
 
@@ -53,7 +53,7 @@ module.exports = suite: ->
       @filter new ValidationFilter
         foo: Validator.fieldTypes.trimmedString
 
-    MyPipeline.singleton.create foo: 123
+    MyPipeline.singleton.create data: foo: 123
     .then (response) ->
       throw "should not succeed"
     .catch (response) ->
@@ -66,6 +66,6 @@ module.exports = suite: ->
       @filter new ValidationFilter
         foo: Validator.fieldTypes.trimmedString
 
-    MyPipeline.singleton.create foo: "  123  "
+    MyPipeline.singleton.create data: foo: "  123  "
     .then (data) ->
       assert.eq data.foo, "123"

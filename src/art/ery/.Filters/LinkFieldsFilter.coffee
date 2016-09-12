@@ -1,4 +1,4 @@
-{log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
+{isPlainObject, newMapFromEach, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
 Filter = require '../Filter'
 
 defineModule module, ->
@@ -8,7 +8,7 @@ defineModule module, ->
       @_initValidator()
 
     _initValidator: ->
-      @_normalizeLinkFields()
+      @_linkFields = LinkFieldsFilter.normalizeLinkFields @_linkFields
       for fieldName, {idFieldName, required} of @_linkFields
 
         @extendFields idFieldName,
@@ -25,29 +25,32 @@ defineModule module, ->
         delete data[fieldName]
       data
 
-    _normalizeLinkFields: ->
-      lf = {}
-      for fieldName, {link, include, required} of @_linkFields
+    booleanProps = wordsArray "required include"
+    @normalizeLinkFields: (linkFields) ->
+      newMapFromEach linkFields, (lf, fieldName, fieldProps) ->
+        for prop in booleanProps when isPlainObject val = fieldProps[prop]
+          fieldProps = merge val, fieldProps
+          fieldProps[prop] = true
+
+        {link, include, required} = fieldProps
         lf[fieldName] =
           include: !!include
           required: !!required
           pipelineName: if isString link then link else fieldName
           idFieldName: fieldName + "Id"
-      @_linkFields = lf
 
     # OUT: promise.then -> new data
     includeLinkedFields: (data) ->
-      data = shallowClone data
-      promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = data[idFieldName]
+      linkedData = shallowClone data
+      promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
         Promise
-        .then           => id && @pipelines[pipelineName].get id
-        .then (value)   -> data[fieldName] = if value? then value else null
+        .then           => id && @pipelines[pipelineName].get key: id
+        .then (value)   -> linkedData[fieldName] = if value? then value else null
         .catch (response) ->
-          console.error response.error
-          console.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
+          log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
           # continue anyway
       Promise.all promises
-      .then -> data
+      .then -> linkedData
 
     @before
       create: (request) -> request.withData @_validator.preCreate @normalizeDataBeforeWrite(request.data), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"

@@ -10,6 +10,7 @@ module.exports = class HandlerFilter extends Filter
 
   process: (request, processNext) ->
     result = if handler = request.pipeline.handlers[request.type]
+      request.addBeforeFilterLog @
       handler.call request.pipeline, request
     else
       request

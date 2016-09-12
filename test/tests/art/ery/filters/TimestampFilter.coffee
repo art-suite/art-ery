@@ -14,7 +14,7 @@ module.exports = suite: ->
     createWithPostCreate class MyPipeline extends SimplePipeline
       @filter TimestampFilter
 
-    MyPipeline.singleton.create {}
+    MyPipeline.singleton.create data: {}
     .then ({createdAt, updatedAt, id}) ->
       assert.isNumber createdAt
       assert.isNumber updatedAt
@@ -22,7 +22,7 @@ module.exports = suite: ->
       id
 
     .then (id) ->
-      MyPipeline.singleton.update id, foo: "bar"
+      MyPipeline.singleton.update key: id, data: foo: "bar"
 
     .then ({createdAt, updatedAt}) ->
       assert.isNumber createdAt

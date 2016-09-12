@@ -9,7 +9,7 @@ module.exports = suite: ->
           result: request.data.double + request.data.double
 
     pipeline = new MyPipeline
-    pipeline.myCustomRequest double: "bar"
+    pipeline.myCustomRequest data: double: "bar"
     .then (response) ->
       assert.eq response, result: "barbar"
 
@@ -23,6 +23,6 @@ module.exports = suite: ->
           request.withData double: request.data.double.toUpperCase()
 
     pipeline = new MyPipeline
-    pipeline.myCustomRequest double: "bar"
+    pipeline.myCustomRequest data: double: "bar"
     .then (response) ->
       assert.eq response, result: "BARBAR"

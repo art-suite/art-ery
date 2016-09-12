@@ -51,7 +51,7 @@ module.exports = suite:
         @filter new OrderTestFilter "a"
         @filter new OrderTestFilter "b"
 
-      MyPipeline.singleton.create {}
+      MyPipeline.singleton.create data: {}
       .then (savedData) ->
         assert.eq orderLog, [
           "beforeCreate b"
@@ -81,7 +81,7 @@ module.exports = suite:
         @filter new OrderTestFilter "a"
         @filter new OrderTestFilter "b"
 
-      MyPipeline.singleton.create {}
+      MyPipeline.singleton.create data: {}
       .then (savedData) ->
         assert.eq savedData.message, """
           before_create(b)

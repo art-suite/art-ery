@@ -93,7 +93,7 @@ defineModule module, class ArtEryFluxModel extends FluxModel
       _pipeline:      _pipeline
       _recordsModel:  recordsModel
 
-      query: (key) -> @_pipeline[modelName] key
+      query: (key) -> @_pipeline[modelName] key: key
 
   ###
   TODO:
@@ -114,11 +114,11 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     throw new Error "invalid key: #{inspect key}" unless isString key
     @_getUpdateSerializer key
     .updateFluxStore =>
-      @_pipeline.get key
+      @_pipeline.get key: key
     false
 
   create: (data) ->
-    @_pipeline.create data
+    @_pipeline.create data: data
     .then (data) =>
       @updateFluxStore @keyFromData(data),
         status: success
@@ -199,7 +199,7 @@ defineModule module, class ArtEryFluxModel extends FluxModel
           previous update failed, but it will be resolved to the most accurate
           representation once all updates have completed or failed.
         ###
-        ret = @_pipeline.update key, data
+        ret = @_pipeline.update key: key, data: data
         .then -> merge accumulatedSuccessfulUpdatesToData, data
         ret.then resolve, reject
         ret
