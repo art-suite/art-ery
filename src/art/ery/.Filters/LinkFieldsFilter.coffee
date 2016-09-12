@@ -50,8 +50,8 @@ defineModule module, ->
       .then -> data
 
     @before
-      create: (request) -> request.withData @_validator.preCreate @normalizeDataBeforeWrite request.data
-      update: (request) -> request.withData @_validator.preUpdate @normalizeDataBeforeWrite request.data
+      create: (request) -> request.withData @_validator.preCreate @normalizeDataBeforeWrite(request.data), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"
+      update: (request) -> request.withData @_validator.preUpdate @normalizeDataBeforeWrite(request.data), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"
 
     # to support 'include' for query results, just alter this to be an 'after-all-requests'
     # and have it detect is data is an array

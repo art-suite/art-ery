@@ -71,8 +71,8 @@ module.exports = class Response extends require './ArtEryBaseObject'
         console.error "ArtEry.toResponse data is already a failing response object: #{formattedInspect e}"
         e
       else
-        console.error "ArtEry.toResponse error: #{formattedInspect e}", e.stack
-        new Response request: request, status: failure, error: error: data, message: data.toString()
+        console.error "ArtEry.toResponse error: #{formattedInspect e}"
+        new Response request: request, status: failure, error: error: e, message: e.toString()
     .then =>
       throw "request required" unless request
       if data instanceof Error
