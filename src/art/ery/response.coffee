@@ -3,12 +3,7 @@ Request = require './Request'
 {BaseObject, arrayWith, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect} = Foundation
 {success, missing, failure} = CommunicationStatus
 
-failureValidator = new Validator
-  request:  required: instanceof: Request
-  status:   required: "communicationStatus"
-  error:    required: true, validate: (a) -> a == undefined || isJsonType a
-
-successValidator = new Validator
+responseValidator = new Validator
   request:  required: instanceof: Request
   status:   required: "communicationStatus"
   data:     validate: (a) -> a == undefined || isJsonType a
@@ -22,10 +17,7 @@ module.exports = class Response extends require './ArtEryBaseObject'
   addAfterFilterLog: (filter) -> @_afterFilterLog = arrayWith @_afterFilterLog, filter
 
   _validateConstructorOptions: (options)->
-    if options.status == success
-      successValidator.preCreateSync options, context: "success-Response options"
-    else
-      failureValidator.preCreateSync options, context: "failure-Response options"
+    responseValidator.preCreateSync options, context: "response options"
 
   ###
   IN: data can be a plainObject or a promise returning a plainObject
@@ -51,7 +43,7 @@ module.exports = class Response extends require './ArtEryBaseObject'
     filterLog: ->
       merge @request.filterLog,
         after:  @afterFilterLog
-    message: -> @data?.message || @error?.message
+    message: -> @data?.message
     isSuccessful: -> @_status == success
     inspectedObjects: ->
       [
@@ -63,7 +55,6 @@ module.exports = class Response extends require './ArtEryBaseObject'
       status:         @status
       data:           @data
       session:        @session
-      error:          @error
       afterFilterLog: @afterFilterLog
 
   ###
@@ -76,24 +67,24 @@ module.exports = class Response extends require './ArtEryBaseObject'
     .then (_data) -> data = _data
     .catch (e) =>
       Promise.reject if e instanceof Response
-        console.error "ArtEry.toResponse data is already a failing response object: #{formattedInspect e}"
+        log.error "ArtEry.toResponse data is already a failing response object: #{formattedInspect e}"
         e
       else
-        console.error "ArtEry.toResponse error: #{formattedInspect e}"
-        new Response request: request, status: failure, error: error: e, message: e.toString()
+        log.error "ArtEry.toResponse error:", e
+        new Response request: request, status: failure, data: error: e, message: e.toString()
     .then =>
       throw "request required" unless request
       if data instanceof Error
-        console.error "ArtEry.toResponse data was Error: #{formattedInspect data}", data.stack
+        log.error "ArtEry.toResponse data was Error: #{formattedInspect data}", data.stack
         throw data
 
       if isFailure
-        console.error "ArtEry.toResponse #{formattedInspect request: request, status: failure, error: data}"
-        new Response request: request, status: failure, error: data
+        log.error "ArtEry.toResponse", status: failure, request: request, data: data
+        new Response request: request, status: failure, data: data
       else if data?
         if data instanceof Response
           data
         else
           new Response request: request, status: success, data: data
       else
-        new Response request: request, status: missing, error: data || message: "missing data for key: #{inspect request.key}"
+        new Response request: request, status: missing, data: data || message: "missing data for key: #{inspect request.key}"

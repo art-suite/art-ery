@@ -35,7 +35,7 @@ module.exports = suite: ->
     .then (data) ->
       throw "should not succeed"
     .catch (response) ->
-      assert.eq response.error,
+      assert.eq response.data,
         validationFailure: "preCreate: ValidationFilter for myPipeline fields missing"
         missingFields:     foo: undefined
 
@@ -57,7 +57,7 @@ module.exports = suite: ->
     .then (response) ->
       throw "should not succeed"
     .catch (response) ->
-      assert.eq response.error,
+      assert.eq response.data,
         validationFailure: "preCreate: ValidationFilter for myPipeline fields invalid"
         invalidFields:     foo: 123
 

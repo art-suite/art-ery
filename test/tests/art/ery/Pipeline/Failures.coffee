@@ -20,4 +20,4 @@ module.exports = suite: ->
     assert.rejects p.create()
     .then (v) ->
       assert.eq path, "filter1"
-      assert.eq v.error, "you lose!"
+      assert.eq v.data, "you lose!"
