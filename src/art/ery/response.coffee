@@ -6,7 +6,7 @@ Request = require './Request'
 failureValidator = new Validator
   request:  required: instanceof: Request
   status:   required: "communicationStatus"
-  error:    required: "object"
+  error:    required: true, validate: (a) -> a == undefined || isJsonType a
 
 successValidator = new Validator
   request:  required: instanceof: Request

@@ -2,8 +2,9 @@ Foundation = require 'art-foundation'
 Request = require './Request'
 Response = require './Response'
 
-{BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone} = Foundation
+{BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
 {toResponse} = Response
+{success} = CommunicationStatus
 
 module.exports = class Filter extends require './ArtEryBaseObject'
 
@@ -78,6 +79,7 @@ module.exports = class Filter extends require './ArtEryBaseObject'
         beforeResult # Response instance
 
     .then (response) =>
+      return response unless response.status == success
       @processAfter response
 
   ###
