@@ -12,4 +12,3 @@ module.exports = class Session extends require './ArtEryBaseObject'
   @property "data"
   constructor: (@_data = {}) ->
 
-

@@ -1,6 +1,6 @@
 {
-    BaseObject, CommunicationStatus, log, arrayWith
-    defineModule, merge, isJsonType, isString, isPlainObject, inspect
+  BaseObject, CommunicationStatus, log, arrayWith
+  defineModule, merge, isJsonType, isString, isPlainObject, inspect
 } = require 'art-foundation'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
@@ -43,7 +43,6 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   next: (data, status = success) ->
     Promise.resolve data
     .then (data) =>
-      # log next: data
       responseProps = if !data
         status = missing
         data: message: "missing responseProps for key: #{inspect @key}"
@@ -54,9 +53,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
       @_toResponse status, responseProps
 
-  success: (responseProps) ->
-    log RequestResponseBase: success: responseProps
-    @_toResponse success, responseProps
+  success: (responseProps) -> @_toResponse success, responseProps
   missing: (responseProps) -> @_toResponse missing, responseProps
   failure: (responseProps) -> @_toResponse failure, responseProps
 
