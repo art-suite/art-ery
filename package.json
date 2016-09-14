@@ -1,6 +1,7 @@
 {
   "author": "Shane Brinkman-Davis Delamore, Imikimi LLC",
   "dependencies": {
+    "art-events": "git://github.com/Imikimi-LLC/art-events.git",
     "art-flux": "git://github.com/Imikimi-LLC/art-flux.git",
     "art-foundation": "git://github.com/Imikimi-LLC/art-foundation.git",
     "chai": "^3.5.0",

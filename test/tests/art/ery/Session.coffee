@@ -21,3 +21,11 @@ module.exports = suite: ->
     s.data = foo: 'bar'
     assert.eq s.data, foo: 'bar'
     assert.eq s._data, s.data
+
+  test "change event", (done) ->
+    s = new Session userId: '123'
+    s.on change: ({props}) ->
+      assert.eq props, userId: '456'
+      done()
+
+    s.data = userId: '456'

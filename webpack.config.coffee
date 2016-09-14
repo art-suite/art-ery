@@ -9,4 +9,5 @@ module.exports = (require "art-foundation/configure_webpack")
       "
     dependencies:
       "art-foundation": "git://github.com/Imikimi-LLC/art-foundation.git"
-      "art-flux": "git://github.com/Imikimi-LLC/art-flux.git"
+      "art-events":     "git://github.com/Imikimi-LLC/art-events.git"
+      "art-flux":       "git://github.com/Imikimi-LLC/art-flux.git"
