@@ -3,8 +3,7 @@ Request = require './Request'
 Response = require './Response'
 
 {BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
-{toResponse} = Response
-{success} = CommunicationStatus
+{success, failure} = CommunicationStatus
 
 module.exports = class Filter extends require './ArtEryBaseObject'
 
@@ -62,61 +61,36 @@ module.exports = class Filter extends require './ArtEryBaseObject'
   # class instance methods
   #################################
 
-  @getter
-    name: -> @class.getName()
+  constructor: (options = {}) ->
+    super
+    {@serverSideOnly, @clientSideOnly, @name} = options
+    @name ||= @class.getName()
+    @after options.after
+    @before options.before
 
-  ###
-  IN: Request instance
-    processNext: ->
-  OUT:
-    promise.then (successful Response instance) ->
-    .catch (unsuccessful Response instance) ->
-  ###
-  process: (request, processNext) ->
+  @property "name",
+    serverSideOnly: false
+    clientSideOnly: false
 
-    @processBefore request
-    .then (beforeResult) =>
-      if beforeResult instanceof Request
-        processNext beforeResult
-      else
-        beforeResult # Response instance
+  toString: -> @getName()
+  getBeforeFilter: (requestType) -> @beforeFilters[requestType] || @beforeFilters.all
+  getAfterFilter:  (requestType) -> @afterFilters[requestType]  || @afterFilters.all
 
-    .then (response) =>
-      return response unless response.status == success
-      @processAfter response
+  processBefore: (request) -> @_processFilter request, @getBeforeFilter request.type
+  processAfter: (response) -> @_processFilter response, @getAfterFilter response.type
 
   ###
   OUT:
-    promise.then (Request or successful Response instance) ->
-    .catch (unsuccessful Response instance) ->
+    promise.then (successful Request or Response instance) ->
+    .catch (failingResponse) ->
   ###
-  processBefore: (request) ->
+  _processFilter: (responseOrRequest, filterFunction) ->
     Promise.then =>
-      if beforeFilter = @beforeFilters[request.type] || @beforeFilters.all
-        request.addBeforeFilterLog @
-        beforeFilter.call @, request
+      if filterFunction
+        responseOrRequest.addFilterLog @
+        filterFunction.call @, responseOrRequest
       else
         # pass-through if no filter
-        request
-    .then (beforeResult) ->
-      if beforeResult instanceof Request
-        beforeResult
-      else
-        toResponse beforeResult, request
-    .catch (e) => toResponse e, request, true
-
-  ###
-  OUT:
-    promise.then (successful Response instance) ->
-    .catch (unsuccessful Response instance) ->
-  ###
-  processAfter: (response) ->
-    Promise.then =>
-      if afterFilter = @afterFilters[response.request.type] || @afterFilters.all
-        response.addAfterFilterLog @
-        afterFilter.call @, response
-      else
-        # pass-through if no filter
-        response
-    .then (afterResult) => toResponse afterResult, response.request
-    .catch (e)          => toResponse e, response.request, true
+        responseOrRequest
+    .then (result) -> responseOrRequest.next result
+    .catch (error) -> responseOrRequest.next error, failure

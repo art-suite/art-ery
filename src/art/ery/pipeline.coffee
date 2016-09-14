@@ -3,11 +3,11 @@ Response = require './Response'
 Request = require './Request'
 Filter = require './Filter'
 Session = require './Session'
-HandlerFilter = require './HandlerFilter'
 
 PipelineRegistry = require './PipelineRegistry'
 
 {
+  newMapFromEach
   compactFlatten
   BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
   CommunicationStatus
@@ -20,7 +20,6 @@ PipelineRegistry = require './PipelineRegistry'
 } = Foundation
 
 {success, missing, failure} = CommunicationStatus
-{toResponse} = Response
 
 defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
@@ -39,16 +38,12 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     if isClass filter                 then new filter
     else if isFunction filter         then filter @
     else if filter instanceof Filter  then filter
-    else if isPlainObject filter
-      new class AnonymousFilter extends Filter
-        @_name: filter.name
-        @before filter.before
-        @after filter.after
+    else if isPlainObject filter      then new Filter filter
     else throw "invalid filter: #{inspect filter} #{filter instanceof Filter}"
 
   @extendableProperty
     queries: {}
-    filters: [new HandlerFilter]
+    filters: []
     handlers: {}
     aliases: {}
     clientApiMethodList: []
@@ -109,6 +104,18 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @getter
     name:     -> @_name     ||= @_options.name    || decapitalize @class.getName()
     session:  -> @_session  ||= @_options.session || Session.singleton
+    requestTypes: ->
+      beforeFilters = {}
+      beforeFilters[k] = true for k, filterFunction of @handlers
+      for filter in @filters
+        beforeFilters[k] = true for k, filterFunction of filter.beforeFilters
+      Object.keys beforeFilters
+
+    beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
+    afterFilters: -> @filters
+
+  getBeforeFiltersFor: (type) -> filter for filter in @beforeFilters when filter.getBeforeFilter type
+  getAfterFiltersFor:  (type) -> filter for filter in @afterFilters  when filter.getAfterFilter type
 
   ###
   OVERRIDE
@@ -116,6 +123,15 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     query: (queryKey, pipeline) -> array of plain objects
   ###
   getAutoDefinedQueries: -> {}
+
+  getPipelineReport: () ->
+    newMapFromEach @requestTypes, (type) =>
+      # return (f.getName() for f in @filters)
+      compactFlatten([
+        filter.getName() for filter in @getBeforeFiltersFor type
+        "[#{type}-handler]" if @handlers[type]
+        filter.getName() for filter in @getAfterFiltersFor type
+      ]).join ' > '
 
   ######################
   # Add Filters
@@ -143,23 +159,51 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
           throw new Error "query delaration must be a function or have a 'query' property that is a function"
         v
 
-  _performRequest: (request) ->
-    {type} = request
-    {filters} = @
-    filterIndex = filters.length - 1
+  _applyBeforeFilters: (request) ->
+    filters = @getBeforeFiltersFor request.type
+    # log _applyBeforeFilters: request, beforeFilters: filters
+    filterIndex = 0
 
-    # IN: Request instance
-    # OUT:
-    #   promise.then (successful Response instance) ->
-    #   .catch (unsuccessful Response instance) ->
-    processNext = (request) ->
-      Promise.then ->
-        if filterIndex < 0
-          new Response request: request, status: failure, error: message: "no Filter generated a Response for request type: #{request.type}"
-        else
-          filters[filterIndex--].process request, processNext
+    applyNextFilter = (partiallyBeforeFilteredRequest) ->
+      if partiallyBeforeFilteredRequest.isResponse || filterIndex >= filters.length
+        Promise.resolve partiallyBeforeFilteredRequest
+      else
+        filters[filterIndex++].processBefore partiallyBeforeFilteredRequest
+        .then (result) -> applyNextFilter result
 
-    processNext request
+    applyNextFilter request
+
+  _applyAfterFilters: (response) ->
+    filters = @getAfterFiltersFor response.type
+    # log _applyAfterFilters: response, afterFilters: filters
+    filterIndex = 0
+
+    applyNextFilter = (partiallyAfterFilteredReponse)->
+      if partiallyAfterFilteredReponse.notSuccessful || filterIndex >= filters.length
+        Promise.resolve partiallyAfterFilteredReponse
+      else
+        filters[filterIndex++].processAfter partiallyAfterFilteredReponse
+        .then (result) -> applyNextFilter result
+
+    applyNextFilter response
+
+  _applyHandler: (request) ->
+    # log _applyHandler: request
+    return request if request.isResponse
+    if handler = @handlers[request.type]
+      request.addFilterLog "#{request.type}-handler"
+      request.next handler.call @, request
+    else
+      message = "no Handler for request type: #{request.type}"
+      log.error message, request: request
+      request.with message, failure
+
+  _processRequest: (request) ->
+    # log _processRequest: self: @, request: request, filters: @filters
+    @_applyBeforeFilters request
+    .then (request)  => @_applyHandler request
+    .then (response) => @_applyAfterFilters response
+    .catch (error)   => request.next error
 
   # client actions just return the data and update the local session object if successful
   # otherwise, they "reject" the whole response object.
@@ -170,10 +214,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       if true, the response object is returned, otherwise, just the data field is returned.
   ###
   noOptions = {}
-  _performClientRequest: (type, options = noOptions) ->
+  _processClientRequest: (type, options = noOptions) ->
     {returnResponseObject} = options
 
-    @_performRequest new Request merge options,
+    @_processRequest new Request merge options,
       type:     type
       pipeline: @
       session:  @session.data
@@ -188,7 +232,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   @_clientApiRequest: (requestType) ->
     @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()
-    @::[requestType] ||= (options) -> @_performClientRequest requestType, options
+    @::[requestType] ||= (options) -> @_processClientRequest requestType, options
 
   @_initClientApiRequest: ->
     for name, handler of @getHandlers()

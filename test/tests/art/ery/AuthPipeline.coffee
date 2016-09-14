@@ -22,12 +22,10 @@ defineModule module, class AuthPipeline extends Pipeline
 
     test "auth failure", ->
       auth = new AuthPipeline()
-      auth.authenticate data: username: "bar", password: "baz"
-      .then ->
-        throw new Error "should not succeed"
-      .catch (response) ->
+      assert.rejects auth.authenticate data: username: "bar", password: "baz"
+      .then (response) ->
         assert.eq response.status, failure
-        assert.isString response.error.message
+        assert.isString response.data.message
 
     test "auth then get", ->
       # NOTE: a new Session is provided here only for testing - to ensure a clean session
@@ -53,7 +51,7 @@ defineModule module, class AuthPipeline extends Pipeline
     authenticate: (request) ->
       {data} = request
       if message = authenticationFailed data
-        request.failure error: message
+        request.failure data: message: message
       else
         request.success session: username: data.username
 

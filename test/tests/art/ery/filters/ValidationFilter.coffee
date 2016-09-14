@@ -31,10 +31,8 @@ module.exports = suite: ->
       @filter new ValidationFilter
         foo: required: true
 
-    MyPipeline.singleton.create data: bar: 123
-    .then (data) ->
-      throw "should not succeed"
-    .catch (response) ->
+    assert.rejects MyPipeline.singleton.create data: bar: 123
+    .then (response) ->
       assert.eq response.data,
         validationFailure: "preCreate: ValidationFilter for myPipeline fields missing"
         missingFields:     foo: undefined

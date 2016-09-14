@@ -10,70 +10,28 @@ validator = new Validator
   data:     "object"
   key:      "string"
 
-module.exports = class Request extends require './ArtEryBaseObject'
+module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
+    super
     validator.preCreateSync options, context: "Request options"
-    {@type, @key, @pipeline, @session, @data, @beforeFilterLog} = options
+    {@type, @key, @pipeline, @session, @data, @serverSideOrigin} = options
 
-  addBeforeFilterLog: (filter) -> @_beforeFilterLog = arrayWith @_beforeFilterLog, filter
+  @property "type key pipeline session data serverSideOrigin"
 
-  @property "type key pipeline session data beforeFilterLog"
+  toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
+
+  requireServerSideOrigin: ->
+    unless @serverSideOrigin
+      throw @failure data: message: "serverSideOrigin required"
+    @
 
   @getter
-    inspectedObjects: ->
-      [
-        @class.namespacePath
-        @props
-      ]
-    beforeFilterLog: -> @_beforeFilterLog || []
-    filterLog: ->
-      [before..., handler] = @beforeFilterLog
-      before: before
-      handler: handler
+    request: -> @
 
     props: ->
-      pipeline:        @pipeline
-      type:            @type
-      key:             @key
-      session:         @session
-      data:            @data
-      beforeFilterLog: @beforeFilterLog
-
-  ###
-  IN: data can be a plainObject or a promise returning a plainObject
-  OUT: promise.then (newRequestWithNewData) ->
-  ###
-  withData: (data) ->
-    Promise.resolve(data).then (resolvedData) =>
-      new Request merge @props, data: resolvedData
-
-  ###
-  IN: data can be a plainObject or a promise returning a plainObject
-  OUT: promise.then (newRequestWithNewData) ->
-  ###
-  withMergedData: (data) ->
-    Promise.resolve(data).then (resolvedData) =>
-      new Request merge @props, data: merge @data, resolvedData
-
-  # return a new success-Response
-  success: (responseProps) ->
-    new ArtEry.Response merge responseProps,
-      status: success
-      data: responseProps.data || {}
-      request: @
-
-  # return a new failure-Response
-  failure: (responseProps) ->
-    new ArtEry.Response merge responseProps,
-      status: failure
-      error: if isString responseProps.error
-          message: responseProps.error
-        else
-          responseProps.error
-      request: @
-
-  # return a new missing-Response
-  missing: (responseProps) ->
-    new ArtEry.Response merge responseProps,
-      status: missing
-      request: @
+      pipeline:         @pipeline
+      type:             @type
+      key:              @key
+      session:          @session
+      data:             @data
+      filterLog:        @filterLog

@@ -7,7 +7,7 @@ module.exports = suite: ->
       @handlers foo: (request) -> foo: 1, bar: 2
 
     p = new MyPipeline
-    assert.eq p.filters.length, 1
+    assert.eq p.filters.length, 0
     p.foo()
     .then (data) ->
       assert.eq data, foo: 1, bar: 2
@@ -18,7 +18,7 @@ module.exports = suite: ->
       @handlers bar: (request) -> {}
 
     p = new MyPipeline
-    assert.eq p.filters.length, 1
+    assert.eq p.filters.length, 0
 
   test "query handlers", ->
     createWithPostCreate class Post extends Pipeline
