@@ -20,5 +20,7 @@ module.exports = class Session extends require './ArtEryBaseObject'
 
   @setter
     data: (v) ->
-      @queueEvent "change", v unless plainObjectsDeepEq v, @_data
+      @queueEvent "change", data: v unless plainObjectsDeepEq v, @_data
       @_data = v
+
+  reset: -> @data = {}
