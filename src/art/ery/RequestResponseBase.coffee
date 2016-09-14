@@ -60,13 +60,13 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   ###
   IN:
     responseProps: (optionally Promise returning:)
-      object passed into Response constructor
+      an object which is directly passed into the Response constructor
       OR instanceof RequestResponseBase
       OR anything else:
         considered internal error, but it will create a valid, failing Response object
   OUT:
-    promise.then (successful Response instance) ->
-    .catch (unsuccessful Response instance) ->
+    promise.then (response) ->
+    .catch -> # should never happen
   ###
   _toResponse: (status, responseProps) ->
     Promise.resolve responseProps
@@ -89,3 +89,5 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         request:  @request
         status:   status
         responseProps
+
+

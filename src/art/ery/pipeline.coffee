@@ -161,7 +161,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   _applyBeforeFilters: (request) ->
     filters = @getBeforeFiltersFor request.type
-    # log _applyBeforeFilters: request, beforeFilters: filters
     filterIndex = 0
 
     applyNextFilter = (partiallyBeforeFilteredRequest) ->
@@ -173,9 +172,18 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     applyNextFilter request
 
+  _applyHandler: (request) ->
+    return request if request.isResponse
+    if handler = @handlers[request.type]
+      request.addFilterLog "#{request.type}-handler"
+      request.next handler.call @, request
+    else
+      message = "no Handler for request type: #{request.type}"
+      log.error message, request: request
+      request.with message, failure
+
   _applyAfterFilters: (response) ->
     filters = @getAfterFiltersFor response.type
-    # log _applyAfterFilters: response, afterFilters: filters
     filterIndex = 0
 
     applyNextFilter = (partiallyAfterFilteredReponse)->
@@ -187,19 +195,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     applyNextFilter response
 
-  _applyHandler: (request) ->
-    # log _applyHandler: request
-    return request if request.isResponse
-    if handler = @handlers[request.type]
-      request.addFilterLog "#{request.type}-handler"
-      request.next handler.call @, request
-    else
-      message = "no Handler for request type: #{request.type}"
-      log.error message, request: request
-      request.with message, failure
-
   _processRequest: (request) ->
-    # log _processRequest: self: @, request: request, filters: @filters
     @_applyBeforeFilters request
     .then (request)  => @_applyHandler request
     .then (response) => @_applyAfterFilters response
