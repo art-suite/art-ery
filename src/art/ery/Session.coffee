@@ -1,11 +1,10 @@
 Foundation = require 'art-foundation'
-{EventedObject} = require 'art-events'
+{EventedMixin} = require 'art-events'
 {BaseObject, merge, inspect, isString, isObject, log, Validator, plainObjectsDeepEq, JsonStore} = Foundation
 
-module.exports = class Session extends require './ArtEryBaseObject'
+module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   jsonStore = new JsonStore
   jsonStoreKey = "Art.Ery.Session.data"
-  @include EventedObject
   ###
   A global singleton Session is provided and used by default.
   Or multiple instances can be created and passed to the
