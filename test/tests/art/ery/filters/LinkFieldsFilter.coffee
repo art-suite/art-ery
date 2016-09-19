@@ -27,6 +27,24 @@ module.exports = suite: ->
     .then (data) ->
       assert.eq data, userId: "abc123", id: "0"
 
+  test "autoCreate linked object triggers on writing", ->
+    createWithPostCreate class Media extends SimplePipeline
+      ;
+
+    createWithPostCreate class Post extends SimplePipeline
+      @filter new LinkFieldsFilter fields =
+        media: link: required: autoCreate: true
+
+    pipelines.post.create
+      data: media: url: url = "bar.com/foo"
+
+    .then (data) ->
+      assert.eq data, mediaId: "0", id: "0"
+      pipelines.media.get key: "0"
+
+    .then (media) ->
+      assert.eq media.url. url
+
   test "included fields work (basic)", ->
     createWithPostCreate class User extends SimplePipeline
       ;
