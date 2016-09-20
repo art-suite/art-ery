@@ -1,8 +1,8 @@
-{log, Validator} = require 'art-foundation'
+{defineModule, log, Validator} = require 'art-foundation'
 Filter = require '../Filter'
 Uuid = require 'uuid'
 
-module.exports = class UuidFilter extends Filter
+defineModule module, class UuidFilter extends Filter
   @alwaysForceNewIds: true
   @before
     create: (request) ->

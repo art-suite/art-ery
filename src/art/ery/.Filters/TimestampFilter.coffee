@@ -1,7 +1,7 @@
-{log, Validator} = require 'art-foundation'
+{defineModule, log, Validator} = require 'art-foundation'
 Filter = require '../Filter'
 
-module.exports = class TimestampFilter extends Filter
+defineModule module, class TimestampFilter extends Filter
   @before
     create: (request) ->
       request.withMergedData

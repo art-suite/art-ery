@@ -1,7 +1,7 @@
-{log, Validator} = require 'art-foundation'
+{defineModule, log, Validator} = require 'art-foundation'
 Filter = require '../Filter'
 
-module.exports = class ValidationFilter extends Filter
+defineModule module, class ValidationFilter extends Filter
   constructor: (@_fields) ->
     super
     @_validator = new Validator @_fields

@@ -19,23 +19,21 @@ defineModule module, ->
       @_validator = new Validator @fields
 
     # returns a new object
-    preprocessData: (data) ->
-      log LinkFieldsFilter: preprocessData:
-        pipeline: @getName()
-        linkFields: @_linkFields
+    preprocessData: ({type,pipeline, data}) ->
       data = merge data
       promises = for fieldName, {idFieldName, autoCreate, pipelineName} of @_linkFields
-        Promise.then =>
-          linkedRecordData = data[fieldName]
-          log autoCreate: fieldName if autoCreate
-          if autoCreate && linkedRecordData && !data[idFieldName] && !linkedRecordData.id
-            @pipelines[pipelineName].create data: linkedRecordData
-          else linkedRecordData
-        .then (linkedRecordData) =>
-          data[idFieldName] = linkedRecordData.id if linkedRecordData?.id
-          delete data[fieldName]
+        do (fieldName, idFieldName, autoCreate, pipelineName) =>
+          Promise.then =>
+            linkedRecordData = data[fieldName]
+            if autoCreate && linkedRecordData && !data[idFieldName] && !linkedRecordData.id
+              @pipelines[pipelineName].create data: linkedRecordData
+            else linkedRecordData
+          .then (linkedRecordData) =>
+            data[idFieldName] = linkedRecordData.id if linkedRecordData?.id
+            delete data[fieldName]
       Promise.all promises
-      .then -> data
+      .then ->
+        data
 
     booleanProps = wordsArray "link required include autoCreate"
     @normalizeLinkFields: (linkFields) ->
@@ -62,8 +60,8 @@ defineModule module, ->
       .then -> linkedData
 
     @before
-      create: (request) -> request.withData @_validator.preCreate @preprocessData(request.data), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"
-      update: (request) -> request.withData @_validator.preUpdate @preprocessData(request.data), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"
+      create: (request) -> request.withData @_validator.preCreate @preprocessData(request), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"
+      update: (request) -> request.withData @_validator.preUpdate @preprocessData(request), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"
 
     # to support 'include' for query results, just alter this to be an 'after-all-requests'
     # and have it detect is data is an array

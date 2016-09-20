@@ -75,7 +75,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   preprocessFilter = (filter) ->
     if isPlainArray filter
-      instantiateFilter f for f in filter
+      instantiateFilter f for f in filter when f
     else
       instantiateFilter filter
 
@@ -125,13 +125,14 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   getAutoDefinedQueries: -> {}
 
   getPipelineReport: () ->
-    newMapFromEach @requestTypes, (type) =>
-      # return (f.getName() for f in @filters)
-      compactFlatten([
-        filter.getName() for filter in @getBeforeFiltersFor type
-        "[#{type}-handler]" if @handlers[type]
-        filter.getName() for filter in @getAfterFiltersFor type
-      ]).join ' > '
+    fields: @fields
+    requests:
+      newMapFromEach @requestTypes, (type) =>
+        compactFlatten([
+          filter.getName() for filter in @getBeforeFiltersFor type
+          "[#{type}-handler]" if @handlers[type]
+          filter.getName() for filter in @getAfterFiltersFor type
+        ]).join ' > '
 
   ######################
   # Add Filters
