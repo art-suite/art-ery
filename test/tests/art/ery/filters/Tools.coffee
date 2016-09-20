@@ -1,4 +1,4 @@
-{log, createWithPostCreate, wordsArray, isString, Validator} = require 'art-foundation'
+{log, createWithPostCreate, wordsArray, isString, Validator, w} = require 'art-foundation'
 {createDatabaseFilters} = Neptune.Art.Ery.Filters
 SimplePipeline = require '../SimplePipeline'
 
@@ -6,10 +6,10 @@ module.exports = suite: createDatabaseFilters: ->
   test "fields are set correctly", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
       @filter createDatabaseFilters
-        user: required: link: true
-        foo: link: true, required: true
-        bar: link: "user"
-        message: requiredPresent: "trimmedString"
+        user:   "required link"
+        foo:    link: true, required: true
+        bar:    link: "user"
+        message: "present trimmedString"
 
     assert.eq Object.keys(MyPipeline.singleton.fields), wordsArray "
       id
@@ -24,8 +24,8 @@ module.exports = suite: createDatabaseFilters: ->
   test "create", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
       @filter createDatabaseFilters
-        user: link: "user", rquired: true
-        message: requiredPresent: "trimmedString"
+        user: required: link: "user"
+        message: "present trimmedString"
 
     MyPipeline.singleton.create
       data:

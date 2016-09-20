@@ -1,21 +1,24 @@
-{defineModule, log, isString, isFunction} = require 'art-foundation'
+{defineModule, log, isString, isFunction, Validator} = require 'art-foundation'
 UuidFilter = require './UuidFilter'
 TimestampFilter = require './TimestampFilter'
 ValidationFilter = require './ValidationFilter'
 LinkFieldsFilter = require './LinkFieldsFilter'
+{normalizeFieldProps} = Validator
 
 defineModule module, class Tools
   @createDatabaseFilters: (fields) ->
     linkFields = {}
     otherFields = {}
     for k, v of fields
-      # NOTE: In node, something adds a native function, "link", to strings.
-      # So, we need to strictly test for == true.
-      link = !isString(v) && (v.link || v.required?.link)
-      if link == true || isString link
+      {link, required, present} = normalizeFieldProps v
+
+      if link
         linkFields[k] = v
         idFieldName = k + "Id"
-        otherFields[idFieldName] = fieldType: "trimmedString", required: !!v.required
+        otherFields[idFieldName] =
+          fieldType:  "trimmedString"
+          required:   required
+          present:    present
       else
         otherFields[k] = v
 

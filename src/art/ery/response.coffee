@@ -1,11 +1,11 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{BaseObject, arrayWith, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect} = Foundation
+{BaseObject, arrayWith, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
 {success, missing, failure} = CommunicationStatus
 
 responseValidator = new Validator
-  request:  required: instanceof: Request
-  status:   required: "communicationStatus"
+  request:  w "required", instanceof: Request
+  status:   w "required communicationStatus"
   data:     validate: (a) -> a == undefined || isJsonType a
   session:  "object"
 

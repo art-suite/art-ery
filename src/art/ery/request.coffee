@@ -1,12 +1,12 @@
 Foundation = require 'art-foundation'
-{BaseObject, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith} = Foundation
+{BaseObject, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w} = Foundation
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
 validator = new Validator
-  type:     required: "string"
+  type:     w "required string"
   pipeline: required: instanceof: Neptune.Art.Ery.Pipeline
-  session:  required: "object"
+  session:  w "required object"
   data:     "object"
   key:      "string"
 

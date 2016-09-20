@@ -19,10 +19,14 @@ defineModule module, ->
 
     # returns a new object
     preprocessData: (data) ->
+      log LinkFieldsFilter: preprocessData:
+        pipeline: @getName()
+        linkFields: @_linkFields
       data = merge data
       promises = for fieldName, {idFieldName, autoCreate, pipelineName} of @_linkFields
         Promise.then =>
           linkedRecordData = data[fieldName]
+          log autoCreate: fieldName if autoCreate
           if autoCreate && linkedRecordData && !data[idFieldName] && !linkedRecordData.id
             @pipelines[pipelineName].create data: linkedRecordData
           else linkedRecordData
