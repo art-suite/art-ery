@@ -212,6 +212,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   noOptions = {}
   _processClientRequest: (type, options = noOptions) ->
     {returnResponseObject} = options
+    options = key: options if isString options
 
     @_processRequest new Request merge options,
       type:     type
