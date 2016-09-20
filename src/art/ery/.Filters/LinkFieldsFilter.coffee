@@ -1,5 +1,6 @@
 {isPlainObject, newMapFromEach, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
 Filter = require '../Filter'
+{normalizeFieldProps} = Validator
 
 defineModule module, ->
   class LinkFieldsFilter extends Filter
@@ -39,17 +40,13 @@ defineModule module, ->
     booleanProps = wordsArray "link required include autoCreate"
     @normalizeLinkFields: (linkFields) ->
       newMapFromEach linkFields, (lf, fieldName, fieldProps) ->
-        for prop in booleanProps when isPlainObject val = fieldProps[prop]
-          fieldProps = merge val, fieldProps
-          fieldProps[prop] = true
-
-        {link, include, required, autoCreate} = fieldProps
+        {link, include, required, autoCreate} = normalizeFieldProps fieldProps
         lf[fieldName] =
-          autoCreate: !!autoCreate
-          include: !!include
-          required: !!required
+          autoCreate:   autoCreate
+          include:      include
+          required:     required
           pipelineName: if isString link then link else fieldName
-          idFieldName: fieldName + "Id"
+          idFieldName:  fieldName + "Id"
 
     # OUT: promise.then -> new data
     includeLinkedFields: (data) ->
