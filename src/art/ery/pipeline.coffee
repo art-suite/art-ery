@@ -18,6 +18,7 @@ PipelineRegistry = require './PipelineRegistry'
   Validator
   mergeInto
 } = Foundation
+{normalizeFieldProps} = Validator
 
 {success, missing, failure} = CommunicationStatus
 
@@ -96,9 +97,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     tableName: -> @name
     normalizedFields: ->
       nf = {}
-      {normalizeFieldType} = Validator
       for k, v of @fields
-        nf[k] = normalizeFieldType v
+        nf[k] = normalizeFieldProps v
       nf
 
   @getter
