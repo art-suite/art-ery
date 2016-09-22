@@ -14,15 +14,15 @@ module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
     super
     validator.preCreateSync options, context: "Request options"
-    {@type, @key, @pipeline, @session, @data, @serverSideOrigin} = options
+    {@type, @key, @pipeline, @session, @data, @originatedOnServer} = options
 
-  @property "type key pipeline session data serverSideOrigin"
+  @property "type key pipeline session data originatedOnServer"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
-  requireServerSideOrigin: ->
-    unless @serverSideOrigin
-      throw @failure data: message: "serverSideOrigin required"
+  requireServerOrigin: (message = "(no further explanation)")->
+    unless @originatedOnServer
+      throw @failure data: message: "Request must originated on server: #{message}"
     @
 
   @getter

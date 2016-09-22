@@ -34,7 +34,7 @@ module.exports = suite: ->
     assert.rejects MyPipeline.singleton.create data: bar: 123
     .then (response) ->
       assert.eq response.data,
-        validationFailure: "preCreate: ValidationFilter for myPipeline fields missing"
+        validationFailure: "ValidationFilter(pipelineName: 'myPipeline'): create: field(s) are missing"
         missingFields:     foo: undefined
 
   test "required field - present", ->
@@ -56,7 +56,7 @@ module.exports = suite: ->
       throw "should not succeed"
     .catch (response) ->
       assert.eq response.data,
-        validationFailure: "preCreate: ValidationFilter for myPipeline fields invalid"
+        validationFailure: "ValidationFilter(pipelineName: 'myPipeline'): create: field(s) are invalid"
         invalidFields:     foo: 123
 
   test "validate - valid with preprocessing", ->

@@ -9,20 +9,15 @@ UserOwnedFilter = require './UserOwnedFilter'
 defineModule module, class Tools
   @createDatabaseFilters: (fields) ->
     if fields.userOwned
-      fields.user = "required link"
+      fields.user = "link"
 
     linkFields = {}
     otherFields = {}
     for k, v of fields when k != "userOwned"
-      {link, required, present} = normalizeFieldProps v
+      {link} = v = normalizeFieldProps v
 
       if link
         linkFields[k] = v
-        idFieldName = k + "Id"
-        otherFields[idFieldName] =
-          fieldType:  "trimmedString"
-          required:   required
-          present:    present
       else
         otherFields[k] = v
 
@@ -30,6 +25,6 @@ defineModule module, class Tools
       new UserOwnedFilter if fields.userOwned
       new UuidFilter
       new TimestampFilter
-      new ValidationFilter otherFields if hasProperties otherFields
       new LinkFieldsFilter linkFields if hasProperties linkFields
+      new ValidationFilter otherFields if hasProperties otherFields
     ]

@@ -6,6 +6,7 @@ Response = require './Response'
 {success, failure} = CommunicationStatus
 
 module.exports = class Filter extends require './ArtEryBaseObject'
+  @filterLocation: "server"
 
   ################
   # class inheritable props

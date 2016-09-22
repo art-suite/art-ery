@@ -22,7 +22,7 @@ module.exports = class Response extends require './RequestResponseBase'
   @property "request status data session error"
   @getter
     type:             -> @request.type
-    serverSideOrigin: -> @request.serverSideOrigin
+    originatedOnServer: -> @request.originatedOnServer
     beforeFilterLog:  -> @request.filterLog
     afterFilterLog:   -> @filterLog
     message:          -> @data?.message
