@@ -123,6 +123,7 @@ defineModule module, class ArtEryFluxModel extends FluxModel
       @updateFluxStore @keyFromData(data),
         status: success
         data: data
+      data
 
   ###
   Purpose:
