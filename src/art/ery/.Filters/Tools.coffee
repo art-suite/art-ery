@@ -1,4 +1,4 @@
-{defineModule, log, isString, isFunction, Validator, hasKeys} = require 'art-foundation'
+{defineModule, log, isString, isFunction, Validator, hasProperties} = require 'art-foundation'
 UuidFilter = require './UuidFilter'
 TimestampFilter = require './TimestampFilter'
 ValidationFilter = require './ValidationFilter'
@@ -29,7 +29,7 @@ defineModule module, class Tools
     [
       new UuidFilter
       new TimestampFilter
-      new ValidationFilter otherFields if hasKeys otherFields
-      new LinkFieldsFilter linkFields if hasKeys linkFields
+      new ValidationFilter otherFields if hasProperties otherFields
+      new LinkFieldsFilter linkFields if hasProperties linkFields
       new SetUserIdFromSessionFilter if fields.userOwned
     ]
