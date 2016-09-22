@@ -10,12 +10,12 @@ module.exports = suite: ->
   test "fields are set correctly", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
       @filter new LinkFieldsFilter fields =
-        user: required: link: "user"
+        user: "required link"
         post: link: "post"
 
     assert.eq MyPipeline.getFields(),
-      userId:  fieldType: "trimmedString", required: true
-      postId:  fieldType: "trimmedString", required: false
+      userId:  fieldType: "trimmedString", pipelineName: "user", required: true
+      postId:  fieldType: "trimmedString", pipelineName: "post"
 
   test "linked objects get converted to ids for writing", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
@@ -51,7 +51,7 @@ module.exports = suite: ->
 
     createWithPostCreate class PostPipeline extends SimplePipeline
       @filter new LinkFieldsFilter fields =
-        user: include: required: link: true
+        user: "include required link"
 
     pipelines.user.create
       data: name: "George"
