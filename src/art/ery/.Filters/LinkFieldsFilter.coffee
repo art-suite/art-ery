@@ -10,11 +10,10 @@ defineModule module, ->
 
     _initValidator: ->
       @_linkFields = LinkFieldsFilter.normalizeLinkFields @_linkFields
-      for fieldName, {idFieldName, required} of @_linkFields
-
-        @extendFields idFieldName,
-          fieldType:  "trimmedString"
-          required:   !!required
+      for fieldName, fieldProps of @_linkFields
+        props = merge fieldProps, fieldType:  "trimmedString"
+        delete props.idFieldName
+        @extendFields fieldProps.idFieldName, props
 
       @_validator = new Validator @fields
 
@@ -39,23 +38,25 @@ defineModule module, ->
     @normalizeLinkFields: (linkFields) ->
       newMapFromEach linkFields, (lf, fieldName, fieldProps) ->
         {link, include, required, autoCreate} = normalizeFieldProps fieldProps
-        lf[fieldName] =
-          autoCreate:   autoCreate
-          include:      include
-          required:     required
+        lf[fieldName] = props =
           pipelineName: if isString link then link else fieldName
           idFieldName:  fieldName + "Id"
+        props.autoCreate = true if autoCreate
+        props.include =    true if include
+        props.required =   true if required
+
 
     # OUT: promise.then -> new data
     includeLinkedFields: (data) ->
       linkedData = shallowClone data
       promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
-        Promise
-        .then           => id && @pipelines[pipelineName].get key: id
-        .then (value)   -> linkedData[fieldName] = if value? then value else null
-        .catch (response) ->
-          log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
-          # continue anyway
+        do (fieldName, idFieldName, pipelineName, include) =>
+          Promise
+          .then           => id && @pipelines[pipelineName].get key: id
+          .then (value)   -> linkedData[fieldName] = if value? then value else null
+          .catch (response) ->
+            log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
+            # continue anyway
       Promise.all promises
       .then -> linkedData
 
