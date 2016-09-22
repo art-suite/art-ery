@@ -3,7 +3,7 @@ UuidFilter = require './UuidFilter'
 TimestampFilter = require './TimestampFilter'
 ValidationFilter = require './ValidationFilter'
 LinkFieldsFilter = require './LinkFieldsFilter'
-SetUserIdFromSessionFilter = require './SetUserIdFromSessionFilter'
+UserOwnedFilter = require './UserOwnedFilter'
 {normalizeFieldProps} = Validator
 
 defineModule module, class Tools
@@ -27,9 +27,9 @@ defineModule module, class Tools
         otherFields[k] = v
 
     [
+      new UserOwnedFilter if fields.userOwned
       new UuidFilter
       new TimestampFilter
       new ValidationFilter otherFields if hasProperties otherFields
       new LinkFieldsFilter linkFields if hasProperties linkFields
-      new SetUserIdFromSessionFilter if fields.userOwned
     ]
