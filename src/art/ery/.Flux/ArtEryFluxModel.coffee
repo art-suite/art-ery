@@ -10,6 +10,7 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
   select
   isString
   isFunction
+  fastBind
   decapitalize
   merge
   Promise
@@ -57,7 +58,13 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     @_pipeline = @class._pipeline
     @_queryModels = {}
     @queries @_pipeline.queries
-    @actions @_pipeline.actions
+    @_bindPipelineMethods()
+
+  _bindPipelineMethods: ->
+    abstractPrototype = @_pipeline.class.firstAbstractAncestor.prototype
+    for k, v of @_pipeline when !@[k] && !abstractPrototype[k] && isFunction v
+      @[k] = fastBind v, @
+
 
   keyFromData: (data) ->
     ret = @_pipeline.keyFromData?(data) || data.id
@@ -94,15 +101,6 @@ defineModule module, class ArtEryFluxModel extends FluxModel
       _recordsModel:  recordsModel
 
       query: (key) -> @_pipeline[modelName] key: key
-
-  ###
-  TODO:
-  actions need to go through an ArtEry pipeline.
-  actions should be invoked with that ArtEry pipeline as @
-  ###
-  actions: (map) ->
-    for actionName, action of map
-      @[actionName] = action
 
   ###
   IN: key: string

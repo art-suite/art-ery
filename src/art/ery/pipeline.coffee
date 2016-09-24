@@ -28,11 +28,15 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     @singletonClass()
     PipelineRegistry.register @
 
+  # copy-paste this line to any sub-class that shouldn't auto-register
+  @firstAbstractAncestor: @
+
   @postCreate: ({hotReloaded}) ->
-    @register() unless hotReloaded || @ == Pipeline
-    @_defineQueryHandlers()
-    @_initClientApiRequest()
-    @_initFields()
+    if @prototype instanceof @firstAbstractAncestor
+      @register() unless hotReloaded
+      @_defineQueryHandlers()
+      @_initClientApiRequest()
+      @_initFields()
     super
 
   @instantiateFilter: instantiateFilter = (filter) ->
