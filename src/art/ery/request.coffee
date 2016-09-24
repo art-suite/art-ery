@@ -4,11 +4,12 @@ ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
 validator = new Validator
-  type:     w "required string"
-  pipeline: required: instanceof: Neptune.Art.Ery.Pipeline
-  session:  w "required object"
-  data:     "object"
-  key:      "string"
+  type:               w "required string"
+  pipeline:           required: instanceof: Neptune.Art.Ery.Pipeline
+  session:            w "required object"
+  data:               "object"
+  key:                "string"
+  originatedOnServer: "boolean"
 
 module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
@@ -22,16 +23,17 @@ module.exports = class Request extends require './RequestResponseBase'
 
   requireServerOrigin: (message = "(no further explanation)")->
     unless @originatedOnServer
-      throw @failure data: message: "Request must originated on server: #{message}"
+      throw @failure data: message: "#{@type}-request: originatedOnServer required #{message || ""}"
     @
 
   @getter
     request: -> @
 
     props: ->
-      pipeline:         @pipeline
-      type:             @type
-      key:              @key
-      session:          @session
-      data:             @data
-      filterLog:        @filterLog
+      pipeline:             @pipeline
+      type:                 @type
+      key:                  @key
+      session:              @session
+      data:                 @data
+      filterLog:            @filterLog
+      originatedOnServer:   @originatedOnServer

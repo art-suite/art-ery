@@ -27,13 +27,14 @@ module.exports = suite:
         pipeline: new Pipeline
         session: {}
       assert.eq formattedInspect(request),   """
-        Neptune.Art.Ery.Request
-        pipeline:  <Neptune.Art.Ery.Pipeline>
-        type:      get
-        key:       123
-        session:   {}
-        data:      undefined
-        filterLog: undefined
+        "Neptune.Art.Ery.Request"
+        pipeline:           <Neptune.Art.Ery.Pipeline>
+        type:               "get"
+        key:                "123"
+        session:            {}
+        data:               undefined
+        filterLog:          undefined
+        originatedOnServer: undefined
         """
 
     test "new Request type: 'create' - valid", ->
@@ -89,3 +90,17 @@ module.exports = suite:
       .then (newRequest) ->
         assert.neq newRequest, request
         assert.eq newRequest.data, bing: "bong", foo: "bar"
+
+  derivedRequestsPersistProps: ->
+    test "originatedOnServer", ->
+      r = new Request
+        type: "get"
+        key: "123"
+        originatedOnServer: true
+        pipeline: new Pipeline
+        session: {}
+
+      assert.eq r.originatedOnServer, true
+      assert.eq r.props.originatedOnServer, true
+      r.withData({}).then (r2) ->
+        assert.eq r2.originatedOnServer, true
