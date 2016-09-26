@@ -39,6 +39,10 @@ defineModule module, class ArtEryFluxModel extends FluxModel
   @defineModelsForAllPipelines: ->
     for name, pipeline of ArtEry.pipelines
       if aliases = pipeline.aliases
+        # both pipelines and models will have the same set of aliases
+        # This skips the aliases in pipelines and calls createModel only once
+        # which will in turn create all the model aliases.
+        # It's important that all the model aliases are the same model-instance object.
         name = pipeline.getName()
         createModel name, pipeline, aliases unless models[name]
       else

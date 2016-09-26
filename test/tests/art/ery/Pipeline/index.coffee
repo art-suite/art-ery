@@ -3,6 +3,7 @@
 
 module.exports = require './namespace'
 .addModules
+  Aliases:        require './Aliases'       
   CustomRequests: require './CustomRequests'
   Failures:       require './Failures'      
   Filters:        require './Filters'       

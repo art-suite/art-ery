@@ -17,6 +17,8 @@ PipelineRegistry = require './PipelineRegistry'
   defineModule
   Validator
   mergeInto
+  arrayToTruthMap
+  lowerCamelCase
 } = Foundation
 {normalizeFieldProps} = Validator
 
@@ -50,9 +52,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     queries: {}
     filters: []
     handlers: {}
-    aliases: {}
     clientApiMethodList: []
     fields: {}
+
+  @getAliases: -> @_aliases || {}
 
   ###
   INPUT: zero or more strings or arrays of strings
@@ -60,22 +63,19 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     - nulls are OK, they are ignored
   OUTPUT: null
 
-  NOTE: @aliases can be called multiple times.
+  NOTE: @aliases can only be called once
 
   example:
     class Post extends Pipeline
       @aliases "chapterPost"
 
   purpose:
-    - declare alternative names to access this pipeline.
-    - allows you to use the shortest form of FluxComponent subscriptions for each alias:
-        @subscriptions "chapterPost"
-      in addition to the pipeline's class name:
-        @subscriptions "post"
+    - used by ArtEryFluxComponent to make model aliases
+      (see FluxModel.aliases)
   ###
   @aliases: ->
-    aliases = @getAliases()
-    aliases[alias] = true for alias in compactFlatten arguments
+    @_aliases = newMapFromEach arguments, (map, k, v) ->
+      map[lowerCamelCase v] = true
     @
 
   preprocessFilter = (filter) ->
