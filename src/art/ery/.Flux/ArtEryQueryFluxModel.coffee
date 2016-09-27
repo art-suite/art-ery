@@ -33,6 +33,7 @@ module.exports = class ArtEryQueryFluxModel extends FluxModel
 
   loadData: (key) ->
     Promise.resolve @query key, @pipeline
+    .then (data) => @localSort data
 
   @setter "recordsModel pipeline"
   @getter "recordsModel pipeline"
@@ -66,7 +67,7 @@ module.exports = class ArtEryQueryFluxModel extends FluxModel
   OVERRIDE
   override for to sort records when updating local query data in response to local record changes
   ###
-  localSort: (queryKey, queryData) -> queryData
+  localSort: (queryData) -> queryData
 
   ###
   OVERRIDE
