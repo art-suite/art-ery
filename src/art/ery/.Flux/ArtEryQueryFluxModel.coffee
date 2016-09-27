@@ -16,6 +16,7 @@ ArtEry = require 'art-ery'
   arrayWith
   arrayWithElementReplaced
   formattedInspect
+  propsEq
 } = Foundation
 
 {missing, failure, success, pending} = CommunicationStatus
@@ -83,8 +84,9 @@ module.exports = class ArtEryQueryFluxModel extends FluxModel
     return previousQueryData unless updatedRecordData
     return [updatedRecordData] unless previousQueryData?.length > 0
 
-    for el, i in previousQueryData
-      if @recordsModel.keysEqual el, updatedRecordData
+    for currentRecordData, i in previousQueryData
+      if @recordsModel.keysEqual currentRecordData, updatedRecordData
+        return null if propsEq currentRecordData, updatedRecordData # no change!
         return arrayWithElementReplaced previousQueryData, updatedRecordData, i
 
     arrayWith previousQueryData, updatedRecordData
@@ -105,4 +107,5 @@ module.exports = class ArtEryQueryFluxModel extends FluxModel
     queryKey = @queryKeyFromRecord? updatedRecordData
     throw new Error "invalid queryKey from #{formattedInspect updatedRecordData}" unless isString queryKey
     return unless fluxRecord = @fluxStoreGet queryKey
-    @updateFluxStore queryKey, data: @localSort @localMerge fluxRecord.data, updatedRecordData
+    if mergeResult = @localMerge fluxRecord.data, updatedRecordData
+      @updateFluxStore queryKey, data: @localSort mergeResult

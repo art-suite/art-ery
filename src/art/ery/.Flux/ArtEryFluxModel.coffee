@@ -167,8 +167,8 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     queryModel.localUpdate updatedRecord for modelName, queryModel of @_queryModels
     null
 
-  fluxStoreEntryUpdated: ({key, fluxRecord}) ->
-    @_updateQueries fluxRecord.data
+  fluxStoreEntryUpdated: ({key, fluxRecord, previousFluxRecord, dataChanged}) ->
+    @_updateQueries fluxRecord.data if dataChanged && fluxRecord.status == success
 
   _optimisticallyUpdateFluxStore: (key, fieldsToUpdate) ->
     # apply local update immediately
