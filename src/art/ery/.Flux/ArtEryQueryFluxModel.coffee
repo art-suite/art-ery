@@ -17,13 +17,15 @@ ArtEry = require 'art-ery'
   arrayWithElementReplaced
   formattedInspect
   propsEq
+  defineModule
 } = Foundation
 
 {missing, failure, success, pending} = CommunicationStatus
 
 {FluxModel} = Flux
 
-module.exports = class ArtEryQueryFluxModel extends FluxModel
+defineModule module, class ArtEryQueryFluxModel extends FluxModel
+  @abstractClass()
   ###
   This class is designed to be extended with overrides:
 

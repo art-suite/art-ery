@@ -1,7 +1,8 @@
-{BaseObject} = require 'art-foundation'
+{BaseObject, defineModule} = require 'art-foundation'
 ArtEry = require './namespace'
 
-module.exports = class ArtEryBaseObject extends BaseObject
+defineModule module, class ArtEryBaseObject extends BaseObject
+  @abstractClass()
   @getter
     # TODO: how exactly do we want to configure if we are in productionEnvironment or not?
 

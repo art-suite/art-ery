@@ -2,10 +2,10 @@ Foundation = require 'art-foundation'
 Request = require './Request'
 Response = require './Response'
 
-{BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
+{defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
 {success, failure} = CommunicationStatus
 
-module.exports = class Filter extends require './ArtEryBaseObject'
+defineModule module, class Filter extends require './ArtEryBaseObject'
   @filterLocation: "server"
 
   ################

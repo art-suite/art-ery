@@ -28,6 +28,7 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 {FluxModel, models} = Flux
 
 defineModule module, class ArtEryFluxModel extends FluxModel
+  @abstractClass()
 
   createModel = (name, pipeline, aliases) ->
     klass = createWithPostCreate class AnonymouseArtErtFluxModel extends ArtEryFluxModel
@@ -49,12 +50,6 @@ defineModule module, class ArtEryFluxModel extends FluxModel
         createModel name, pipeline
 
   @pipeline: (@_pipeline) -> @_pipeline
-
-  @postCreate: ->
-    if @_pipeline
-      super
-    else
-      @
 
   constructor: ->
     super
