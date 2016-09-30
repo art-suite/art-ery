@@ -65,7 +65,7 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     @_bindPipelineMethods()
 
   _bindPipelineMethods: ->
-    abstractPrototype = @_pipeline.class.firstAbstractAncestor.prototype
+    abstractPrototype = @_pipeline.class.getAbstractPrototype()
     for k, v of @_pipeline when !@[k] && !abstractPrototype[k] && isFunction v
       @[k] = fastBind v, @
 
