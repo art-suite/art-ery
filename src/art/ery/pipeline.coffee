@@ -7,7 +7,7 @@ Session = require './Session'
 PipelineRegistry = require './PipelineRegistry'
 
 {
-  newMapFromEach
+  newObjectFromEach
   compactFlatten
   BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
   CommunicationStatus
@@ -73,7 +73,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       (see FluxModel.aliases)
   ###
   @aliases: ->
-    @_aliases = newMapFromEach arguments, (map, k, v) ->
+    @_aliases = newObjectFromEach arguments, (map, k, v) ->
       map[lowerCamelCase v] = true
     @
 
@@ -130,7 +130,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   getPipelineReport: () ->
     fields: @fields
     requests:
-      newMapFromEach @requestTypes, (type) =>
+      newObjectFromEach @requestTypes, (type) =>
         compactFlatten([
           filter.getName() for filter in @getBeforeFiltersFor type
           "[#{type}-handler]" if @handlers[type]
