@@ -21,6 +21,7 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
   formattedInspect
   defineModule
   createWithPostCreate
+  inspect
 } = Foundation
 
 {missing, failure, success, pending} = CommunicationStatus
@@ -171,10 +172,10 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     @updateFluxStore key,
       (oldFluxRecord) => merge oldFluxRecord, data: merge oldFluxRecord?.data, fieldsToUpdate
 
-  update: (key, data) ->
+  update: (key, updatedFields) ->
     throw new Error "invalid key: #{inspect key}" unless isString key
 
-    @_optimisticallyUpdateFluxStore key, data
+    # @_optimisticallyUpdateFluxStore key, updatedFields
 
     ###
     creating a Promise here because we have two promise paths
@@ -184,6 +185,9 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     ###
     new Promise (resolve, reject) =>
       @_getUpdateSerializer key
+      # TODO: updateSerializer.updateFluxStore should optimisitically update the store
+      # new signature might look like this:
+      #   .updateFluxStore updatedFields, (accumulatedSuccessfulUpdatesToData) =>
       .updateFluxStore (accumulatedSuccessfulUpdatesToData) =>
         ###
         NOTE if this update fails:
@@ -197,16 +201,16 @@ defineModule module, class ArtEryFluxModel extends FluxModel
           previous update failed, but it will be resolved to the most accurate
           representation once all updates have completed or failed.
         ###
-        ret = @_pipeline.update key: key, data: data
-        .then -> merge accumulatedSuccessfulUpdatesToData, data
+        ret = @_pipeline.update key: key, data: updatedFields
+        .then -> merge accumulatedSuccessfulUpdatesToData, updatedFields
         ret.then resolve, reject
         ret
 
         ###
         NOTE: this could be done more cleanly with tapThen (see Art.Foundation.Promise)
 
-        @_pipeline.update key, data
-        .then -> merge accumulatedSuccessfulUpdatesToData, data
+        @_pipeline.update key, updatedFields
+        .then -> merge accumulatedSuccessfulUpdatesToData, updatedFields
         .tapThen resolve, reject
 
         ###

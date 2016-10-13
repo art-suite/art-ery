@@ -2,7 +2,7 @@ Foundation = require 'art-foundation'
 Request = require './Request'
 Response = require './Response'
 
-{defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
+{getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
 {success, failure} = CommunicationStatus
 
 defineModule module, class Filter extends require './ArtEryBaseObject'
@@ -93,5 +93,13 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       else
         # pass-through if no filter
         responseOrRequest
-    .then (result) -> responseOrRequest.next result
-    .catch (error) -> responseOrRequest.next error, failure
+    .then (result) => responseOrRequest.next result
+    .catch (error) =>
+      log.error(
+        "Error Applying Filter"
+        filter: @
+        pipeline: responseOrRequest.pipeline?.name
+        responseOrRequest: responseOrRequest
+        error: error
+      )
+      responseOrRequest.next error, failure

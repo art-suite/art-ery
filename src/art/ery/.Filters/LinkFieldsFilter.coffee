@@ -14,7 +14,7 @@ defineModule module, class LinkFieldsFilter extends Filter
     for fieldName, fieldProps of @_linkFields
       props = merge fieldProps, fieldType:  "trimmedString"
       delete props.idFieldName
-      @extendFields fieldProps.idFieldName, props
+      @extendFields fieldProps.idFieldName, normalizeFieldProps props
 
     @_validator = new Validator @fields
 

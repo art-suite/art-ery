@@ -20,13 +20,13 @@ defineModule module, class UserOwnedFilter extends Filter
     # ensure the current user can only update their own records
     # (unless request.originatedOnServer)
     update: (request) ->
-      {data, session} = request
+      {data, session, key} = request
 
       if data.userId
         request.requireServerOrigin "to update data.userId"
 
-      @pipeline.get data.id
+      request.pipeline.get key: key
       .then (currentRecord) =>
         if session.userId != currentRecord.userId
-          request.requireServerOrigin "to modify a record where currentRecord.userId != session.userId"
+          request.requireServerOrigin "to modify a record where currentRecord.userId(#{currentRecord.userId}) != session.userId(#{session.userId})"
         request

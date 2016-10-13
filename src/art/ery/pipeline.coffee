@@ -20,6 +20,8 @@ PipelineRegistry = require './PipelineRegistry'
   mergeInto
   arrayToTruthMap
   lowerCamelCase
+  peek
+  inspectedObjectLiteral
 } = Foundation
 {normalizeFieldProps} = Validator
 
@@ -90,6 +92,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   @getter
     aliases: -> Object.keys @class.getAliases()
+    inspectedObjects: -> inspectedObjectLiteral @name
 
   ######################
   # constructor
@@ -129,10 +132,18 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   getAutoDefinedQueries: -> {}
 
   getPipelineReport: () ->
-    fields: @fields
+    tableName: @tableName
+    fields: newObjectFromEach @fields, (fieldProps) ->
+      newObjectFromEach Object.keys(fieldProps).sort(), (out, index, k) ->
+        v = fieldProps[k]
+        unless k == "preprocess" || k == "validate" || k == "fieldType"
+        #   out[k + if peek(k) == "e" then "d" else "ed"] = true
+        # else
+          out[k] = v
+
     requests:
       newObjectFromEach @requestTypes, (type) =>
-        compactFlatten([
+        inspectedObjectLiteral compactFlatten([
           filter.getName() for filter in @getBeforeFiltersFor type
           "[#{type}-handler]" if @handlers[type]
           filter.getName() for filter in @getAfterFiltersFor type

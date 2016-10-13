@@ -1,6 +1,8 @@
 {
   BaseObject, CommunicationStatus, log, arrayWith
   defineModule, merge, isJsonType, isString, isPlainObject, inspect
+  inspectedObjectLiteral
+  toInspectedObjects
 } = require 'art-foundation'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
@@ -19,8 +21,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   @getter
     inspectedObjects: ->
       [
-        @class.namespacePath
-        @props
+        inspectedObjectLiteral @class.namespacePath
+        toInspectedObjects @props
       ]
 
   ###
@@ -80,10 +82,14 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         status = failure
         message = null
         responseProps = data: message: if responseProps instanceof Error
-          log.error responseProps
-          log.error "Internal Error: _toResponse received Error instance"
+          log.error(
+            message = "Internal Error: ArtEry.RequestResponseBase#_toResponse received Error instance"
+            @
+            responseProps
+          )
+          message
         else
-          log.error "Internal Error: _toResponse exepecting responseProps or error", responseProps
+          log.error "Internal Error: ArtEry.RequestResponseBase#_toResponse expecting responseProps or error", responseProps
 
       new ArtEry.Response merge
         request:  @request
