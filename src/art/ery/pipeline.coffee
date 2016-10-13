@@ -3,6 +3,7 @@ Response = require './Response'
 Request = require './Request'
 Filter = require './Filter'
 Session = require './Session'
+Config = require './Config'
 
 PipelineRegistry = require './PipelineRegistry'
 
@@ -97,7 +98,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     super
 
   @getter "options",
-    tableName: -> @name
+    tableName: -> "#{Config.tableNamePrefix}#{@name}"
     normalizedFields: ->
       nf = {}
       for k, v of @fields
