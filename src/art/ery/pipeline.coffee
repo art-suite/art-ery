@@ -101,7 +101,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     super
 
   @getter "options",
-    tableName: -> "#{Config.tableNamePrefix}#{@name}"
+    tableName: -> Config.getPrefixedTableName @name
     normalizedFields: ->
       nf = {}
       for k, v of @fields
