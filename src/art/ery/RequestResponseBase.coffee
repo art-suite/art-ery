@@ -78,6 +78,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     .then (responseProps) =>
       return responseProps if responseProps instanceof RequestResponseBase
 
+      responseProps = message: responseProps if isString responseProps
       unless isPlainObject responseProps
         status = failure
         message = null
