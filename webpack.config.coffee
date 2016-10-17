@@ -8,6 +8,6 @@ module.exports = (require "art-foundation/configure_webpack")
       security and performance of cloud-code.
       "
     dependencies:
-      "art-foundation": "git://github.com/Imikimi-LLC/art-foundation.git"
-      "art-events":     "git://github.com/Imikimi-LLC/art-events.git"
-      "art-flux":       "git://github.com/Imikimi-LLC/art-flux.git"
+      "art-foundation": "git://github.com/imikimi/art-foundation.git"
+      "art-events":     "git://github.com/imikimi/art-events.git"
+      "art-flux":       "git://github.com/imikimi/art-flux.git"
