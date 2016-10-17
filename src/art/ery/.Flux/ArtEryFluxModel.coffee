@@ -111,8 +111,7 @@ defineModule module, class ArtEryFluxModel extends FluxModel
   load: (key) ->
     throw new Error "invalid key: #{inspect key}" unless isString key
     @_getUpdateSerializer key
-    .updateFluxStore =>
-      @_pipeline.get key: key
+    .updateFluxStore => @_pipeline.get key: key
     false
 
   create: (data) ->
@@ -145,13 +144,20 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     unless updateSerializer = @_updateSerializers[key]
       updateSerializer = new Promise.Serializer
        #prime the serializer with the current fluxRecord.data
-      updateSerializer.then => @fluxStoreGet(key)?.data || {}
+      updateSerializer.then => @fluxStoreGet(key)?.data
       updateSerializer.updateFluxStore = (updateFunction) =>
         updateSerializer.then (data) =>
-          Promise.resolve updateFunction data
-          .catch -> data # on error, roll back flux-Store to the last known-good data
-          .then (data) =>
-            @updateFluxStore key, status: success, data: data
+          Promise.then -> updateFunction data
+          .then (data) ->
+            status: success, data: data
+          .catch (e) ->
+            if data
+              # on error, roll back flux-Store to the last known-good data
+              status: success, data: data
+            else
+              status: e.status
+          .then (fluxRecord) =>
+            @updateFluxStore key, fluxRecord
             data
         updateSerializer
 
