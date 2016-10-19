@@ -1,4 +1,5 @@
 require './src/Art'
+{select} = require 'art-foundation'
 Server = require './src/Art/Ery/.Server'
 
 {version} = require './package.json'
@@ -7,7 +8,7 @@ Server = require './src/Art/Ery/.Server'
 
 commander = require "commander"
 .version version
-.option '-p, --port',     'set the HTTP port (default: #{defaults.port})'
+.option '-p, --port <number>',     'set the HTTP port (default: #{defaults.port})'
 .parse process.argv
 
-Server.Main.start commander
+Server.Main.start select commander, "port"

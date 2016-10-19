@@ -93,6 +93,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @getter
     aliases: -> Object.keys @class.getAliases()
     inspectedObjects: -> inspectedObjectLiteral @name
+    isRemoteClient: -> @remoteServer
 
   ######################
   # constructor
@@ -190,7 +191,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   _applyHandler: (request) ->
     return request if request.isResponse
-    if handler = @handlers[request.type]
+    if @isRemoteClient
+      request.sendRemoteRequest @remoteServer
+    else if handler = @handlers[request.type]
       request.addFilterLog "#{request.type}-handler"
       request.next handler.call @, request
     else
@@ -229,6 +232,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   _processClientRequest: (type, options = noOptions) ->
     {returnResponseObject} = options
     options = key: options if isString options
+
+    if @remoteServer
+      log "should go to: #{@remoteServer}"
 
     @_processRequest new Request merge options,
       type:     type

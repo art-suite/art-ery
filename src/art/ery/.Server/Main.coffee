@@ -1,5 +1,6 @@
-{defineModule, merge} = require 'art-foundation'
-http = require 'http'
+{log, defineModule, merge, CommunicationStatus} = require 'art-foundation'
+{success} = CommunicationStatus
+PromiseHttp = require './PromiseHttp'
 
 defineModule module, class Main
   @defaults:
@@ -7,10 +8,16 @@ defineModule module, class Main
 
   @start: (options) ->
     options = merge Main.defaults, options
-    {port} = options
 
-    server = http.createServer (request, response) ->
-      response.end "It Works!! #{request.url}"
+    PromiseHttp.start merge options,
+      name: "Art.Ery.Server"
+      handlers: [
+        (request, data) ->
+          if request.url.match /^\/
+          headers:
+            "Access-Control-Allow-Origin": "*"
 
-    server.listen port, ->
-      console.log "Art.Ery.Server listening on: http://localhost:#{port}"
+          json:
+            status: success
+            data: "It Works!! #{request.url}"
+      ]

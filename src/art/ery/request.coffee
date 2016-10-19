@@ -1,5 +1,5 @@
 Foundation = require 'art-foundation'
-{BaseObject, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w} = Foundation
+{present, BaseObject, RestClient, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w} = Foundation
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
@@ -37,3 +37,43 @@ module.exports = class Request extends require './RequestResponseBase'
       data:                 @data
       filterLog:            @filterLog
       originatedOnServer:   @originatedOnServer
+
+    urlKeyClause: -> if present @key then "/#{@key}" else ""
+
+  getRestRequestUrl:    (server) -> "#{server}/#{@pipeline.name}#{@urlKeyClause}"
+  getNonRestRequestUrl: (server) -> "#{server}/#{@pipeline.name}-#{@type}#{@urlKeyClause}"
+
+  restMap =
+    get:    "get"
+    create: "post"
+    update: "put"
+    delete: "delete"
+
+  sendRemoteRequest: (server) ->
+    url = if @type.match /^get|update|delete|create$/
+      verb = restMap[@type]
+      @getRestRequestUrl server
+    else
+      verb = "post"
+      @getNonRestRequestUrl server
+
+    log sendRemoteRequest: options =
+      verb: verb
+      url: url
+      data: @data
+
+    RestClient.restJsonRequest options
+    .then ({data, status, filterLog, session}) =>
+      log sendRemoteRequestSuccess:
+        url: url
+        status: status
+        data: data
+        filterLog: filterLog
+        session: session
+      @_toResponse success,
+        data: data
+        filterLog: filterLog
+        session: session
+    .catch (error) =>
+      log.error ArtEry:Rquest:sendRemoteRequestError: error
+      @failure error: error
