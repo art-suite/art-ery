@@ -20,10 +20,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   @getter
     inspectedObjects: ->
-      [
-        inspectedObjectLiteral @class.namespacePath
+      "#{@class.namespacePath}":
         toInspectedObjects @props
-      ]
 
   ###
   IN: data can be a plainObject or a promise returning a plainObject
