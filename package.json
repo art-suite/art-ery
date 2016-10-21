@@ -22,6 +22,7 @@
   "name": "art-ery",
   "scripts": {
     "dev": "neptune-namespaces --std; webpack-dev-server -d --progress",
+    "devServer": "./art-ery-server -r ./test/tests/Art/Ery/ClientServer/Pipelines",
     "hot": "neptune-namespaces --std; webpack-dev-server --hot --inline --progress",
     "nn": "neptune-namespaces --std",
     "nodeTest": "neptune-namespaces --std;mocha -u tdd --compilers coffee:coffee-script/register",

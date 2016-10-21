@@ -15,7 +15,7 @@ module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
     super
     validator.preCreateSync options, context: "Request options"
-    {@type, @key, @pipeline, @session, @data, @originatedOnServer} = options
+    {@type, @key, @pipeline, @session, @data, @originatedOnServer, @originatedOnClient} = options
 
   @property "type key pipeline session data originatedOnServer"
 

@@ -37,11 +37,11 @@ defineModule module, class PromiseHttp extends BaseObject
     {port} = options
 
     http.createServer (request, response) =>
-      log request: select request, "url", "headers"
+      # log request: select request, "url", "headers"
 
       data = ""
       request.on 'data', (chunk) =>
-        log onData: chunk
+        # log onData: chunk
         data = "#{data}#{chunk}"
       request.on 'end', =>
         Promise.then =>

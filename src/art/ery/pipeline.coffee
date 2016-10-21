@@ -191,7 +191,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   _applyHandler: (request) ->
     return request if request.isResponse
-    if @isRemoteClient
+    if @isRemoteClient && !request.originatedOnClient
       request.sendRemoteRequest @remoteServer
     else if handler = @handlers[request.type]
       request.addFilterLog "#{request.type}-handler"

@@ -1,9 +1,9 @@
 {defineModule, log} = require 'art-foundation'
-{Pipeline} = Neptune.Art.Ery
+{Pipeline} = require 'art-ery'
 
 defineModule module, class HelloWorld extends Pipeline
 
   remoteServer: "http://localhost:8085"
 
   @handlers
-    get: ({data}) -> "Hello #{data?.name || 'World'}!"
+    get: ({key}) -> "Hello #{key || 'World'}!"
