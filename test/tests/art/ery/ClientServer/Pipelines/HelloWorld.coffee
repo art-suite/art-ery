@@ -3,7 +3,11 @@
 
 defineModule module, class HelloWorld extends Pipeline
 
-  remoteServer: "http://localhost:8085"
+  remoteServerInfo:
+    domain: "localhost"
+    port: 8085
+    apiRoot: "api"
+    protocol: "https"
 
   @handlers
     get: ({key}) -> "Hello #{key || 'World'}!"

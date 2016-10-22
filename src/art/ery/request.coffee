@@ -49,18 +49,29 @@ module.exports = class Request extends require './RequestResponseBase'
     update: "put"
     delete: "delete"
 
-  sendRemoteRequest: (server) ->
-    url = if @type.match /^get|update|delete|create$/
-      verb = restMap[@type]
-      @getRestRequestUrl server
-    else
-      verb = "post"
-      @getNonRestRequestUrl server
+  @getRestClientParamsForArtEryRequest: getRestClientParamsForArtEryRequest = ({server, restPath, type, key, data}) ->
+    urlKeyClause = if present key then "/#{key}" else ""
+    server ||= ""
 
-    log sendRemoteRequest: options =
-      verb: verb
-      url: url
+    url = if method = restMap[type]
+      "#{server}#{restPath}#{urlKeyClause}"
+    else
+      method = "post"
+      "#{server}#{restPath}-#{type}#{urlKeyClause}"
+
+    method: method
+    url:    url
+    data:   data
+
+  sendRemoteRequest: (restPath) ->
+    options = getRestClientParamsForArtEryRequest
+      restPath: @pipeline.restPath
+      server: @pipeline.remoteServer
+      type: @type
+      key: @key
       data: @data
+
+    log sendRemoteRequest: options
 
     RestClient.restJsonRequest options
     .then ({data, status, filterLog, session}) =>

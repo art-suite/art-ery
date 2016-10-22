@@ -22,6 +22,7 @@ PipelineRegistry = require './PipelineRegistry'
   lowerCamelCase
   peek
   inspectedObjectLiteral
+  escapeRegExp
 } = Foundation
 {normalizeFieldProps} = Validator
 
@@ -95,6 +96,27 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     inspectedObjects: -> inspectedObjectLiteral @name
     isRemoteClient: -> @remoteServer
 
+    remoteServer: ->
+      return unless @remoteServerInfo
+      {domain, port, apiRoot} = @remoteServerInfo
+      ret = domain
+      ret += ":#{port}" if port
+      ret
+
+    apiRoot: ->
+      if r = @remoteServerInfo?.apiRoot
+        "/#{r}"
+      else
+        ""
+
+    restPath: -> @_restPath ||= "#{@apiRoot}/#{@name}"
+    restPathRegex: -> @_restPathRegex ||= ///
+      ^
+      #{escapeRegExp @restPath}
+      (?:-([a-z0-9_]+))?          # optional request-type (if missing, it is derived from the HTTP method)
+      (?:\/([-_.a-z0-9]+))?       # optional key
+      ///i
+
   ######################
   # constructor
   ######################
@@ -132,7 +154,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###
   getAutoDefinedQueries: -> {}
 
-  getPipelineReport: () ->
+  getPipelineReport: ->
     tableName: @tableName
     fields: newObjectFromEach @fields, (fieldProps) ->
       newObjectFromEach Object.keys(fieldProps).sort(), (out, index, k) ->
@@ -149,6 +171,15 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
           "[#{type}-handler]" if @handlers[type]
           filter.getName() for filter in @getAfterFiltersFor type
         ]).join ' > '
+
+  getApiReport: (options = {}) ->
+    {server} = options
+    newObjectFromEach @requestTypes, (type) =>
+      {method, url} = Request.getRestClientParamsForArtEryRequest
+        server: @remoteServer || server
+        type: type
+        restPath: @restPath
+      "#{method.toLocaleUpperCase()}": url
 
   ######################
   # Add Filters
@@ -233,7 +264,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     {returnResponseObject} = options
     options = key: options if isString options
 
-    if @remoteServer
+    if @remoteServer && !options.originatedOnClient
       log "should go to: #{@remoteServer}"
 
     @_processRequest new Request merge options,

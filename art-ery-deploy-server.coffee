@@ -13,8 +13,19 @@ the index.coffe file.
 
 ###
 require './src/Art'
+throng = require 'throng'
 {log} = require 'art-foundation'
 Server = require './src/Art/Ery/.Server'
 
-Server.Main.start
-  port: (process.env.PORT || Server.Main.defaults.port) | 0
+numWorkers = process.env.WEB_CONCURRENCY || 1
+port = (process.env.PORT || Server.Main.defaults.port) | 0
+
+start = -> Server.Main.start port: port
+
+if numWorkers > 1
+  throng
+    start: start
+    workers:  numWorkers
+    lifetime: Infinity
+else
+  start()

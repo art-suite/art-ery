@@ -1,4 +1,4 @@
-{select, defineModule, log, Promise, BaseObject, merge} = require 'art-foundation'
+{inspect, formattedInspect, isJsonType, select, defineModule, log, Promise, BaseObject, merge, isPlainArray} = require 'art-foundation'
 
 http = require 'http'
 
@@ -8,7 +8,9 @@ defineModule module, class PromiseHttp extends BaseObject
 
   constructor: (options = {})->
     {handlers} = options
+    @_commonResponseHeaders = options.commonResponseHeaders
     @_handlers = options.handlers || []
+    @addApiHandler options.apiHandlers
 
   @getter "handlers"
 
@@ -17,6 +19,10 @@ defineModule module, class PromiseHttp extends BaseObject
     handler: (request, data) -> promise.then (simpleResponse) ->
       IN: request is an IncomingMessaage (https://nodejs.org/api/http.html#http_class_http_incomingmessage)
       IN: data - a string for now, but might also be a Buffer later
+
+  IN: hanlder: array of handlers; each handler gets added
+  IN: null -> noop
+
   OUT:
     if falsish, then the next handler in the chain is tried
     else simpleResponse or promise returning simpleResponse
@@ -31,29 +37,78 @@ defineModule module, class PromiseHttp extends BaseObject
   # handler returns null if it passes on handling the request
   # handler returns a promise (or a value which will be wrapped in a promise) if it is handling the request
   addHandler: (handler) ->
-    @_handlers.push handler
+    switch
+      when !handler             then null
+      when isPlainArray handler then @_handlers = @_handlers.concat handler
+      else @_handlers.push handler
+
+  ###
+  IN: apiHandler: (request, plainObjectStructureInput) -> Promise.then (plainObjectStructureOutput) ->
+  IN: apiHandler can be an array of apiHandlers to add
+  IN: null -> noop
+
+  apiHandlers don't need to manage:
+    - parsing and encoding JSON
+    - response headers
+
+  apiHandler OUT:
+    if the handler can't respond to that request
+      null/false
+    else if success
+      plainObjectStructureOutput or a promise resolving to plainObjectStructureOutput
+    else if failure
+      throw error or return rejected promise
+  ###
+  addApiHandler: (apiHandler) ->
+    switch
+      when !apiHandler then null
+      when isPlainArray apiHandler then @addApiHandler h for h in apiHandler
+      else
+        @addHandler (request, data) ->
+          Promise.then ->
+            JSON.parse data || "{}"
+          .catch -> throw new Error "requested data was not valid JSON: #{data}"
+          .then (parsedData) ->
+            apiHandler request, parsedData
+          .then (responseData) ->
+            return false unless responseData
+            unless isJsonType responseData
+              throw new Error "INTERNAL ERROR: api handler did not return a JSON compatible type: #{inspect responseData}"
+            log apiHandler_then: responseData
+            headers: "Content-Type": 'application/json'
+            data: if request.headers.accept?.match /json/
+                JSON.stringify responseData
+              else
+                formattedInspect responseData
 
   start: (options = {}) ->
     {port} = options
 
     http.createServer (request, response) =>
-      # log request: select request, "url", "headers"
+      log "\nPromiseHttp request: #{request.method} #{request.url}"
 
       data = ""
-      request.on 'data', (chunk) =>
-        # log onData: chunk
-        data = "#{data}#{chunk}"
+      request.on 'data', (chunk) => data = "#{data}#{chunk}"
+
       request.on 'end', =>
         Promise.then =>
-          for handler in @handlers
-            break if handled = handler request, data
-          handled
-        .then (handled) =>
-          if handled
-            {headers, json, data} = handled
-            headers = merge headers, "Content-Type": 'application/json' if json
-            response.setHeader k, v for k, v of headers || {}
-            response.end if json then JSON.stringify json else data
+          # log requestHeaders: request.headers
+          serilizer = new Promise.Serializer
+          serilizer.then -> false
+          for handler, i in @handlers
+            do (handler, i) ->
+              serilizer.then (previous) ->
+                log previous: previous, i: i
+                previous || handler request, data
+          serilizer
+
+        .then (plainResponse) =>
+          if plainResponse
+            {headers, data} = plainResponse
+            response.setHeader k, v for k, v of merge @_commonResponseHeaders, headers
+            response.end data
+          else
+            log.error "REQUEST NOT HANDLED: #{request.method}: #{request.url}"
 
     .listen port, ->
       console.log "#{options.name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"

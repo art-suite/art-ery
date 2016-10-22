@@ -1,53 +1,81 @@
-{log, defineModule, merge, CommunicationStatus, isNumber} = require 'art-foundation'
+{newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber} = require 'art-foundation'
 {success} = CommunicationStatus
 PromiseHttp = require './PromiseHttp'
 {pipelines} = require '../'
 
-defineModule module, class Main
-  @defaults:
-    port: 8085
+defineModule module, ->
+  class Main
+    @defaults:
+      port: 8085
 
-  @start: (options) ->
-    options.port = Main.defaults.port unless isNumber options.port
-    log "Art.Ery.pipelines"
-    for k, v of pipelines
-      log "http://localhost:#{options.port}/pipelines/#{k}"
+    httpMethodsToArtEryRequestTypes =
+      get:    "get"
+      post:   "create"
+      put:    "update"
+      delete: "delete"
 
-    PromiseHttp.start merge options,
-      name: "Art.Ery.Server"
-      handlers: [
-        (request, data) ->
-
-          data = JSON.parse data || "{}"
-
-          console.log "handler: #{request.method} #{request.url}"
-          if m = request.url.match /^\/pipelines\/([a-z_][a-z0-9_]+)(?:-([a-z0-9_]+))?(?:\/([-_.a-z0-9]+))?/i
-            [__, pipelineName, requestType, key] = m
-            log match:
-              pipelineName: pipelineName
+    @artEryPipelineApiHandler:
+      (request, data) ->
+        {url} = request
+        log artEryPipelineApiHandler:
+          method: request.method
+          url: request.url
+          pipelines: Object.keys pipelines
+        for pipelineName, pipeline of pipelines
+          {restPathRegex, restPath} = pipeline
+          log "FOO!"
+          log artEryPipelineApiHandler:
+            pipelineName: pipelineName
+            restPath: restPath
+            restPathRegex: restPathRegex
+            url: url
+          if m = url.match restPathRegex
+            [__, requestType, key] = m
+            log artEryPipelineApiHandler:
+              match: pipelineName
               requestType: requestType
               key: key
-            requestType ||= request.method.toLocaleLowerCase()
-            if pipeline = pipelines[pipelineName]
-              log request:
-                pipelineName: pipelineName
-                requestType: requestType
-                requestOptions: requestOptions =
-                  originatedOnClient: true
-                  key: key
-                  data: data
-              pipeline._processClientRequest requestType, requestOptions
-              .then (result) ->
-                headers: "Access-Control-Allow-Origin": "*"
-                json: result
+              m: m
+            requestType ||= httpMethodsToArtEryRequestTypes[request.method.toLocaleLowerCase()]
+            return false unless requestType # not handled
 
-            else
-              Promise.reject "invalid pipeline: #{pipelineName}"
+            requestOptions =
+              originatedOnClient: true
+              key: key
+              data: data
+
+            log "artEryPipelineApiHandler: I can handle this!":
+              pipeline: pipelineName
+              requestType: requestType
+              requestOptions: requestOptions
+
+            return pipeline._processClientRequest requestType, requestOptions
           else
-            headers:
-              "Access-Control-Allow-Origin": "*"
+            log artEryPipelineApiHandler: nomatch: pipelineName
+        null
 
-            json:
-              status: success
-              data: "It Works!! #{request.url}"
-      ]
+    @getArtEryPipelineApiInfo: (options = {}) ->
+      log options: options
+      {server, port} = options
+      server ||= "http://localhost"
+      server += ":#{port}" if port
+
+      "Art.Ery.pipeline.json.rest.api":
+        newObjectFromEach pipelines, (pipeline) -> pipeline.getApiReport server: server
+
+    @start: (options) ->
+      options.port = Main.defaults.port unless isNumber options.port
+      log @getArtEryPipelineApiInfo options
+      throw new Error "no pipelines" unless 0 < objectKeyCount pipelines
+
+      PromiseHttp.start merge options,
+        name: "Art.Ery.Server"
+        commonResponseHeaders: "Access-Control-Allow-Origin": "*"
+        apiHandlers: [
+          @artEryPipelineApiHandler
+          => @getArtEryPipelineApiInfo options
+        ]
+
+            # else
+            #   status: success
+            #   data: "It Works!! #{request.url}"

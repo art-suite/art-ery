@@ -3,7 +3,7 @@ module.exports = (require "art-foundation/configure_webpack")
   dirname: __dirname
   package:
     scripts:
-      devServer: "./art-ery-server -r ./test/tests/Art/Ery/ClientServer/Pipelines"
+      testServer: "./art-ery-server -r ./test/tests/Art/Ery/ClientServer/Pipelines"
     description: "
       A pipelined business-logic framework for cloud-backed data. ArtEry
       conceptially allows you to write apps 100% as client-code, but with the
@@ -13,3 +13,4 @@ module.exports = (require "art-foundation/configure_webpack")
       "art-foundation": "git://github.com/imikimi/art-foundation.git"
       "art-events":     "git://github.com/imikimi/art-events.git"
       "art-flux":       "git://github.com/imikimi/art-flux.git"
+      throng:           "^4.0.0"
