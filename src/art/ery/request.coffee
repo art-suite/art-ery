@@ -64,27 +64,27 @@ module.exports = class Request extends require './RequestResponseBase'
     data:   data
 
   sendRemoteRequest: (restPath) ->
-    options = getRestClientParamsForArtEryRequest
+    remoteRequestOptions = getRestClientParamsForArtEryRequest
       restPath: @pipeline.restPath
-      server: @pipeline.remoteServer
-      type: @type
-      key: @key
-      data: @data
+      server:   @pipeline.remoteServer
+      type:     @type
+      key:      @key
+      data:     @data
 
-    log sendRemoteRequest: options
+    # log sendRemoteRequest: remoteRequestOptions
 
-    RestClient.restJsonRequest options
-    .then ({data, status, filterLog, session}) =>
-      log sendRemoteRequestSuccess:
-        url: url
-        status: status
-        data: data
-        filterLog: filterLog
-        session: session
+    RestClient.restJsonRequest remoteRequestOptions
+    .then (remoteResponseOptions) =>
+      # log sendRemoteRequestSuccess:
+      #   requestOptions: remoteRequestOptions
+      #   remoteResponseOptions: remoteResponseOptions
+      {data, status, filterLog, session} = remoteResponseOptions
       @_toResponse success,
         data: data
         filterLog: filterLog
         session: session
+        remoteRequest: remoteRequestOptions
+        remoteResponse: remoteResponseOptions
     .catch (error) =>
       log.error ArtEry:Rquest:sendRemoteRequestError: error
       @failure error: error

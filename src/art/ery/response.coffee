@@ -13,13 +13,14 @@ module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.preCreateSync options, context: "Response options"
-    {@request, @status, @data, @session, @error} = options
+    {@request, @status, @data, @session, @error, @remoteRequest, @remoteResponse} = options
+    @session ||= @request.session
     # log newResponse: @inspectedObjects
 
   isResponse: true
   toString: -> "ArtEry.Response(#{@type}: #{@status}): #{@message}"
 
-  @property "request status data session error"
+  @property "request status data session error remoteResponse remoteRequest"
   @getter
     type:             -> @request.type
     originatedOnServer: -> @request.originatedOnServer
@@ -34,3 +35,11 @@ module.exports = class Response extends require './RequestResponseBase'
       data:       @data
       session:    @session
       filterLog:  @filterLog
+      remoteRequest: @remoteRequest
+      remoteResponse: @remoteResponse
+
+    jsonResponse: ->
+      status:     @status
+      data:       @data || {}
+      session:    @session || {}
+      filterLog:  @filterLog || null

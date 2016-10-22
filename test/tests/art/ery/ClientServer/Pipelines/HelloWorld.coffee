@@ -7,7 +7,7 @@ defineModule module, class HelloWorld extends Pipeline
     domain: "localhost"
     port: 8085
     apiRoot: "api"
-    protocol: "https"
+    protocol: "http"
 
   @handlers
     get: ({key}) -> "Hello #{key || 'World'}!"

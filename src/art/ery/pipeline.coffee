@@ -98,8 +98,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     remoteServer: ->
       return unless @remoteServerInfo
-      {domain, port, apiRoot} = @remoteServerInfo
-      ret = domain
+      {domain, port, apiRoot, protocol} = @remoteServerInfo
+      protocol ||= "http"
+      ret = "#{protocol}://#{domain}"
       ret += ":#{port}" if port
       ret
 
@@ -246,10 +247,17 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     applyNextFilter response
 
   _processRequest: (request) ->
+    # log _processRequest: request
+    request = new Request merge request, pipeline: @ if isPlainObject request
     @_applyBeforeFilters request
     .then (request)  => @_applyHandler request
     .then (response) => @_applyAfterFilters response
-    .catch (error)   => request.next error
+    .catch (error)   =>
+      log.error
+        _processRequest:
+          request: request
+          error: error
+      request.next error
 
   # client actions just return the data and update the local session object if successful
   # otherwise, they "reject" the whole response object.

@@ -15,47 +15,52 @@ defineModule module, ->
       delete: "delete"
 
     @artEryPipelineApiHandler:
-      (request, data) ->
+      (request, requestBody) ->
         {url} = request
-        log artEryPipelineApiHandler:
-          method: request.method
-          url: request.url
-          pipelines: Object.keys pipelines
+        # log artEryPipelineApiHandler:
+        #   method: request.method
+        #   url: request.url
+        #   pipelines: Object.keys pipelines
         for pipelineName, pipeline of pipelines
           {restPathRegex, restPath} = pipeline
-          log "FOO!"
-          log artEryPipelineApiHandler:
-            pipelineName: pipelineName
-            restPath: restPath
-            restPathRegex: restPathRegex
-            url: url
+          # log "FOO!"
+          # log artEryPipelineApiHandler:
+          #   pipelineName: pipelineName
+          #   restPath: restPath
+          #   restPathRegex: restPathRegex
+          #   url: url
           if m = url.match restPathRegex
             [__, requestType, key] = m
-            log artEryPipelineApiHandler:
-              match: pipelineName
-              requestType: requestType
-              key: key
-              m: m
+            # log artEryPipelineApiHandler:
+            #   match: pipelineName
+            #   requestType: requestType
+            #   key: key
+            #   m: m
             requestType ||= httpMethodsToArtEryRequestTypes[request.method.toLocaleLowerCase()]
             return false unless requestType # not handled
 
             requestOptions =
+              type: requestType
               originatedOnClient: true
               key: key
-              data: data
+              data: requestBody.data
+              session: requestBody.session || {}
 
-            log "artEryPipelineApiHandler: I can handle this!":
-              pipeline: pipelineName
-              requestType: requestType
-              requestOptions: requestOptions
+            # log "artEryPipelineApiHandler: I can handle this!":
+            #   pipeline: pipelineName
+            #   requestType: requestType
+            #   requestOptions: requestOptions
 
-            return pipeline._processClientRequest requestType, requestOptions
-          else
-            log artEryPipelineApiHandler: nomatch: pipelineName
+            return pipeline._processRequest requestOptions
+            .then (response) ->
+              # log "artEryPipelineApiHandler", response.jsonResponse
+              response.jsonResponse
+          # else
+          #   log artEryPipelineApiHandler: nomatch: pipelineName
         null
 
     @getArtEryPipelineApiInfo: (options = {}) ->
-      log options: options
+      # log options: options
       {server, port} = options
       server ||= "http://localhost"
       server += ":#{port}" if port

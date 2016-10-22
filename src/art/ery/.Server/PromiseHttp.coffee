@@ -71,10 +71,11 @@ defineModule module, class PromiseHttp extends BaseObject
           .then (parsedData) ->
             apiHandler request, parsedData
           .then (responseData) ->
+            # log PromiseHttp: responseData: responseData
             return false unless responseData
             unless isJsonType responseData
               throw new Error "INTERNAL ERROR: api handler did not return a JSON compatible type: #{inspect responseData}"
-            log apiHandler_then: responseData
+            # log apiHandler_then: responseData
             headers: "Content-Type": 'application/json'
             data: if request.headers.accept?.match /json/
                 JSON.stringify responseData
@@ -85,7 +86,7 @@ defineModule module, class PromiseHttp extends BaseObject
     {port} = options
 
     http.createServer (request, response) =>
-      log "\nPromiseHttp request: #{request.method} #{request.url}"
+      log "#{new Date} PromiseHttp request: #{request.method} #{request.url}"
 
       data = ""
       request.on 'data', (chunk) => data = "#{data}#{chunk}"
@@ -98,7 +99,7 @@ defineModule module, class PromiseHttp extends BaseObject
           for handler, i in @handlers
             do (handler, i) ->
               serilizer.then (previous) ->
-                log previous: previous, i: i
+                # log previous: previous, i: i
                 previous || handler request, data
           serilizer
 
@@ -111,4 +112,4 @@ defineModule module, class PromiseHttp extends BaseObject
             log.error "REQUEST NOT HANDLED: #{request.method}: #{request.url}"
 
     .listen port, ->
-      console.log "#{options.name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"
+      log "#{options.name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"
