@@ -3,4 +3,5 @@
 
 module.exports = require './namespace'
 .addModules
+  Auth:       require './Auth'      
   HelloWorld: require './HelloWorld'

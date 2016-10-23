@@ -30,13 +30,15 @@ module.exports = class Request extends require './RequestResponseBase'
     request: -> @
 
     props: ->
-      pipeline:             @pipeline
-      type:                 @type
-      key:                  @key
-      session:              @session
-      data:                 @data
-      filterLog:            @filterLog
-      originatedOnServer:   @originatedOnServer
+      {
+        @pipeline
+        @type
+        @key
+        @session
+        @data
+        @filterLog
+        @originatedOnServer
+      }
 
     urlKeyClause: -> if present @key then "/#{@key}" else ""
 
@@ -63,28 +65,30 @@ module.exports = class Request extends require './RequestResponseBase'
     url:    url
     data:   data
 
-  sendRemoteRequest: (restPath) ->
+  sendRemoteRequest: ->
     remoteRequestOptions = getRestClientParamsForArtEryRequest
       restPath: @pipeline.restPath
       server:   @pipeline.remoteServer
       type:     @type
       key:      @key
-      data:     @data
+      data:
+        session:  @session
+        data:     @data
 
     # log sendRemoteRequest: remoteRequestOptions
 
     RestClient.restJsonRequest remoteRequestOptions
+    .catch (error) =>
+      log.error ArtEry:Rquest:sendRemoteRequestError: error
+      @failure error: error
     .then (remoteResponseOptions) =>
-      # log sendRemoteRequestSuccess:
-      #   requestOptions: remoteRequestOptions
-      #   remoteResponseOptions: remoteResponseOptions
+      log sendRemoteRequestSuccess:
+        requestOptions: remoteRequestOptions
+        remoteResponseOptions: remoteResponseOptions
       {data, status, filterLog, session} = remoteResponseOptions
-      @_toResponse success,
+      @_toResponse status,
         data: data
         filterLog: filterLog
         session: session
         remoteRequest: remoteRequestOptions
         remoteResponse: remoteResponseOptions
-    .catch (error) =>
-      log.error ArtEry:Rquest:sendRemoteRequestError: error
-      @failure error: error

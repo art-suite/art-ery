@@ -14,3 +14,4 @@ module.exports = (require "art-foundation/configure_webpack")
       "art-events":     "git://github.com/imikimi/art-events.git"
       "art-flux":       "git://github.com/imikimi/art-flux.git"
       throng:           "^4.0.0"
+      jsonwebtoken:     "^7.1.9"

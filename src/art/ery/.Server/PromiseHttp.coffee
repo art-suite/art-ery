@@ -1,6 +1,7 @@
-{inspect, formattedInspect, isJsonType, select, defineModule, log, Promise, BaseObject, merge, isPlainArray} = require 'art-foundation'
+{inspect, isPlainObject, formattedInspect, isJsonType, select, defineModule, log, Promise, BaseObject, merge, isPlainArray} = require 'art-foundation'
 
 http = require 'http'
+querystring = require 'querystring'
 
 defineModule module, class PromiseHttp extends BaseObject
   @start: (options) ->
@@ -66,16 +67,24 @@ defineModule module, class PromiseHttp extends BaseObject
       else
         @addHandler (request, data) ->
           Promise.then ->
+            log apiHandler: parseJSON: raw: data
             JSON.parse data || "{}"
           .catch -> throw new Error "requested data was not valid JSON: #{data}"
           .then (parsedData) ->
+            {url} = request
+            [__, query] = url.split "?"
+            if query
+              merge query: merge(querystring.parse(query)), parsedData
+            else
+              parsedData
+
+          .then (parsedData) ->
             apiHandler request, parsedData
           .then (responseData) ->
-            # log PromiseHttp: responseData: responseData
             return false unless responseData
             unless isJsonType responseData
               throw new Error "INTERNAL ERROR: api handler did not return a JSON compatible type: #{inspect responseData}"
-            # log apiHandler_then: responseData
+
             headers: "Content-Type": 'application/json'
             data: if request.headers.accept?.match /json/
                 JSON.stringify responseData
@@ -86,10 +95,11 @@ defineModule module, class PromiseHttp extends BaseObject
     {port} = options
 
     http.createServer (request, response) =>
-      log "#{new Date} PromiseHttp request: #{request.method} #{request.url}"
+      # log "#{new Date} PromiseHttp request: #{request.method} #{request.url}"
 
       data = ""
-      request.on 'data', (chunk) => data = "#{data}#{chunk}"
+      request.on 'data', (chunk) =>
+        data = "#{data}#{chunk}"
 
       request.on 'end', =>
         Promise.then =>
@@ -99,17 +109,20 @@ defineModule module, class PromiseHttp extends BaseObject
           for handler, i in @handlers
             do (handler, i) ->
               serilizer.then (previous) ->
-                # log previous: previous, i: i
                 previous || handler request, data
           serilizer
 
         .then (plainResponse) =>
+          log "#{new Date} PromiseHttp request: #{request.method} #{request.url} (#{data}) -> #{plainResponse.data || "(success, but no data)"}"
           if plainResponse
             {headers, data} = plainResponse
             response.setHeader k, v for k, v of merge @_commonResponseHeaders, headers
             response.end data
           else
             log.error "REQUEST NOT HANDLED: #{request.method}: #{request.url}"
+        .catch (error) =>
+          log.error "#{new Date} PromiseHttp request: #{request.method} #{request.url}, ERROR:", error
+
 
     .listen port, ->
       log "#{options.name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"

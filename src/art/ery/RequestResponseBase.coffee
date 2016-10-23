@@ -90,9 +90,11 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         else
           log.error "Internal Error: ArtEry.RequestResponseBase#_toResponse expecting responseProps or error", responseProps
 
-      new ArtEry.Response merge
-        request:  @request
-        status:   status
-        responseProps
+      response = new ArtEry.Response merge {@request, status}, responseProps
+
+      if status == success
+        Promise.resolve response
+      else
+        Promise.reject response
 
 

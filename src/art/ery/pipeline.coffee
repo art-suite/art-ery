@@ -135,12 +135,19 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @getter
     name:     -> @_name     ||= @_options.name    || decapitalize @class.getName()
     session:  -> @_session  ||= @_options.session || Session.singleton
-    requestTypes: ->
-      beforeFilters = {}
-      beforeFilters[k] = true for k, filterFunction of @handlers
+    handlerRequestTypesMap: (into = {}) ->
+      mergeInto into, @handlers
+      into
+
+    filterRequestTypesMap: (into = {}) ->
       for filter in @filters
-        beforeFilters[k] = true for k, filterFunction of filter.beforeFilters
-      Object.keys beforeFilters
+        mergeInto into, filter.beforeFilters
+      into
+
+    requestTypesMap: (into = {})->
+      @getHandlerRequestTypesMap @getFilterRequestTypesMap into
+
+    requestTypes: -> Object.keys @requestTypesMap
 
     beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
     afterFilters: -> @filters
@@ -231,7 +238,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     else
       message = "no Handler for request type: #{request.type}"
       log.error message, request: request
-      request.with message, failure
+      request.missing data: {message}
 
   _applyAfterFilters: (response) ->
     filters = @getAfterFiltersFor response.type
@@ -254,8 +261,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     .then (response) => @_applyAfterFilters response
     .catch (error)   =>
       log.error
-        _processRequest:
-          request: request
+        Pipeline_processRequest:
           error: error
       request.next error
 
@@ -278,12 +284,15 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     @_processRequest new Request merge options,
       type:     type
       pipeline: @
-      session:  @session.data
+      session:          @session.data
+      sessionSignature: @session.signature
 
     .then (response) =>
-      {status, data, session} = response
+      {status, data, session, sessionSignature} = response
       if status == success
-        @session.data = session if session
+        if session
+          @session.data = session
+          @session.signature = sessionSignature
         if returnResponseObject then response else data
       else
         throw response

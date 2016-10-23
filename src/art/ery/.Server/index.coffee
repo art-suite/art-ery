@@ -3,5 +3,6 @@
 
 module.exports = require './namespace'
 .addModules
-  Main:        require './Main'       
-  PromiseHttp: require './PromiseHttp'
+  Main:                require './Main'               
+  PromiseHttp:         require './PromiseHttp'        
+  PromiseJsonWebToken: require './PromiseJsonWebToken'

@@ -2,6 +2,27 @@
 {success} = CommunicationStatus
 PromiseHttp = require './PromiseHttp'
 {pipelines} = require '../'
+PromiseJsonWebToken = require './PromiseJsonWebToken'
+
+###
+generating a secury HMAC sessionKey:
+
+in short, run: openssl rand -base64 16
+
+http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
+Recommends 128bit string generated with a "cryptographically
+secure pseudo random number generator (CSPRNG)."
+
+http://osxdaily.com/2011/05/10/generate-random-passwords-command-line/
+# 128 bits:
+> openssl rand -base64 16
+
+# 256 bits:
+> openssl rand -base64 32
+
+###
+sessionKey = "todo+generate+your+one+unique+key" # 22 base64 characters == 132 bits
+
 
 defineModule module, ->
   class Main
@@ -14,50 +35,41 @@ defineModule module, ->
       put:    "update"
       delete: "delete"
 
-    @artEryPipelineApiHandler:
-      (request, requestBody) ->
-        {url} = request
-        # log artEryPipelineApiHandler:
-        #   method: request.method
-        #   url: request.url
-        #   pipelines: Object.keys pipelines
-        for pipelineName, pipeline of pipelines
-          {restPathRegex, restPath} = pipeline
-          # log "FOO!"
-          # log artEryPipelineApiHandler:
-          #   pipelineName: pipelineName
-          #   restPath: restPath
-          #   restPathRegex: restPathRegex
-          #   url: url
-          if m = url.match restPathRegex
-            [__, requestType, key] = m
-            # log artEryPipelineApiHandler:
-            #   match: pipelineName
-            #   requestType: requestType
-            #   key: key
-            #   m: m
-            requestType ||= httpMethodsToArtEryRequestTypes[request.method.toLocaleLowerCase()]
-            return false unless requestType # not handled
+    @findPipelineForRequest: (request) ->
+      {url} = request
+      for pipelineName, pipeline of pipelines
+        if m = url.match pipeline.restPathRegex
+          [__, type, key] = m
+          type ||= httpMethodsToArtEryRequestTypes[request.method.toLocaleLowerCase()]
+          return {pipeline, type, key} if type
 
-            requestOptions =
-              type: requestType
-              originatedOnClient: true
-              key: key
-              data: requestBody.data
-              session: requestBody.session || {}
+      null
 
-            # log "artEryPipelineApiHandler: I can handle this!":
-            #   pipeline: pipelineName
-            #   requestType: requestType
-            #   requestOptions: requestOptions
+    @signSession: (plainObjectsResponse) ->
+      {session} = plainObjectsResponse
+      PromiseJsonWebToken.sign session
+      if session
+        PromiseJsonWebToken.sign session, sessionKey
+        .then (sessionSignature) -> merge plainObjectsResponse, {sessionSignature}
+      else
+        Promise.resolve plainObjectsResponse
 
-            return pipeline._processRequest requestOptions
-            .then (response) ->
-              # log "artEryPipelineApiHandler", response.jsonResponse
-              response.jsonResponse
-          # else
-          #   log artEryPipelineApiHandler: nomatch: pipelineName
-        null
+    @artEryPipelineApiHandler: (request, requestBody) ->
+
+      if found = Main.findPipelineForRequest request
+        {pipeline, type, key} = found
+
+        requestOptions = {
+          type
+          key
+          originatedOnClient: true
+          data:     merge requestBody.query, requestBody.data
+          session:  requestBody.session || {}
+        }
+
+        return pipeline._processRequest requestOptions
+        .then (response) ->
+          Main.signSession response.plainObjectsResponse
 
     @getArtEryPipelineApiInfo: (options = {}) ->
       # log options: options

@@ -13,7 +13,7 @@ module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.preCreateSync options, context: "Response options"
-    {@request, @status, @data, @session, @error, @remoteRequest, @remoteResponse} = options
+    {@request, @status, @data = {}, @session = {}, @error, @remoteRequest, @remoteResponse} = options
     @session ||= @request.session
     # log newResponse: @inspectedObjects
 
@@ -30,16 +30,17 @@ module.exports = class Response extends require './RequestResponseBase'
     isSuccessful:     -> @_status == success
     notSuccessful:    -> @_status != success
     props: ->
-      request:    @request
-      status:     @status
-      data:       @data
-      session:    @session
-      filterLog:  @filterLog
-      remoteRequest: @remoteRequest
-      remoteResponse: @remoteResponse
+      {
+        @request
+        @status
+        @data
+        @session
+        @filterLog
+        @remoteRequest
+        @remoteResponse
+      }
 
-    jsonResponse: ->
-      status:     @status
-      data:       @data || {}
-      session:    @session || {}
-      filterLog:  @filterLog || null
+    plainObjectsResponse: ->
+      out = {@status, @data, @session}
+      out.filterLog = @filterLog if @filterLog?.length > 0
+      out
