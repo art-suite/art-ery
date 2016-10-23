@@ -62,7 +62,6 @@ module.exports = suite:
           assert.eq session.data.username, "alice"
           assert.eq loggedInAs, "alice"
 
-
       test "altering the session signature resets the session", ->
         pipelines.auth.authenticate data: username: "alice", password: "alice"
         .then ->
