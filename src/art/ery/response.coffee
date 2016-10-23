@@ -13,14 +13,14 @@ module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.preCreateSync options, context: "Response options"
-    {@request, @status, @data = {}, @session = {}, @error, @remoteRequest, @remoteResponse} = options
+    {@request, @status, @data = {}, @session, @sessionSignature, @error, @remoteRequest, @remoteResponse} = options
     @session ||= @request.session
     # log newResponse: @inspectedObjects
 
   isResponse: true
   toString: -> "ArtEry.Response(#{@type}: #{@status}): #{@message}"
 
-  @property "request status data session error remoteResponse remoteRequest"
+  @property "request status data session sessionSignature error remoteResponse remoteRequest"
   @getter
     type:             -> @request.type
     originatedOnServer: -> @request.originatedOnServer

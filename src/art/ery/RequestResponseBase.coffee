@@ -45,7 +45,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     .then (data) =>
       responseProps = if !data
         status = missing
-        data: message: "missing responseProps for key: #{inspect @key}"
+        data: message: "missing response"
       else if isJsonType data
         data: data
       else

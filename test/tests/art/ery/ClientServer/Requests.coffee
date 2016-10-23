@@ -1,5 +1,5 @@
 {log, createWithPostCreate, RestClient} = require 'art-foundation'
-{missing, Pipeline, pipelines} = Neptune.Art.Ery
+{missing, Pipeline, pipelines, session} = Neptune.Art.Ery
 
 module.exports = suite:
   pipelines: ->
@@ -46,22 +46,30 @@ module.exports = suite:
       test "works when password == username", ->
         pipelines.auth.authenticate data: username: "alice", password: "alice"
         .then ->
-          assert.eq pipelines.auth.session.data.username, "alice"
+          assert.eq session.data.username, "alice"
           pipelines.auth.loggedInAs()
-        .then (loggedInAs) -> assert.eq loggedInAs, "alice"
+        .then (loggedInAs) ->
+          assert.eq session.data.username, "alice"
+          assert.eq loggedInAs, "alice"
 
-      test "setting the session to an exact clone is ok", ->
+      test "altering the session has no effect", ->
         pipelines.auth.authenticate data: username: "alice", password: "alice"
         .then ->
-          pipelines.auth.session.data = username: "alice"
-          pipelines.auth.loggedInAs()
-        .then (loggedInAs) -> assert.eq loggedInAs, "alice"
-
-
-      test "altering the session causes session reset", ->
-        pipelines.auth.authenticate data: username: "alice", password: "alice"
-        .then ->
+          assert.eq session.data.username, "alice"
           pipelines.auth.session.data = username: "bob"
           pipelines.auth.loggedInAs()
-        .then (loggedInAs) -> assert.eq loggedInAs, "alice"
+        .then (loggedInAs) ->
+          assert.eq session.data.username, "alice"
+          assert.eq loggedInAs, "alice"
+
+
+      test "altering the session signature resets the session", ->
+        pipelines.auth.authenticate data: username: "alice", password: "alice"
+        .then ->
+          assert.eq session.data.username, "alice"
+          pipelines.auth.session.signature = "hackity hack hack"
+          pipelines.auth.loggedInAs()
+        .then (loggedInAs) ->
+          assert.eq session.data, {}
+          assert.eq loggedInAs, {}
 

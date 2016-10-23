@@ -1,11 +1,11 @@
-{newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber} = require 'art-foundation'
+{select, objectWithout, newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber} = require 'art-foundation'
 {success} = CommunicationStatus
 PromiseHttp = require './PromiseHttp'
 {pipelines} = require '../'
 PromiseJsonWebToken = require './PromiseJsonWebToken'
 
 ###
-generating a secury HMAC sessionKey:
+generating a secury HMAC privateSessionKey:
 
 in short, run: openssl rand -base64 16
 
@@ -21,7 +21,7 @@ http://osxdaily.com/2011/05/10/generate-random-passwords-command-line/
 > openssl rand -base64 32
 
 ###
-sessionKey = "todo+generate+your+one+unique+key" # 22 base64 characters == 132 bits
+privateSessionKey = "todo+generate+your+one+unique+key" # 22 base64 characters == 132 bits
 
 
 defineModule module, ->
@@ -45,31 +45,55 @@ defineModule module, ->
 
       null
 
-    @signSession: (plainObjectsResponse) ->
+    ###
+    NOTE: sessions expire after 30 days of inactivity; expiration is renewed every request.
+      TODO:
+      1) for your app, have a server-backend session record that can be manually expired
+         and store it's id in the session object
+      2) have a short-term expiration value you set in the session (5m - 1h)
+      3) check server-backend session for manual expiration after every short-term expiration
+      *) Use an ArtEry filter to do this. I'll probably write one and include it in ArtEry.Filters soon.
+        BUT it won't be tied to a specific backend; you'll still have to do that part yourself.
+    ###
+    @signSession: signSession = (plainObjectRequest, plainObjectsResponse) ->
       {session} = plainObjectsResponse
-      PromiseJsonWebToken.sign session
-      if session
-        PromiseJsonWebToken.sign session, sessionKey
-        .then (sessionSignature) -> merge plainObjectsResponse, {sessionSignature}
-      else
-        Promise.resolve plainObjectsResponse
+      PromiseJsonWebToken.sign(
+        objectWithout session || plainObjectRequest.session || {}, "exp"
+        privateSessionKey
+        expiresIn: "30 days"
+      )
+      .then (sessionSignature) -> merge plainObjectsResponse, {sessionSignature}
 
-    @artEryPipelineApiHandler: (request, requestBody) ->
+    ###
+    IN: plainObjectsRequest
+      .sessionSignature - required
+    OUT: (promise) verified session or {} if not valid
+    ###
+    @verifySession: verifySession = (plainObjectsRequest) ->
+      {sessionSignature} = plainObjectsRequest
+      return Promise.resolve({}) unless sessionSignature
+      PromiseJsonWebToken.verify sessionSignature, privateSessionKey
+      .then (session) -> session
+      .catch (e)-> {}
+
+    @artEryPipelineApiHandler: (request, plainObjectRequest) ->
 
       if found = Main.findPipelineForRequest request
-        {pipeline, type, key} = found
 
-        requestOptions = {
-          type
-          key
-          originatedOnClient: true
-          data:     merge requestBody.query, requestBody.data
-          session:  requestBody.session || {}
-        }
+        verifySession plainObjectRequest
+        .then (session) ->
+          {pipeline, type, key} = found
 
-        return pipeline._processRequest requestOptions
-        .then (response) ->
-          Main.signSession response.plainObjectsResponse
+          requestOptions =
+            type:     type
+            key:      key
+            originatedOnClient: true
+            data:     merge plainObjectRequest.query, plainObjectRequest.data
+            session:  session
+
+          pipeline._processRequest requestOptions
+          .then ({plainObjectsResponse}) ->
+            signSession plainObjectRequest, plainObjectsResponse
 
     @getArtEryPipelineApiInfo: (options = {}) ->
       # log options: options

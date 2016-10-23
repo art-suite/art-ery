@@ -122,6 +122,7 @@ defineModule module, class PromiseHttp extends BaseObject
             log.error "REQUEST NOT HANDLED: #{request.method}: #{request.url}"
         .catch (error) =>
           log.error "#{new Date} PromiseHttp request: #{request.method} #{request.url}, ERROR:", error
+          console.error error
 
 
     .listen port, ->

@@ -32,4 +32,8 @@ defineModule module, class Auth extends Pipeline
     # in order for this to work in production,
     # it has to be handled client-side
     # and that means it has to be a filter with higher priority than the highest server-side filter.
-    loggedInAs: ({session}) -> session.username
+    loggedInAs: (request) ->
+      if username = isPresentString request.session.username
+        username
+      else
+        request.success()

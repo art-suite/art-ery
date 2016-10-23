@@ -15,9 +15,9 @@ module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
     super
     validator.preCreateSync options, context: "Request options"
-    {@type, @key, @pipeline, @session, @data, @originatedOnServer, @originatedOnClient} = options
+    {@type, @key, @pipeline, @session, @data, @originatedOnServer, @originatedOnClient, @sessionSignature} = options
 
-  @property "type key pipeline session data originatedOnServer"
+  @property "type key pipeline session data originatedOnServer sessionSignature"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
@@ -72,10 +72,11 @@ module.exports = class Request extends require './RequestResponseBase'
       type:     @type
       key:      @key
       data:
-        session:  @session
-        data:     @data
+        data:             @data
+        session:          @session
+        sessionSignature: @sessionSignature
 
-    # log sendRemoteRequest: remoteRequestOptions
+    log sendRemoteRequest: remoteRequestOptions
 
     RestClient.restJsonRequest remoteRequestOptions
     .catch (error) =>
@@ -85,10 +86,11 @@ module.exports = class Request extends require './RequestResponseBase'
       log sendRemoteRequestSuccess:
         requestOptions: remoteRequestOptions
         remoteResponseOptions: remoteResponseOptions
-      {data, status, filterLog, session} = remoteResponseOptions
+      {data, status, filterLog, session, sessionSignature} = remoteResponseOptions
       @_toResponse status,
         data: data
         filterLog: filterLog
         session: session
+        sessionSignature: sessionSignature
         remoteRequest: remoteRequestOptions
         remoteResponse: remoteResponseOptions
