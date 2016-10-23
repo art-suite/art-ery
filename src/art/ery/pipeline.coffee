@@ -278,10 +278,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     {returnResponseObject} = options
     options = key: options if isString options
 
-    if @remoteServer && !options.originatedOnClient
-      log "should go to: #{@remoteServer}"
-
-    @_processRequest new Request log "new request", merge options,
+    @_processRequest new Request merge options,
       type:     type
       pipeline: @
       session:          @session.data
@@ -291,9 +288,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       {status, data, session, sessionSignature} = response
       if status == success
         if session
-          log "session response":
-            session: session
-            sessionSignature: sessionSignature
           @session.data = session
           @session.signature = sessionSignature
         if returnResponseObject then response else data

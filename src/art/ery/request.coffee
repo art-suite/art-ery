@@ -76,16 +76,10 @@ module.exports = class Request extends require './RequestResponseBase'
         session:          @session
         sessionSignature: @sessionSignature
 
-    log sendRemoteRequest: remoteRequestOptions
-
     RestClient.restJsonRequest remoteRequestOptions
     .catch (error) =>
-      log.error ArtEry:Rquest:sendRemoteRequestError: error
       @failure error: error
     .then (remoteResponseOptions) =>
-      log sendRemoteRequestSuccess:
-        requestOptions: remoteRequestOptions
-        remoteResponseOptions: remoteResponseOptions
       {data, status, filterLog, session, sessionSignature} = remoteResponseOptions
       @_toResponse status,
         data: data

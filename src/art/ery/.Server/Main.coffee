@@ -96,7 +96,6 @@ defineModule module, ->
             signSession plainObjectRequest, plainObjectsResponse
 
     @getArtEryPipelineApiInfo: (options = {}) ->
-      # log options: options
       {server, port} = options
       server ||= "http://localhost"
       server += ":#{port}" if port

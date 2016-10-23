@@ -66,9 +66,7 @@ defineModule module, class PromiseHttp extends BaseObject
       when isPlainArray apiHandler then @addApiHandler h for h in apiHandler
       else
         @addHandler (request, data) ->
-          Promise.then ->
-            log apiHandler: parseJSON: raw: data
-            JSON.parse data || "{}"
+          Promise.then -> JSON.parse data || "{}"
           .catch -> throw new Error "requested data was not valid JSON: #{data}"
           .then (parsedData) ->
             {url} = request
@@ -95,7 +93,6 @@ defineModule module, class PromiseHttp extends BaseObject
     {port} = options
 
     http.createServer (request, response) =>
-      # log "#{new Date} PromiseHttp request: #{request.method} #{request.url}"
 
       data = ""
       request.on 'data', (chunk) =>
@@ -103,7 +100,6 @@ defineModule module, class PromiseHttp extends BaseObject
 
       request.on 'end', =>
         Promise.then =>
-          # log requestHeaders: request.headers
           serilizer = new Promise.Serializer
           serilizer.then -> false
           for handler, i in @handlers
@@ -113,7 +109,7 @@ defineModule module, class PromiseHttp extends BaseObject
           serilizer
 
         .then (plainResponse) =>
-          log "#{new Date} PromiseHttp request: #{request.method} #{request.url} (#{data}) -> #{plainResponse.data || "(success, but no data)"}"
+          log "\n#{new Date} PromiseHttp request: #{request.method} #{request.url} (#{data}) -> #{plainResponse.data || "(success, but no data)"}"
           if plainResponse
             {headers, data} = plainResponse
             response.setHeader k, v for k, v of merge @_commonResponseHeaders, headers
@@ -121,7 +117,7 @@ defineModule module, class PromiseHttp extends BaseObject
           else
             log.error "REQUEST NOT HANDLED: #{request.method}: #{request.url}"
         .catch (error) =>
-          log.error "#{new Date} PromiseHttp request: #{request.method} #{request.url}, ERROR:", error
+          log.error "\n#{new Date} PromiseHttp request: #{request.method} #{request.url}, ERROR:", error
           console.error error
 
 

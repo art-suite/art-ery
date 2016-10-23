@@ -23,7 +23,6 @@ defineModule module, class Auth extends Pipeline
   @handlers
     authenticate: (request) ->
       {data} = request
-      log authenticate: data: data
       if message = authenticationFailed data
         request.failure data: message: message
       else
