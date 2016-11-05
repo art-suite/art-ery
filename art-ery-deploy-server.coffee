@@ -12,10 +12,9 @@ as a starting point. All you need to do is require your own pipelines in
 the index.coffe file.
 
 ###
-require './src/Art'
-throng = require 'throng'
-{log} = require 'art-foundation'
-Server = require './src/Art/Ery/.Server'
+throng  = require 'throng'
+{log}   = require 'art-foundation'
+Server  = require './server'
 
 numWorkers = process.env.WEB_CONCURRENCY || 1
 port = (process.env.PORT || Server.Main.defaults.port) | 0
@@ -24,7 +23,7 @@ start = -> Server.Main.start port: port
 
 if numWorkers > 1
   throng
-    start: start
+    start:    start
     workers:  numWorkers
     lifetime: Infinity
 else
