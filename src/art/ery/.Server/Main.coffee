@@ -1,3 +1,5 @@
+throng  = require 'throng'
+
 {select, objectWithout, newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber} = require 'art-foundation'
 {success} = CommunicationStatus
 PromiseHttp = require './PromiseHttp'
@@ -105,17 +107,24 @@ defineModule module, ->
 
     @start: (options) ->
       options.port = Main.defaults.port unless isNumber options.port
-      log @getArtEryPipelineApiInfo options
+      options.port |= 0
       throw new Error "no pipelines" unless 0 < objectKeyCount pipelines
 
-      PromiseHttp.start merge options,
-        name: "Art.Ery.Server"
-        commonResponseHeaders: "Access-Control-Allow-Origin": "*"
-        apiHandlers: [
-          @artEryPipelineApiHandler
-          => @getArtEryPipelineApiInfo options
-        ]
+      {numWorkers} = options
 
-            # else
-            #   status: success
-            #   data: "It Works!! #{request.url}"
+      startSingleServer = =>
+        PromiseHttp.start merge options,
+          name: "Art.Ery.Server"
+          commonResponseHeaders: "Access-Control-Allow-Origin": "*"
+          apiHandlers: [
+            @artEryPipelineApiHandler
+            => @getArtEryPipelineApiInfo options
+          ]
+
+      if numWorkers > 1
+        throng
+          start:    startSingleServer
+          workers:  numWorkers
+          lifetime: Infinity
+      else
+        startSingleServer()
