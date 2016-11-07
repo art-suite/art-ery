@@ -12,7 +12,7 @@ as a starting point. All you need to do is require your own pipelines in
 the index.coffe file.
 
 ###
-require './server'
+require './Server'
 .start
   numWorkers:   process.env.WEB_CONCURRENCY || 1
   port:         process.env.PORT

@@ -1,5 +1,5 @@
 {log, select} = require 'art-foundation'
-Server  = require './server'
+Server  = require './Server'
 
 {version} = require './package.json'
 
