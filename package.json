@@ -9,6 +9,7 @@
     "coffee-script": "^1.11.1",
     "css-loader": "^0.23.1",
     "json-loader": "^0.5.4",
+    "jsonwebtoken": "^7.1.9",
     "mocha": "^2.5.3",
     "neptune-namespaces": "^1.5.0",
     "script-loader": "^0.7.0",
