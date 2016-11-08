@@ -12,6 +12,13 @@ module.exports = suite: ->
     .then (data) ->
       assert.eq data, foo: 1, bar: 2
 
+  test "return string", ->
+    createWithPostCreate class MyPipeline extends Pipeline
+      @handlers foo: (request) -> "my string"
+
+    (new MyPipeline)
+    .foo().then (data) -> assert.eq data, "my string"
+
   test "two handlers calls, one filter", ->
     createWithPostCreate class MyPipeline extends Pipeline
       @handlers foo: (request) -> {}

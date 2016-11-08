@@ -78,5 +78,7 @@ defineModule module, class LinkFieldsFilter extends Filter
           response.withData if isPlainArray data
             # TODO: use bulkGet for efficiency
             Promise.all(@includeLinkedFields record for record in data)
-          else
+          else if isPlainObject data
             @includeLinkedFields response.data
+          else
+            data

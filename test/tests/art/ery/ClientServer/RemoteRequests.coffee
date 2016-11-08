@@ -14,6 +14,9 @@ module.exports = suite:
       RestClient.get "http://localhost:8085"
       .then (v) ->
         log v
+      .catch (e) ->
+        log.error "START THE TEST SERVER: npm run testServer"
+        throw e
 
     test "Hello George!", ->
       pipelines.helloWorld.get
