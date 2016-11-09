@@ -2,7 +2,7 @@
 Filter = require '../Filter'
 
 defineModule module, class UserOwnedFilter extends Filter
-  @filterLocation: "server"
+  @location: "server"
 
   @before
     # ensure we are setting userId to session.userId and session.userId is set

@@ -152,8 +152,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
     afterFilters: -> @filters
 
-  getBeforeFiltersFor: (type) -> filter for filter in @beforeFilters when filter.getBeforeFilter type
-  getAfterFiltersFor:  (type) -> filter for filter in @afterFilters  when filter.getAfterFilter type
+  getBeforeFiltersFor: (type, location = "server") -> filter for filter in @beforeFilters when filter.getBeforeFilter type, location
+  getAfterFiltersFor:  (type, location = "server") -> filter for filter in @afterFilters  when filter.getAfterFilter  type, location
 
   ###
   OVERRIDE
@@ -161,6 +161,14 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     query: (queryKey, pipeline) -> array of plain objects
   ###
   getAutoDefinedQueries: -> {}
+
+  getRequestProcessingReport: (processingLocation = "server") ->
+    newObjectFromEach @requestTypes, (type) =>
+      inspectedObjectLiteral compactFlatten([
+        filter.getName() for filter in @getBeforeFiltersFor type, processingLocation
+        "[remote request]"
+        filter.getName() for filter in @getAfterFiltersFor type, processingLocation
+      ]).join ' > '
 
   getPipelineReport: ->
     tableName: @tableName
@@ -172,13 +180,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
         # else
           out[k] = v
 
-    requests:
-      newObjectFromEach @requestTypes, (type) =>
-        inspectedObjectLiteral compactFlatten([
-          filter.getName() for filter in @getBeforeFiltersFor type
-          "[#{type}-handler]" if @handlers[type]
-          filter.getName() for filter in @getAfterFiltersFor type
-        ]).join ' > '
+    clientSideRequestProcessing: @getRequestProcessingReport "client"
+    serverSideRequestProcessing: @getRequestProcessingReport "server"
+    serverlessDevelopmentRequestProcessing: @getRequestProcessingReport "both"
 
   getApiReport: (options = {}) ->
     {server} = options
@@ -260,9 +264,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     .then (request)  => @_applyHandler request
     .then (response) => @_applyAfterFilters response
     .catch (error)   =>
-      log.error
-        Pipeline_processRequest:
-          error: error
+      # log.error
+      #   Pipeline_processRequest:
+      #     error: error
       request.next error
 
   # client actions just return the data and update the local session object if successful

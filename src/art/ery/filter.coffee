@@ -6,7 +6,7 @@ Response = require './Response'
 {success, failure} = CommunicationStatus
 
 defineModule module, class Filter extends require './ArtEryBaseObject'
-  @filterLocation: "server"
+  @location: "server" # 'server', 'client' or 'both'
 
   ################
   # class inheritable props
@@ -64,8 +64,10 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
 
   constructor: (options = {}) ->
     super
-    {@serverSideOnly, @clientSideOnly, @name} = options
+    {@serverSideOnly, @clientSideOnly, @name, @location} = options
     @name ||= @class.getName()
+    @_location ||= @class.location || "server"
+    @shouldFilter()
     @after options.after
     @before options.before
 
@@ -73,9 +75,18 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     serverSideOnly: false
     clientSideOnly: false
 
+  @property "location"
+
+  shouldFilter: (processingLocation) ->
+    switch @location
+      when "server" then processingLocation != "client"
+      when "client" then processingLocation != "server"
+      when "both" then true
+      else throw new Error "Filter #{@getName()}: invalid filter location: #{@location}"
+
   toString: -> @getName()
-  getBeforeFilter: (requestType) -> @beforeFilters[requestType] || @beforeFilters.all
-  getAfterFilter:  (requestType) -> @afterFilters[requestType]  || @afterFilters.all
+  getBeforeFilter: (requestType, location = "server") -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
+  getAfterFilter:  (requestType, location = "server") -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
 
   processBefore: (request) -> @_processFilter request, @getBeforeFilter request.type
   processAfter: (response) -> @_processFilter response, @getAfterFilter response.type

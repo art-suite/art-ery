@@ -28,6 +28,7 @@ defineModule module, class UniqueIdFilter extends Filter
     are guaranteed not to collide with them.
   ###
   constructor: (options)->
+    super
     @bits = options?.bits || 70
     throw new Error "too many bits: #{@bits}. max = 256" unless @bits <= 256
     @numChars = ceil @bits / 6
