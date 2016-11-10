@@ -3,12 +3,12 @@ Ery = Neptune.Art.Ery
 
 {merge, log, createWithPostCreate, CommunicationStatus, wordsArray} = Foundation
 {missing} = CommunicationStatus
-{Pipeline, Filter, Config} = Ery
+{Pipeline, Filter, config} = Ery
 
 module.exports =
 
   suite: ->
-    test "Config.tableNamePrefix", ->
-      Config.tableNamePrefix = "AwesomeApp."
+    test "config.tableNamePrefix", ->
+      config.tableNamePrefix = "AwesomeApp."
       pipeline = new class MyPipeline extends Pipeline
       assert.eq pipeline.tableName, "AwesomeApp.myPipeline"

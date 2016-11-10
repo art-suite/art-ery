@@ -8,7 +8,7 @@ SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
   setup ->
-    Neptune.Art.Ery.Config.location = "both"
+    Neptune.Art.Ery.config.location = "both"
     Neptune.Art.Ery.PipelineRegistry._reset()
     Flux._reset()
 
@@ -26,7 +26,7 @@ module.exports = suite: ->
     ArtEryFluxModel.defineModelsForAllPipelines()
 
   teardown ->
-    Neptune.Art.Ery.Config.location = "client"
+    Neptune.Art.Ery.config.location = "client"
 
   test "query model defined", ->
     assert.instanceOf Flux.models.postByUserId, ArtEryQueryFluxModel

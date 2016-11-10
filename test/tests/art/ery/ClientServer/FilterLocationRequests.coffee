@@ -1,5 +1,5 @@
 {log, createWithPostCreate, RestClient} = require 'art-foundation'
-{Config, missing, Pipeline, pipelines, session} = Neptune.Art.Ery
+{config, missing, Pipeline, pipelines, session} = Neptune.Art.Ery
 
 module.exports = suite:
 
@@ -17,11 +17,11 @@ module.exports = suite:
         ]
 
     test "both location", ->
-      {location} = Config
-      Config.location = "both"
+      {location} = config
+      config.location = "both"
       pipelines.filterLocation.filterTest returnResponseObject: true
       .then (response) ->
-        Config.location = location
+        config.location = location
         assert.eq response.handledBy, "handler"
         assert.eq response.data.customLog, [
           "serverFilter@both"

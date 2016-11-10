@@ -1,5 +1,5 @@
 {defineModule, log, isString, present, CommunicationStatus, arrayWith} = require 'art-foundation'
-{Response, Request, Pipeline, Session, Config} = require 'art-ery'
+{Response, Request, Pipeline, Session, config} = require 'art-ery'
 {success, failure, missing} = CommunicationStatus
 
 isPresentString = (s) -> isString(s) && present s
@@ -9,7 +9,7 @@ defineModule module, class FilterLocation extends Pipeline
   @remoteServer "http://localhost:8085"
 
   requestWithLog = (request, name) ->
-    request.withData customLog: arrayWith request.data?.customLog, "#{name}@#{Config.location}"
+    request.withData customLog: arrayWith request.data?.customLog, "#{name}@#{config.location}"
 
   @filter
     location: "client"
@@ -28,4 +28,4 @@ defineModule module, class FilterLocation extends Pipeline
 
   @handlers
     filterTest: (request) ->
-      request.success data: customLog: arrayWith request.data?.customLog, "[handler@#{Config.location}]"
+      request.success data: customLog: arrayWith request.data?.customLog, "[handler@#{config.location}]"

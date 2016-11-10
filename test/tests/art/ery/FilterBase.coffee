@@ -5,11 +5,11 @@ SimplePipeline = require './SimplePipeline'
 module.exports = suite:
   extendFields: ->
     setup ->
-      Neptune.Art.Ery.Config.location = "both"
+      Neptune.Art.Ery.config.location = "both"
       Neptune.Art.Ery.PipelineRegistry._reset()
 
     teardown ->
-      Neptune.Art.Ery.Config.location = "client"
+      Neptune.Art.Ery.config.location = "client"
 
     test "on subclass", ->
       class MyFilter extends Filter
@@ -39,11 +39,11 @@ module.exports = suite:
 
   order: ->
     setup ->
-      Neptune.Art.Ery.Config.location = "both"
+      Neptune.Art.Ery.config.location = "both"
       Neptune.Art.Ery.PipelineRegistry._reset()
 
     teardown ->
-      Neptune.Art.Ery.Config.location = "client"
+      Neptune.Art.Ery.config.location = "client"
 
     orderLog = []
 
@@ -79,11 +79,11 @@ module.exports = suite:
 
   all: ->
     setup ->
-      Neptune.Art.Ery.Config.location = "both"
+      Neptune.Art.Ery.config.location = "both"
       Neptune.Art.Ery.PipelineRegistry._reset()
 
     teardown ->
-      Neptune.Art.Ery.Config.location = "client"
+      Neptune.Art.Ery.config.location = "client"
 
     class OrderTestFilter extends Filter
       constructor: (@str) -> super

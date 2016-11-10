@@ -3,11 +3,11 @@
 
 module.exports = suite: ->
   setup ->
-    Neptune.Art.Ery.Config.location = "both"
+    Neptune.Art.Ery.config.location = "both"
     Neptune.Art.Ery.PipelineRegistry._reset()
 
   teardown ->
-    Neptune.Art.Ery.Config.location = "client"
+    Neptune.Art.Ery.config.location = "client"
 
   test "basic", ->
     createWithPostCreate class MyPipeline extends Pipeline

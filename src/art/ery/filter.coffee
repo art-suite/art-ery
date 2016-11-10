@@ -1,7 +1,7 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
 Response = require './Response'
-Config = require './Config'
+{config} = require './Config'
 
 {toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
 {success, failure} = CommunicationStatus
@@ -116,8 +116,8 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       else throw new Error "Filter #{@getName()}: invalid filter location: #{@location}"
 
   toString: -> @getName()
-  getBeforeFilter: (requestType, location = Config.location) -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
-  getAfterFilter:  (requestType, location = Config.location) -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
+  getBeforeFilter: (requestType, location = config.location) -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
+  getAfterFilter:  (requestType, location = config.location) -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
 
   processBefore: (request) -> @_processFilter request, @getBeforeFilter request.type, request.pipeline.location
   processAfter: (response) -> @_processFilter response, @getAfterFilter response.type, response.request.pipeline.location

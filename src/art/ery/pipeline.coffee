@@ -3,7 +3,7 @@ Response = require './Response'
 Request = require './Request'
 Filter = require './Filter'
 Session = require './Session'
-Config = require './Config'
+{config} = require './Config'
 
 PipelineRegistry = require './PipelineRegistry'
 
@@ -123,11 +123,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @handler:  @extendHandlers
   @handlers: @extendHandlers
 
-  # override default remoteServer (see Config.remoteServer)
-  @remoteServer:  (@_remoteServer) ->
-
-  # override default (see Config.apiRoot)
-  @apiRoot:       (@_apiRoot)      ->
+  @remoteServer:    (@_remoteServer)    -> # override default (see config.remoteServer)
+  @apiRoot:         (@_apiRoot)         -> # override default (see config.apiRoot)
+  @tableNamePrefix: (@_tableNamePrefix) -> # override default (see config.tableNamePrefix)
 
   ###
   declare a query - used by ArtEryFlux
@@ -176,8 +174,11 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   constructor: (@_options = {}) ->
     super
 
+  getPrefixedTableName: (tableName) => "#{@tableNamePrefix}#{tableName}"
+
   @getter "options",
-    tableName: -> Config.getPrefixedTableName @name
+    tableNamePrefix: -> @class._tableNamePrefix || config.tableNamePrefix
+    tableName: -> @getPrefixedTableName @name
     normalizedFields: ->
       nf = {}
       for k, v of @fields
@@ -203,16 +204,16 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     aliases: -> Object.keys @class.getAliases()
     inspectedObjects: -> inspectedObjectLiteral @name
     isRemoteClient: -> !!@remoteServer
-    apiRoot: -> @class._apiRoot || Config._apiRoot
+    apiRoot: -> @class._apiRoot || config._apiRoot
 
-    remoteServer: -> @class._remoteServer || Config.remoteServer
+    remoteServer: -> @class._remoteServer || config.remoteServer
 
     location: ->
       if @remoteServer
-        Config.location
+        config.location
       else "both"
 
-    restPath: -> @_restPath ||= "/#{Config.apiRoot}/#{@name}"
+    restPath: -> @_restPath ||= "/#{config.apiRoot}/#{@name}"
     restPathRegex: -> @_restPathRegex ||= ///
       ^
       #{escapeRegExp @restPath}
@@ -236,7 +237,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###############################
   # Development Reports
   ###############################
-  getRequestProcessingReport: (processingLocation = Config.location) ->
+  getRequestProcessingReport: (processingLocation = config.location) ->
     newObjectFromEach @requestTypes, (type) =>
       inspectedObjectLiteral compactFlatten([
         filter.getName() for filter in @getBeforeFiltersFor type, processingLocation
@@ -302,7 +303,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   _applyHandler: (request) ->
     return request if request.isResponse
-    if Config.location == "client" && @remoteServer
+    if config.location == "client" && @remoteServer
       request.sendRemoteRequest @remoteServer
 
     else if handler = @handlers[request.type]
