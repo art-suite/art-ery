@@ -223,7 +223,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       else
         (filter = filters[filterIndex++]).processBefore partiallyBeforeFilteredRequest
         .then (result) =>
-          result.handled "#{@name}: #{request.type}: filter: #{filter}" if result.isResponse
+          result.handled "beforeFilter: #{filter}" if result.isResponse
           applyNextFilter result
 
     applyNextFilter request
@@ -236,7 +236,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     else if handler = @handlers[request.type]
       request.next handler.call @, request
       .then (response) =>
-        response.handled "#{@name}: #{request.type}: handler"
+        response.handled "handler"
 
     else
       message = "no Handler for request type: #{request.type}"

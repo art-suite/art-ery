@@ -4,10 +4,10 @@
 module.exports = suite:
   pipelines: ->
     test "restPath", ->
-      assert.eq pipelines.helloWorld.restPath, "/api/helloWorld"
+      assert.eq pipelines.myRemote.restPath, "/api/myRemote"
 
     test "remoteServer", ->
-      assert.eq pipelines.helloWorld.remoteServer, "http://localhost:8085"
+      assert.eq pipelines.myRemote.remoteServer, "http://localhost:8085"
 
   remote: ->
     test "heartbeat", ->
@@ -20,7 +20,7 @@ module.exports = suite:
         throw e
 
     test "Hello George!", ->
-      pipelines.helloWorld.get
+      pipelines.myRemote.get
         key: "George"
         returnResponseObject: true
       .then (v) ->
@@ -29,18 +29,16 @@ module.exports = suite:
         assert.isPlainObject v.remoteResponse
 
     test "Hello Alice!", ->
-      pipelines.helloWorld.get key: "Alice"
+      pipelines.myRemote.get key: "Alice"
       .then (data) -> assert.eq data, "Hello Alice!"
 
     test "missing", ->
-      assert.rejects pipelines.helloWorld.missing()
+      assert.rejects pipelines.myRemote.missing()
       .then (response) ->
-        log response
         assert.eq response.status, "missing"
 
     test "handledByFilterRequest", ->
-      pipelines.helloWorld.handledByFilterRequest returnResponseObject: true
+      pipelines.myRemote.handledByFilterRequest returnResponseObject: true
       .then (response) ->
-        log response
-        assert.eq response.remoteResponse.handledBy, "helloWorld: handledByFilterRequest: filter: handleByFilter"
-        assert.eq response.handledBy, "POST http://localhost:8085/api/helloWorld-handledByFilterRequest"
+        assert.eq response.remoteResponse.handledBy, "beforeFilter: handleByFilter"
+        assert.eq response.handledBy, "POST http://localhost:8085/api/myRemote-handledByFilterRequest"

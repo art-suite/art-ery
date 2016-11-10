@@ -5,4 +5,4 @@ module.exports = require './namespace'
 .addModules
   Auth:           require './Auth'          
   FilterLocation: require './FilterLocation'
-  HelloWorld:     require './HelloWorld'    
+  MyRemote:       require './MyRemote'      

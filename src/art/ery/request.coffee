@@ -79,9 +79,9 @@ module.exports = class Request extends require './RequestResponseBase'
 
     RestClient.restJsonRequest remoteRequestOptions
     .catch (error) =>
-      log sendRemoteRequest: error: error
       if CommunicationStatus[error.response.status]
-        # pass it through to the normal handler
+        # if standard CommunicationStatus type
+        #   pass it through to the normal handler
         error.response
       else
         @failure error: error

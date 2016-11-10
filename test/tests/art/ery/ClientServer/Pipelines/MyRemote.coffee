@@ -1,7 +1,7 @@
 {defineModule, log} = require 'art-foundation'
 {Pipeline} = require 'art-ery'
 
-defineModule module, class HelloWorld extends Pipeline
+defineModule module, class MyRemote extends Pipeline
 
   remoteServerInfo:
     domain: "localhost"
@@ -10,11 +10,7 @@ defineModule module, class HelloWorld extends Pipeline
 
   @filter
     name: "handleByFilter"
-    before: handledByFilterRequest: (request) ->
-      request.success()
-      .then (response) ->
-        log handledByFilterRequest: response: response
-        response
+    before: handledByFilterRequest: (request) -> request.success()
 
   @handlers
     get: ({key}) -> "Hello #{key || 'World'}!"
