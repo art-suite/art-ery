@@ -7,7 +7,7 @@ UserOwnedFilter = require './UserOwnedFilter'
 {normalizeFieldProps} = Validator
 
 defineModule module, class Tools
-  @createDatabaseFilters: (fields) ->
+  @createDatabaseFilters: (fields = {}) ->
     if fields.userOwned
       fields.user = "link"
 
