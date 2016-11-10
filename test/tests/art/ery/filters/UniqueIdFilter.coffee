@@ -1,25 +1,18 @@
 {log, createWithPostCreate, isString, Validator} = require 'art-foundation'
-{UuidFilter} = Neptune.Art.Ery.Filters
+{UniqueIdFilter} = Neptune.Art.Ery.Filters
 SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
-  setup ->
-    Neptune.Art.Ery.Config.location = "both"
-    Neptune.Art.Ery.PipelineRegistry._reset()
-
-  teardown ->
-    Neptune.Art.Ery.Config.location = "client"
-
   test "fields are set correctly", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter UuidFilter
+      @filter UniqueIdFilter
 
     assert.eq MyPipeline.getFields().id.dataType, "string"
 
   test "create", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter UuidFilter
+      @filter UniqueIdFilter
 
     (new MyPipeline).create {}
     .then ({id}) ->
-      assert.match id, /^[-a-f0-9]{36}$/
+      assert.match id, /^[-_a-zA-Z0-9\/\:]{12}$/

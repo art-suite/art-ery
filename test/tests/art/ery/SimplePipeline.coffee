@@ -78,9 +78,13 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
     get: ({key}) ->
       @_store[key]
 
-    create: (request) ->
-      {nextUniqueKey} = @
-      @_store[nextUniqueKey] = merge request.data, id: nextUniqueKey
+    create: ({data}) ->
+      data = if data.id
+        data
+      else
+        merge data, id: @nextUniqueKey
+
+      @_store[data.id] = data
 
     update: ({key, data}) ->
       if previousData = @_store[key]

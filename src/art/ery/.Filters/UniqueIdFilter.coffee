@@ -1,4 +1,4 @@
-{ceil, defineModule, log, Validator, randomString} = require 'art-foundation'
+{ceil, defineModule, log, Validator, randomString, isString} = require 'art-foundation'
 Filter = require '../Filter'
 Uuid = require 'uuid'
 Crypto = require 'crypto'
@@ -34,12 +34,15 @@ defineModule module, class UniqueIdFilter extends Filter
     @numChars = ceil @bits / 6
 
   @uuid: uuid = -> Uuid.v4()
-  @compactUniqueId: compactUniqueId = (bits = 60)->
 
   @getter
     compactUniqueId: ->
-      hmac.update(uuid()).digest 'base64'
+      primer = uuid()
+      throw new Error "invalid uuid: #{inspect primer}" unless isString(primer) && primer.length > 10
+      hmac.update(primer).digest 'base64'
       .slice 0, @numChars
+      .replace /\//g, "-"
+      .replace /\+/g, "_"
 
   @before
     create: (request) ->

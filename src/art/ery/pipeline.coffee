@@ -207,6 +207,11 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     remoteServer: -> @class._remoteServer || Config.remoteServer
 
+    location: ->
+      if @remoteServer
+        Config.location
+      else "both"
+
     restPath: -> @_restPath ||= "/#{Config.apiRoot}/#{@name}"
     restPathRegex: -> @_restPathRegex ||= ///
       ^
@@ -218,8 +223,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
     afterFilters: -> @filters
 
-  getBeforeFiltersFor: (type, location = Config.location) -> filter for filter in @beforeFilters when filter.getBeforeFilter type, location
-  getAfterFiltersFor:  (type, location = Config.location) -> filter for filter in @afterFilters  when filter.getAfterFilter  type, location
+  getBeforeFiltersFor: (type, location = @location) -> filter for filter in @beforeFilters when filter.getBeforeFilter type, location
+  getAfterFiltersFor:  (type, location = @location) -> filter for filter in @afterFilters  when filter.getAfterFilter  type, location
 
   ###
   OVERRIDE

@@ -43,7 +43,7 @@ module.exports = suite: createDatabaseFilters: ->
       assert.eq data.userId, "abc123"
       assert.isNumber data.createdAt
       assert.isNumber data.updatedAt
-      assert.eq data.id, "0"
+      assert.match data.id, /^[-_a-zA-Z0-9\/\:]{12}$/
 
   # test "create", ->
   #   MyPipeline.singleton = new SimplePipeline()

@@ -119,8 +119,8 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
   getBeforeFilter: (requestType, location = Config.location) -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
   getAfterFilter:  (requestType, location = Config.location) -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
 
-  processBefore: (request) -> @_processFilter request, @getBeforeFilter request.type
-  processAfter: (response) -> @_processFilter response, @getAfterFilter response.type
+  processBefore: (request) -> @_processFilter request, @getBeforeFilter request.type, request.pipeline.location
+  processAfter: (response) -> @_processFilter response, @getAfterFilter response.type, response.request.pipeline.location
 
   @getter
     inspectedObjects: ->

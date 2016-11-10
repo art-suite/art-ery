@@ -96,6 +96,7 @@ defineModule module, ->
 
           pipeline._processRequest requestOptions
           .then ({plainObjectsResponse}) ->
+            log out: plainObjectsResponse
             signSession plainObjectRequest, plainObjectsResponse
 
     @getArtEryPipelineApiInfo: =>
