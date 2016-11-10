@@ -5,5 +5,5 @@ module.exports = require './namespace'
 .addModules
   AuthRequests:           require './AuthRequests'          
   FilterLocationRequests: require './FilterLocationRequests'
-  RemoteRequests:         require './RemoteRequests'        
+  MyRemoteRequests:       require './MyRemoteRequests'      
 require './Pipelines'
