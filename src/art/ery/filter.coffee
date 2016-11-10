@@ -1,8 +1,9 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
 Response = require './Response'
+Config = require './Config'
 
-{getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
+{toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
 {success, failure} = CommunicationStatus
 
 ###
@@ -104,10 +105,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     @after options.after
     @before options.before
 
-  @property "name",
-    serverSideOnly: false
-    clientSideOnly: false
-
+  @property "name"
   @property "location"
 
   shouldFilter: (processingLocation) ->
@@ -118,11 +116,21 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       else throw new Error "Filter #{@getName()}: invalid filter location: #{@location}"
 
   toString: -> @getName()
-  getBeforeFilter: (requestType, location = "server") -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
-  getAfterFilter:  (requestType, location = "server") -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
+  getBeforeFilter: (requestType, location = Config.location) -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
+  getAfterFilter:  (requestType, location = Config.location) -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
 
   processBefore: (request) -> @_processFilter request, @getBeforeFilter request.type
   processAfter: (response) -> @_processFilter response, @getAfterFilter response.type
+
+  @getter
+    inspectedObjects: ->
+      "#{@name}":
+        toInspectedObjects @props
+
+    props: ->
+      {
+        @location
+      }
 
   ###
   OUT:
@@ -130,6 +138,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     .catch (failingResponse) ->
   ###
   _processFilter: (responseOrRequest, filterFunction) ->
+
     Promise.then =>
       if filterFunction
         responseOrRequest.addFilterLog @
@@ -137,13 +146,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       else
         # pass-through if no filter
         responseOrRequest
-    .then (result) => responseOrRequest.next result
+    .then (result) =>
+      responseOrRequest.next result
     .catch (error) =>
-      log.error(
-        "Error Applying Filter"
-        filter: @
-        pipeline: responseOrRequest.pipeline?.name
-        responseOrRequest: responseOrRequest
-        error: error
-      )
       responseOrRequest.next error, failure

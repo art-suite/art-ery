@@ -2,6 +2,13 @@
 {missing, Pipeline} = Neptune.Art.Ery
 
 module.exports = suite: ->
+  setup ->
+    Neptune.Art.Ery.Config.location = "both"
+    Neptune.Art.Ery.PipelineRegistry._reset()
+
+  teardown ->
+    Neptune.Art.Ery.Config.location = "client"
+
   test "myCustomRequest", ->
     createWithPostCreate class MyPipeline extends Pipeline
       @handlers

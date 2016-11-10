@@ -25,6 +25,8 @@ http://osxdaily.com/2011/05/10/generate-random-passwords-command-line/
 ###
 privateSessionKey = "todo+generate+your+one+unique+key" # 22 base64 characters == 132 bits
 
+ArtEry = require 'art-ery'
+
 
 defineModule module, ->
   class Main
@@ -79,7 +81,6 @@ defineModule module, ->
       .catch (e)-> {}
 
     @artEryPipelineApiHandler: (request, plainObjectRequest) ->
-
       if found = Main.findPipelineForRequest request
 
         verifySession plainObjectRequest
@@ -97,15 +98,22 @@ defineModule module, ->
           .then ({plainObjectsResponse}) ->
             signSession plainObjectRequest, plainObjectsResponse
 
-    @getArtEryPipelineApiInfo: (options = {}) ->
-      {server, port} = options
+    @getArtEryPipelineApiInfo: =>
+      {server, port} = @options
       server ||= "http://localhost"
       server += ":#{port}" if port
 
       "Art.Ery.pipeline.json.rest.api":
         newObjectFromEach pipelines, (pipeline) -> pipeline.getApiReport server: server
 
+    @artEryPipelineDefaultHandler: (request, plainObjectRequest) =>
+      if request.url == "/"
+        @getArtEryPipelineApiInfo()
+      else
+        status: "missing"
+
     @start: (options) ->
+      @options = options
       options.port = Main.defaults.port unless isNumber options.port
       options.port |= 0
       throw new Error "no pipelines" unless 0 < objectKeyCount pipelines
@@ -113,12 +121,14 @@ defineModule module, ->
       {numWorkers} = options
 
       startSingleServer = =>
+        ArtEry.configure location: "server"
+
         PromiseHttp.start merge options,
           name: "Art.Ery.Server"
           commonResponseHeaders: "Access-Control-Allow-Origin": "*"
           apiHandlers: [
             @artEryPipelineApiHandler
-            => @getArtEryPipelineApiInfo options
+            @artEryPipelineDefaultHandler
           ]
 
       if numWorkers > 1

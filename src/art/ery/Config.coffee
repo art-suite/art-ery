@@ -1,8 +1,20 @@
-{defineModule, mergeInto, BaseObject} = require 'art-foundation'
+{w, Validator, defineModule, mergeInto, BaseObject} = require 'art-foundation'
 
 defineModule module, class Config extends BaseObject
-  @classProperty tableNamePrefix: ""
-  @getPrefixedTableName: (tableName) -> "#{@getTableNamePrefix()}#{tableName}"
+  @tableNamePrefix: ""
+  @getPrefixedTableName: (tableName) => "#{@tableNamePrefix}#{tableName}"
+
+  # the location ArtEry is currently running on
+  # "client", "server", or "both" - 'both' is the serverless mode for development & testing
+  @location: "client"
+
+  @apiRoot: "api"
+
+  configureOptionsValidator = new Validator do ->
+    validLocations = w "server client both"
+    location: validate: (v) -> !v || v in validLocations
 
   @configure: (config = {}) =>
-    @tableNamePrefix = config.tableNamePrefix || @getTableNamePrefix()
+    configureOptionsValidator.validateSync config
+    @location         = config.location         || @location
+    @tableNamePrefix  = config.tableNamePrefix  || @tableNamePrefix

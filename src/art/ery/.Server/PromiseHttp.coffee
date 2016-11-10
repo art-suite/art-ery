@@ -1,4 +1,8 @@
-{inspect, isPlainObject, formattedInspect, isJsonType, select, defineModule, log, Promise, BaseObject, merge, isPlainArray} = require 'art-foundation'
+{
+  inspect, isPlainObject, formattedInspect, isJsonType, select, defineModule, log, Promise, BaseObject, merge, isPlainArray
+  dateFormat
+  inspectLean
+} = require 'art-foundation'
 
 http = require 'http'
 querystring = require 'querystring'
@@ -78,10 +82,20 @@ defineModule module, class PromiseHttp extends BaseObject
 
           .then (parsedData) ->
             apiHandler request, parsedData
+
+          .catch (error) ->
+            status: "failure"
+            message: "#{new Date} PromiseHttp request: #{request.method} #{request.url}, ERROR: #{formattedInspect error}"
+
           .then (responseData) ->
             return false unless responseData
             unless isJsonType responseData
               throw new Error "INTERNAL ERROR: api handler did not return a JSON compatible type: #{inspect responseData}"
+
+            statusCode: switch responseData.status
+              when "missing" then 404
+              when "failure" then 500
+              else 200
 
             headers: "Content-Type": 'application/json'
             data: if request.headers.accept?.match /json/
@@ -89,14 +103,17 @@ defineModule module, class PromiseHttp extends BaseObject
               else
                 formattedInspect responseData
 
+  logTime = ->
+    dateFormat "UTC:yyyy-mm-dd_HH-MM-ss"
+
   start: (options = {}) ->
     {port} = options
 
     http.createServer (request, response) =>
 
-      data = ""
+      receivedData = ""
       request.on 'data', (chunk) =>
-        data = "#{data}#{chunk}"
+        receivedData = "#{receivedData}#{chunk}"
 
       request.on 'end', =>
         Promise.then =>
@@ -105,21 +122,30 @@ defineModule module, class PromiseHttp extends BaseObject
           for handler, i in @handlers
             do (handler, i) ->
               serilizer.then (previous) ->
-                previous || handler request, data
+                previous || handler request, receivedData
           serilizer
 
         .then (plainResponse) =>
-          log "\n#{new Date} PromiseHttp request: #{request.method} #{request.url} (#{data}) -> #{plainResponse.data || "(success, but no data)"}"
           if plainResponse
-            {headers, data} = plainResponse
+            {headers, data, statusCode = 200} = plainResponse
+
+
+            logObject =
+              "#{request.method}": request.url
+            logObject.in = receivedData if receivedData
+            logObject.bytesOut = plainResponse?.data?.length || 0
+
+            log "#{logTime().replace /\:/g, '_'}: #{statusCode}: #{inspectLean logObject}"
+
+            response.statusCode = statusCode
             response.setHeader k, v for k, v of merge @_commonResponseHeaders, headers
             response.end data
           else
             log.error "REQUEST NOT HANDLED: #{request.method}: #{request.url}"
         .catch (error) =>
-          log.error "\n#{new Date} PromiseHttp request: #{request.method} #{request.url}, ERROR:", error
+          log.error "#{logTime()} PromiseHttp: #{request.method} #{request.url}, ERROR:", error
           console.error error
-
+          response.end "#{logTime()} PromiseHttp: #{request.method} #{request.url}, ERROR: #{formattedInspect error}"
 
     .listen port, ->
       log "#{options.name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"

@@ -1,11 +1,15 @@
 {log, createWithPostCreate, isString, Validator, Promise, newObjectFromEach, isFunction} = require 'art-foundation'
-{Pipeline, Filters, pipelines} = Neptune.Art.Ery
+{Pipeline, Filters, pipelines, Config} = Neptune.Art.Ery
 {LinkFieldsFilter} = Filters
 SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
   setup ->
+    Config.location = "both"
     Neptune.Art.Ery.PipelineRegistry._reset()
+
+  teardown ->
+    Config.location = "client"
 
   trimFields = (fields) ->
     newObjectFromEach fields, (props) ->

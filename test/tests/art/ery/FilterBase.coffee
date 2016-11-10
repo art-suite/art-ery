@@ -4,6 +4,13 @@ SimplePipeline = require './SimplePipeline'
 
 module.exports = suite:
   extendFields: ->
+    setup ->
+      Neptune.Art.Ery.Config.location = "both"
+      Neptune.Art.Ery.PipelineRegistry._reset()
+
+    teardown ->
+      Neptune.Art.Ery.Config.location = "client"
+
     test "on subclass", ->
       class MyFilter extends Filter
         @fields foo: "string"
@@ -31,6 +38,13 @@ module.exports = suite:
       assert.eq myFilter.getFields(), foo: "string", bar: "number"
 
   order: ->
+    setup ->
+      Neptune.Art.Ery.Config.location = "both"
+      Neptune.Art.Ery.PipelineRegistry._reset()
+
+    teardown ->
+      Neptune.Art.Ery.Config.location = "client"
+
     orderLog = []
 
     class OrderTestFilter extends Filter
@@ -64,6 +78,12 @@ module.exports = suite:
         assert.eq savedData.message, "bag"
 
   all: ->
+    setup ->
+      Neptune.Art.Ery.Config.location = "both"
+      Neptune.Art.Ery.PipelineRegistry._reset()
+
+    teardown ->
+      Neptune.Art.Ery.Config.location = "client"
 
     class OrderTestFilter extends Filter
       constructor: (@str) -> super

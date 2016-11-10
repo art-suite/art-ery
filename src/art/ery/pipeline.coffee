@@ -94,23 +94,17 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @getter
     aliases: -> Object.keys @class.getAliases()
     inspectedObjects: -> inspectedObjectLiteral @name
-    isRemoteClient: -> @remoteServer
+    isRemoteClient: -> !!@remoteServer
 
     remoteServer: ->
       return unless @remoteServerInfo
-      {domain, port, apiRoot, protocol} = @remoteServerInfo
+      {domain, port, protocol} = @remoteServerInfo
       protocol ||= "http"
       ret = "#{protocol}://#{domain}"
       ret += ":#{port}" if port
       ret
 
-    apiRoot: ->
-      if r = @remoteServerInfo?.apiRoot
-        "/#{r}"
-      else
-        ""
-
-    restPath: -> @_restPath ||= "#{@apiRoot}/#{@name}"
+    restPath: -> @_restPath ||= "/#{Config.apiRoot}/#{@name}"
     restPathRegex: -> @_restPathRegex ||= ///
       ^
       #{escapeRegExp @restPath}
@@ -152,8 +146,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
     afterFilters: -> @filters
 
-  getBeforeFiltersFor: (type, location = "server") -> filter for filter in @beforeFilters when filter.getBeforeFilter type, location
-  getAfterFiltersFor:  (type, location = "server") -> filter for filter in @afterFilters  when filter.getAfterFilter  type, location
+  getBeforeFiltersFor: (type, location = Config.location) -> filter for filter in @beforeFilters when filter.getBeforeFilter type, location
+  getAfterFiltersFor:  (type, location = Config.location) -> filter for filter in @afterFilters  when filter.getAfterFilter  type, location
 
   ###
   OVERRIDE
@@ -162,7 +156,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###
   getAutoDefinedQueries: -> {}
 
-  getRequestProcessingReport: (processingLocation = "server") ->
+  getRequestProcessingReport: (processingLocation = Config.location) ->
     newObjectFromEach @requestTypes, (type) =>
       inspectedObjectLiteral compactFlatten([
         filter.getName() for filter in @getBeforeFiltersFor type, processingLocation
@@ -223,22 +217,27 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     filters = @getBeforeFiltersFor request.type
     filterIndex = 0
 
-    applyNextFilter = (partiallyBeforeFilteredRequest) ->
+    applyNextFilter = (partiallyBeforeFilteredRequest) =>
       if partiallyBeforeFilteredRequest.isResponse || filterIndex >= filters.length
         Promise.resolve partiallyBeforeFilteredRequest
       else
-        filters[filterIndex++].processBefore partiallyBeforeFilteredRequest
-        .then (result) -> applyNextFilter result
+        (filter = filters[filterIndex++]).processBefore partiallyBeforeFilteredRequest
+        .then (result) =>
+          result.handled "#{@name}: #{request.type}: filter: #{filter}" if result.isResponse
+          applyNextFilter result
 
     applyNextFilter request
 
   _applyHandler: (request) ->
     return request if request.isResponse
-    if @isRemoteClient && !request.originatedOnClient
+    if Config.location == "client" && @remoteServer
       request.sendRemoteRequest @remoteServer
+
     else if handler = @handlers[request.type]
-      request.addFilterLog "#{request.type}-handler"
       request.next handler.call @, request
+      .then (response) =>
+        response.handled "#{@name}: #{request.type}: handler"
+
     else
       message = "no Handler for request type: #{request.type}"
       log.error message, request: request
@@ -258,7 +257,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     applyNextFilter response
 
   _processRequest: (request) ->
-    # log _processRequest: request
     request = new Request merge request, pipeline: @ if isPlainObject request
     @_applyBeforeFilters request
     .then (request)  => @_applyHandler request

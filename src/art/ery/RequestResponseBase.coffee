@@ -3,6 +3,7 @@
   defineModule, merge, isJsonType, isString, isPlainObject, inspect
   inspectedObjectLiteral
   toInspectedObjects
+  formattedInspect
 } = require 'art-foundation'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
@@ -16,7 +17,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   @property "filterLog"
 
-  addFilterLog: (filter) -> @_filterLog = arrayWith @_filterLog, filter
+  addFilterLog: (filter) -> @_filterLog = arrayWith @_filterLog, "#{filter}"
 
   @getter
     inspectedObjects: ->
@@ -82,7 +83,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         message = null
         responseProps = data: message: if responseProps instanceof Error
           log.error(
-            message = "Internal Error: ArtEry.RequestResponseBase#_toResponse received Error instance"
+            message = "Internal Error: ArtEry.RequestResponseBase#_toResponse received Error instance: #{formattedInspect responseProps}"
             @
             responseProps
           )
@@ -96,5 +97,3 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         Promise.resolve response
       else
         Promise.reject response
-
-

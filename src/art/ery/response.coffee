@@ -13,14 +13,19 @@ module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.preCreateSync options, context: "Response options"
-    {@request, @status, @data = {}, @session, @sessionSignature, @error, @remoteRequest, @remoteResponse} = options
+    {@request, @status, @data = {}, @session, @sessionSignature, @error, @remoteRequest, @remoteResponse, @handledBy} = options
     @session ||= @request.session
     # log newResponse: @inspectedObjects
 
   isResponse: true
   toString: -> "ArtEry.Response(#{@type}: #{@status}): #{@message}"
 
-  @property "request status data session sessionSignature error remoteResponse remoteRequest"
+  # OUT: promise.then => @
+  handled: (handledBy) ->
+    @handledBy = handledBy if @status == success
+    Promise.resolve @
+
+  @property "request status data session sessionSignature error remoteResponse remoteRequest handledBy"
   @getter
     type:             -> @request.type
     originatedOnServer: -> @request.originatedOnServer
@@ -36,11 +41,14 @@ module.exports = class Response extends require './RequestResponseBase'
         @data
         @session
         @filterLog
+        @handledBy
         @remoteRequest
         @remoteResponse
       }
 
     plainObjectsResponse: ->
       out = {@status, @data, @session}
-      out.filterLog = @filterLog if @filterLog?.length > 0
+      out.beforeFilterLog = @beforeFilterLog if @beforeFilterLog?.length > 0
+      out.handledBy = @handledBy
+      out.afterFilterLog = @afterFilterLog if @afterFilterLog?.length > 0
       out

@@ -1,5 +1,5 @@
-Foundation = require 'art-foundation'
-{present, BaseObject, RestClient, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w} = Foundation
+{present, BaseObject, RestClient, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w
+} = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
@@ -17,7 +17,7 @@ module.exports = class Request extends require './RequestResponseBase'
     validator.preCreateSync options, context: "Request options"
     {@type, @key, @pipeline, @session, @data, @originatedOnServer, @originatedOnClient, @sessionSignature} = options
 
-  @property "type key pipeline session data originatedOnServer sessionSignature"
+  @property "type key pipeline session data originatedOnServer sessionSignature originatedOnClient"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
@@ -38,6 +38,7 @@ module.exports = class Request extends require './RequestResponseBase'
         @data
         @filterLog
         @originatedOnServer
+        @originatedOnClient
       }
 
     urlKeyClause: -> if present @key then "/#{@key}" else ""
@@ -78,7 +79,12 @@ module.exports = class Request extends require './RequestResponseBase'
 
     RestClient.restJsonRequest remoteRequestOptions
     .catch (error) =>
-      @failure error: error
+      log sendRemoteRequest: error: error
+      if CommunicationStatus[error.response.status]
+        # pass it through to the normal handler
+        error.response
+      else
+        @failure error: error
     .then (remoteResponseOptions) =>
       {data, status, filterLog, session, sessionSignature} = remoteResponseOptions
       @_toResponse status,
@@ -88,3 +94,5 @@ module.exports = class Request extends require './RequestResponseBase'
         sessionSignature: sessionSignature
         remoteRequest: remoteRequestOptions
         remoteResponse: remoteResponseOptions
+      .then (response) =>
+        response.handled "#{remoteRequestOptions.method.toLocaleUpperCase()} #{remoteRequestOptions.url}"

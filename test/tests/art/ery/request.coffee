@@ -35,6 +35,7 @@ module.exports = suite:
           data:                  undefined
           filterLog:             undefined
           originatedOnServer:    undefined
+          originatedOnClient:    undefined
         """
 
     test "new Request type: 'create' - valid", ->

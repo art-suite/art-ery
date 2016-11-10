@@ -2,6 +2,13 @@
 {missing, Pipeline} = Neptune.Art.Ery
 
 module.exports = suite: ->
+  setup ->
+    Neptune.Art.Ery.Config.location = "both"
+    Neptune.Art.Ery.PipelineRegistry._reset()
+
+  teardown ->
+    Neptune.Art.Ery.Config.location = "client"
+
   test "filter logs", ->
     createWithPostCreate class MyPipeline extends Pipeline
       @handlers foo: (request) -> merge request.data, foo: 1, bar: 2
@@ -18,7 +25,8 @@ module.exports = suite: ->
     p.foo
       returnResponseObject: true
     .then (response) ->
-      assert.eq ["MyBeforeFooFilter", "foo-handler"], (a.toString() for a in response.beforeFilterLog)
+      assert.eq ["MyBeforeFooFilter"], (a.toString() for a in response.beforeFilterLog)
+      assert.eq "myPipeline: foo: handler", response.handledBy
       assert.eq ["MyAfterFooFilter"], (a.toString() for a in response.afterFilterLog)
       assert.eq response.data,
         foo: 1

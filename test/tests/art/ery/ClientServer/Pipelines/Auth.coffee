@@ -10,7 +10,6 @@ defineModule module, class Auth extends Pipeline
   remoteServerInfo:
     domain: "localhost"
     port: 8085
-    apiRoot: "api"
     protocol: "http"
 
   # a stupid authentication test

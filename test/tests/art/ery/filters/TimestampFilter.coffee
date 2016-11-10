@@ -3,6 +3,13 @@
 SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
+  setup ->
+    Neptune.Art.Ery.Config.location = "both"
+    Neptune.Art.Ery.PipelineRegistry._reset()
+
+  teardown ->
+    Neptune.Art.Ery.Config.location = "client"
+
   test "fields are set correctly", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
       @filter TimestampFilter

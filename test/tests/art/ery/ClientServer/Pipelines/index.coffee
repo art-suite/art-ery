@@ -3,5 +3,6 @@
 
 module.exports = require './namespace'
 .addModules
-  Auth:       require './Auth'      
-  HelloWorld: require './HelloWorld'
+  Auth:           require './Auth'          
+  FilterLocation: require './FilterLocation'
+  HelloWorld:     require './HelloWorld'    
