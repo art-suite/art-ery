@@ -6,10 +6,7 @@ isPresentString = (s) -> isString(s) && present s
 
 defineModule module, class FilterLocation extends Pipeline
 
-  remoteServerInfo:
-    domain: "localhost"
-    port: 8085
-    protocol: "http"
+  @remoteServer "http://localhost:8085"
 
   requestWithLog = (request, name) ->
     request.withData customLog: arrayWith request.data?.customLog, "#{name}@#{Config.location}"

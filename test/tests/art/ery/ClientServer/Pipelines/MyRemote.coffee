@@ -3,10 +3,7 @@
 
 defineModule module, class MyRemote extends Pipeline
 
-  remoteServerInfo:
-    domain: "localhost"
-    port: 8085
-    protocol: "http"
+  @remoteServer "http://localhost:8085"
 
   @filter
     name: "handleByFilter"

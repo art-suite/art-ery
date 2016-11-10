@@ -10,6 +10,14 @@ defineModule module, class Config extends BaseObject
 
   @apiRoot: "api"
 
+  ###
+  remoteServer examples:
+    "http://localhost:8085"
+    "http://domain.com"
+    "https://domain.com"
+  ###
+  @remoteServer: null
+
   configureOptionsValidator = new Validator do ->
     validLocations = w "server client both"
     location: validate: (v) -> !v || v in validLocations
@@ -18,3 +26,8 @@ defineModule module, class Config extends BaseObject
     configureOptionsValidator.validateSync config
     @location         = config.location         || @location
     @tableNamePrefix  = config.tableNamePrefix  || @tableNamePrefix
+    @remoteServer     = config.remoteServer
+      # domain: "localhost"
+      # port: 8085
+      # protocol: "http"
+

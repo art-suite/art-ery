@@ -7,10 +7,7 @@ isPresentString = (s) -> isString(s) && present s
 
 defineModule module, class Auth extends Pipeline
 
-  remoteServerInfo:
-    domain: "localhost"
-    port: 8085
-    protocol: "http"
+  @remoteServer "http://localhost:8085"
 
   # a stupid authentication test
   authenticationFailed = (data) ->

@@ -51,6 +51,11 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     else if isPlainObject filter      then new Filter filter
     else throw "invalid filter: #{inspect filter} #{filter instanceof Filter}"
 
+  @getAliases: -> @_aliases || {}
+
+  ###########################
+  # Declarative API
+  ###########################
   @extendableProperty
     queries: {}
     filters: []
@@ -58,9 +63,93 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     clientApiMethodList: []
     fields: {}
 
-  @getAliases: -> @_aliases || {}
+  ###
+  define a single filter OR an array of filters to define.
+
+  NOTE: the order of filter definitions matter:
+    last-defined filters FIRST in the before-filter sequence
+    last-defined filters LAST in the after-filter sequence
+
+    Example request processing sequence:
+
+      filterDefinedLast.beforeFilter
+        filterDefinedSecond.beforeFilter
+          filterDefinedFirst.beforeFilter
+            handler
+          filterDefinedFirst.afterFilter
+        filterDefinedSecond.afterFilter
+      filterDefinedLast.afterFilter
+
+  IN:
+    name: "myFilter"                    # only used for debug purposes
+    location: "server"/"client"/"both"  # where the filter will be applied
+    before: map:
+      requestType: (request) ->
+        OUT one of these (or a promise returning one of these):
+          request
+          - the same request if nothing was filtered
+          - a new request with the new, filtered values
+
+          response in the form of:
+          - new Response
+          - null        >> request.missing()
+          - string      >> request.success data: message: string
+          - plainObject >> request.success data: plainObject
+          - plainArray  >> request.success data: plainArray
+          NOTE, if a response is returned, it shortcircuits the handler and all other
+            filters. The response is returned directly to the caller.
+
+    after: map:
+      requestType: (response) ->
+        OUT: same or new response
+           NOTE: all after-filters are applied if the handler generated the first response object
+           UNLESS there is an error, in which case the error is returned directly.
+  ###
+  @filter:        (filter)         -> @extendFilters preprocessFilter filter
 
   ###
+  add one or more handlers
+
+  IN map:
+    requestType: (request) ->
+      IN: ArtEry.Request instance
+      OUT:
+        ArtEry.Response instance
+      OR
+        plain data which will be wrapped up in an ArtEry.Response instance
+
+  @handler and @handlers are aliases.
+  ###
+  @handler:  @extendHandlers
+  @handlers: @extendHandlers
+
+  # override default remoteServer (see Config.remoteServer)
+  @remoteServer:  (@_remoteServer) ->
+
+  # override default (see Config.apiRoot)
+  @apiRoot:       (@_apiRoot)      ->
+
+  ###
+  declare a query - used by ArtEryFlux
+
+  IN: map:
+    queryName: map:
+      class properties for anonymous subclass of ArtEryQueryFluxModel
+
+  queryName is used as both the ArtFlux model-name AND the ArtEry request-type:
+    Example:
+      # invoke query
+      myPipeline.myQueryName key: queryKey
+
+      # subscribe to Model in FluxComponent
+      @subscriptions
+        myQueryName: queryKey
+  ###
+  @query:         @extendQueries
+
+  ###
+  aliases
+
   INPUT: zero or more strings or arrays of strings
     - arbitrary nesting of arrays is OK
     - nulls are OK, they are ignored
@@ -81,37 +170,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       map[lowerCamelCase v] = true
     @
 
-  preprocessFilter = (filter) ->
-    if isPlainArray filter
-      instantiateFilter f for f in filter when f
-    else
-      instantiateFilter filter
-
-  @query:     (queries)  -> @extendQueries  queries
-  @handler:   (handlers) -> @extendHandlers handlers
-  @filter:    (filter)   -> @extendFilters preprocessFilter filter
-
-  @getter
-    aliases: -> Object.keys @class.getAliases()
-    inspectedObjects: -> inspectedObjectLiteral @name
-    isRemoteClient: -> !!@remoteServer
-
-    remoteServer: ->
-      return unless @remoteServerInfo
-      {domain, port, protocol} = @remoteServerInfo
-      protocol ||= "http"
-      ret = "#{protocol}://#{domain}"
-      ret += ":#{port}" if port
-      ret
-
-    restPath: -> @_restPath ||= "/#{Config.apiRoot}/#{@name}"
-    restPathRegex: -> @_restPathRegex ||= ///
-      ^
-      #{escapeRegExp @restPath}
-      (?:-([a-z0-9_]+))?          # optional request-type (if missing, it is derived from the HTTP method)
-      (?:\/([-_.a-z0-9]+))?       # optional key
-      ///i
-
   ######################
   # constructor
   ######################
@@ -126,7 +184,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
         nf[k] = normalizeFieldProps v
       nf
 
-  @getter
     name:     -> @_name     ||= @_options.name    || decapitalize @class.getName()
     session:  -> @_session  ||= @_options.session || Session.singleton
     handlerRequestTypesMap: (into = {}) ->
@@ -143,6 +200,21 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     requestTypes: -> Object.keys @requestTypesMap
 
+    aliases: -> Object.keys @class.getAliases()
+    inspectedObjects: -> inspectedObjectLiteral @name
+    isRemoteClient: -> !!@remoteServer
+    apiRoot: -> @class._apiRoot || Config._apiRoot
+
+    remoteServer: -> @class._remoteServer || Config.remoteServer
+
+    restPath: -> @_restPath ||= "/#{Config.apiRoot}/#{@name}"
+    restPathRegex: -> @_restPathRegex ||= ///
+      ^
+      #{escapeRegExp @restPath}
+      (?:-([a-z0-9_]+))?          # optional request-type (if missing, it is derived from the HTTP method)
+      (?:\/([-_.a-z0-9]+))?       # optional key
+      ///i
+
     beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
     afterFilters: -> @filters
 
@@ -156,6 +228,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###
   getAutoDefinedQueries: -> {}
 
+  ###############################
+  # Development Reports
+  ###############################
   getRequestProcessingReport: (processingLocation = Config.location) ->
     newObjectFromEach @requestTypes, (type) =>
       inspectedObjectLiteral compactFlatten([
@@ -187,24 +262,16 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
         restPath: @restPath
       "#{method.toLocaleUpperCase()}": url
 
-  ######################
-  # Add Filters
-  ######################
-
-
-  ###
-  handlers are merely the "pearl" filter - the action that happens
-   - after all before-filters and
-   - before all after-filters
-
-  IN: map from request-types to request handlers:
-    (request) -> request OR response OR result which will be converted to a response
-  ###
-  @handlers: @extendHandlers
-
   ###################
   # PRIVATE
   ###################
+
+  preprocessFilter = (filter) ->
+    if isPlainArray filter
+      instantiateFilter f for f in filter when f
+    else
+      instantiateFilter filter
+
   @_defineQueryHandlers: ->
     for k, v of @getQueries()
       @extendHandlers k, if isFunction v then v else
