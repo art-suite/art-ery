@@ -3,8 +3,7 @@ Filter = require '../Filter'
 Uuid = require 'uuid'
 Crypto = require 'crypto'
 
-hmac = Crypto.createHmac 'sha256', randomString()
-
+secret = randomString()
 
 defineModule module, class UniqueIdFilter extends Filter
 
@@ -37,9 +36,7 @@ defineModule module, class UniqueIdFilter extends Filter
 
   @getter
     compactUniqueId: ->
-      primer = uuid()
-      throw new Error "invalid uuid: #{inspect primer}" unless isString(primer) && primer.length > 10
-      hmac.update(primer).digest 'base64'
+      Crypto.createHmac('sha256', secret).update(uuid()).digest 'base64'
       .slice 0, @numChars
       .replace /\//g, "-"
       .replace /\+/g, "_"
