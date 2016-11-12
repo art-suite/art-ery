@@ -11,8 +11,6 @@ commander = require "commander"
 .option '-r, --require <file>',    'require your pipelines with this'
 .parse process.argv
 
-commander.port ||= process.env.PORT
-
 if commander.require
   log "loading: #{commander.require }"
   require commander.require

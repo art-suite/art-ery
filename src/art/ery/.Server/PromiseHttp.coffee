@@ -106,10 +106,8 @@ defineModule module, class PromiseHttp extends BaseObject
   logTime = ->
     dateFormat "UTC:yyyy-mm-dd_HH-MM-ss"
 
-  start: (options = {}) ->
-    {port} = options
-
-    http.createServer (request, response) =>
+  @getter middleware: ->
+    (request, response, next) =>
 
       receivedData = ""
       request.on 'data', (chunk) =>
@@ -140,12 +138,19 @@ defineModule module, class PromiseHttp extends BaseObject
             response.statusCode = statusCode
             response.setHeader k, v for k, v of merge @_commonResponseHeaders, headers
             response.end data
+          else if next
+            next()
           else
             log.error "REQUEST NOT HANDLED: #{request.method}: #{request.url}"
+
         .catch (error) =>
           log.error "#{logTime()} PromiseHttp: #{request.method} #{request.url}, ERROR:", error
           console.error error
           response.end "#{logTime()} PromiseHttp: #{request.method} #{request.url}, ERROR: #{formattedInspect error}"
 
+  start: (options = {}) ->
+    {port} = options
+
+    http.createServer @middleware
     .listen port, ->
       log "#{options.name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"

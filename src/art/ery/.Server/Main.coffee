@@ -108,9 +108,11 @@ defineModule module, ->
         newObjectFromEach pipelines, (pipeline) -> pipeline.getApiReport server: server
 
     @artEryPipelineDefaultHandler: ({url}, plainObjectRequest) =>
-      apiPath = "/#{ArtEry.config.apiRoot}"
-      if url == "/" || apiPath == url.slice 0, apiPath.length
-        status: "missing"
+      if url.match @defaultHandlerRegex ||= /// ^ (\/ | | \/ #{ArtEry.config.apiRoot} .*) $ ///
+        status: if url.match @exactDefaultHandlerRegex ||= /// ^ (\/ | | \/ #{ArtEry.config.apiRoot} \/? ) $ ///
+            "success"
+          else
+            "missing"
         data: api: @getArtEryPipelineApiInfo()
       else
         status: "missing"
