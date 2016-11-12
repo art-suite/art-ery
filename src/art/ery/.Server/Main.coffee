@@ -117,7 +117,7 @@ defineModule module, ->
 
     @start: (options) =>
       @options = options || {}
-      options.port = Main.defaults.port unless isNumber options.port
+      options.port = Main.defaults.port unless options.port?
       options.port |= 0
       throw new Error "no pipelines" unless 0 < objectKeyCount pipelines
 
@@ -137,6 +137,7 @@ defineModule module, ->
       log ArtEryServer:
         numWorkers: numWorkers
         port: options.port
+        env: process.env
 
       if numWorkers > 1
         throng
