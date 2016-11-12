@@ -18,6 +18,9 @@ defineModule module, class Config extends BaseObject
     ###
     remoteServer: null
 
+    # increase logging level with interesting stuff
+    verbose: false
+
   @getPrefixedTableName: (tableName) => "#{@tableNamePrefix}#{tableName}"
 
   configureOptionsValidator = new Validator do ->
