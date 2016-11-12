@@ -223,6 +223,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
     afterFilters: -> @filters
+    status: -> "OK"
 
   getBeforeFiltersFor: (type, location = @location) -> filter for filter in @beforeFilters when filter.getBeforeFilter type, location
   getAfterFiltersFor:  (type, location = @location) -> filter for filter in @afterFilters  when filter.getAfterFilter  type, location
@@ -241,32 +242,39 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     newObjectFromEach @requestTypes, (type) =>
       inspectedObjectLiteral compactFlatten([
         filter.getName() for filter in @getBeforeFiltersFor type, processingLocation
-        "[remote request]"
+        if processingLocation == "client" then "[remote request]" else "[local handler]"
         filter.getName() for filter in @getAfterFiltersFor type, processingLocation
       ]).join ' > '
 
-  getPipelineReport: ->
-    tableName: @tableName
-    fields: newObjectFromEach @fields, (fieldProps) ->
-      newObjectFromEach Object.keys(fieldProps).sort(), (out, index, k) ->
-        v = fieldProps[k]
-        unless k == "preprocess" || k == "validate" || k == "fieldType"
-        #   out[k + if peek(k) == "e" then "d" else "ed"] = true
-        # else
-          out[k] = v
+  @getter
+    pipelineReport: (processingLocation)->
+      out =
+        tableName: @tableName
+        fields: newObjectFromEach @fields, (fieldProps) ->
+          newObjectFromEach Object.keys(fieldProps).sort(), (out, index, k) ->
+            v = fieldProps[k]
+            unless k == "preprocess" || k == "validate" || k == "fieldType"
+            #   out[k + if peek(k) == "e" then "d" else "ed"] = true
+            # else
+              out[k] = v
 
-    clientSideRequestProcessing: @getRequestProcessingReport "client"
-    serverSideRequestProcessing: @getRequestProcessingReport "server"
-    serverlessDevelopmentRequestProcessing: @getRequestProcessingReport "both"
+      if processingLocation
+        out["#{processingLocation}Processing"] = @getRequestProcessingReport "client"
+      else
+        out.clientSideRequestProcessing = @getRequestProcessingReport "client"
+        out.serverSideRequestProcessing = @getRequestProcessingReport "server"
+        out.serverlessDevelopmentRequestProcessing = @getRequestProcessingReport "both"
 
-  getApiReport: (options = {}) ->
-    {server} = options
-    newObjectFromEach @requestTypes, (type) =>
-      {method, url} = Request.getRestClientParamsForArtEryRequest
-        server: @remoteServer || server
-        type: type
-        restPath: @restPath
-      "#{method.toLocaleUpperCase()}": url
+      out
+
+    apiReport: (options = {}) ->
+      {server} = options
+      newObjectFromEach @requestTypes, (type) =>
+        {method, url} = Request.getRestClientParamsForArtEryRequest
+          server: @remoteServer || server
+          type: type
+          restPath: @restPath
+        "#{method.toLocaleUpperCase()}": url
 
   ###################
   # PRIVATE
