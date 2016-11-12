@@ -113,8 +113,8 @@ defineModule module, ->
       else
         status: "missing"
 
-    @start: (options) ->
-      @options = options
+    @start: (options) =>
+      @options = options || {}
       options.port = Main.defaults.port unless isNumber options.port
       options.port |= 0
       throw new Error "no pipelines" unless 0 < objectKeyCount pipelines
