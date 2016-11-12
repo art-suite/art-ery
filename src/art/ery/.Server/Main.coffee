@@ -107,9 +107,11 @@ defineModule module, ->
       "Art.Ery.pipeline.json.rest.api":
         newObjectFromEach pipelines, (pipeline) -> pipeline.getApiReport server: server
 
-    @artEryPipelineDefaultHandler: (request, plainObjectRequest) =>
-      if request.url == "/"
-        @getArtEryPipelineApiInfo()
+    @artEryPipelineDefaultHandler: ({url}, plainObjectRequest) =>
+      apiPath = "/#{ArtEry.config.apiRoot}"
+      if url == "/" || apiPath == url.slice 0, apiPath.length
+        status: "missing"
+        data: api: @getArtEryPipelineApiInfo()
       else
         status: "missing"
 
