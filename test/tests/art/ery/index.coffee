@@ -3,12 +3,12 @@
 
 module.exports = require './namespace'
 .addModules
-  AuthPipeline:   require './AuthPipeline'
-  config:         require './config'
-  FilterBase:     require './FilterBase'
-  Request:        require './Request'
-  Response:       require './response'
-  Session:        require './Session'
+  AuthPipeline:   require './AuthPipeline'  
+  Config:         require './Config'        
+  FilterBase:     require './FilterBase'    
+  Request:        require './Request'       
+  Response:       require './response'      
+  Session:        require './Session'       
   SimplePipeline: require './SimplePipeline'
 require './ClientServer'
 require './Filters'

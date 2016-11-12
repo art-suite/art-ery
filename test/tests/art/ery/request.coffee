@@ -28,14 +28,15 @@ module.exports = suite:
         session: {}
       assert.eq formattedInspect(request),   """
         Neptune.Art.Ery.Request:
-          pipeline:              pipeline
-          type:                  "get"
-          key:                   "123"
-          session:               {}
-          data:                  undefined
-          filterLog:             undefined
-          originatedOnServer:    undefined
-          originatedOnClient:    undefined
+          pipeline:           pipeline
+          type:               "get"
+          key:                "123"
+          session:            {}
+          data:               undefined
+          filterLog:          undefined
+          originatedOnServer: undefined
+          originatedOnClient: undefined
+
         """
 
     test "new Request type: 'create' - valid", ->

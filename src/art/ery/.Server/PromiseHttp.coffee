@@ -101,7 +101,7 @@ defineModule module, class PromiseHttp extends BaseObject
             data: if request.headers.accept?.match /json/
                 JSON.stringify responseData
               else
-                formattedInspect responseData
+                formattedInspect responseData, 160
 
   logTime = ->
     dateFormat "UTC:yyyy-mm-dd_HH-MM-ss"
