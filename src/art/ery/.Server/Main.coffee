@@ -121,8 +121,6 @@ defineModule module, ->
       options.port |= 0
       throw new Error "no pipelines" unless 0 < objectKeyCount pipelines
 
-      {numWorkers} = options
-
       startSingleServer = =>
         ArtEry.configure location: "server"
 
@@ -133,6 +131,12 @@ defineModule module, ->
             @artEryPipelineApiHandler
             @artEryPipelineDefaultHandler
           ]
+
+      {numWorkers, port} = options
+
+      log ArtEryServer:
+        numWorkers: numWorkers
+        port: options.port
 
       if numWorkers > 1
         throng
