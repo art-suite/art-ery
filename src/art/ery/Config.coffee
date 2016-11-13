@@ -27,6 +27,11 @@ defineModule module, class Config extends BaseObject
     validLocations = w "server client both"
     location: validate: (v) -> !v || v in validLocations
 
+  mergeIntoIfTargetHasOwnProperty = (target, source) ->
+    for k, v of source
+      target[k] = v if target.hasOwnProperty k
+
   @configure: (config = {}) =>
     configureOptionsValidator.validateSync config
-    mergeInto @config, config, @config
+    mergeIntoIfTargetHasOwnProperty @config, config
+

@@ -9,13 +9,13 @@ querystring = require 'querystring'
 
 defineModule module, class PromiseHttp extends BaseObject
   @start: (options) ->
-    new PromiseHttp(options).start options
+    new PromiseHttp(options).start()
 
-  constructor: (options = {})->
-    {handlers} = options
-    @_commonResponseHeaders = options.commonResponseHeaders
-    @_handlers = options.handlers || []
-    @addApiHandler options.apiHandlers
+  constructor: (@options)->
+    {handlers, @verbose} = @options ||= {}
+    @_commonResponseHeaders = @options.commonResponseHeaders
+    @_handlers = @options.handlers || []
+    @addApiHandler @options.apiHandlers
 
   @getter "handlers"
 
@@ -131,9 +131,13 @@ defineModule module, class PromiseHttp extends BaseObject
             logObject =
               "#{request.method}": request.url
             logObject.in = receivedData if receivedData
-            logObject.bytesOut = plainResponse?.data?.length || 0
 
-            log "#{logTime().replace /\:/g, '_'}: #{statusCode}: #{inspectLean logObject}"
+            log "#{logTime().replace /\:/g, '_'}: pid: #{process.pid}, status: #{statusCode}, out: #{plainResponse?.data?.length || 0}bytes, #{inspectLean logObject}"
+            if @verbose
+              log response: try
+                JSON.parse data
+              catch
+                data
 
             response.statusCode = statusCode
             response.setHeader k, v for k, v of merge @_commonResponseHeaders, headers
@@ -148,9 +152,20 @@ defineModule module, class PromiseHttp extends BaseObject
           console.error error
           response.end "#{logTime()} PromiseHttp: #{request.method} #{request.url}, ERROR: #{formattedInspect error}"
 
-  start: (options = {}) ->
-    {port} = options
+  start: ->
+    {port, name} = @options
+    staticOptions = @options.static
+    log PromiseHttp: start:
+      options: @options
 
-    http.createServer @middleware
-    .listen port, ->
-      log "#{options.name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"
+    express = require 'express'
+    app = express()
+    app.use @middleware
+    if staticOptions
+      log "serving statuc assets from: #{staticOptions.root}"
+      app.use express.static staticOptions.root, merge staticOptions,
+        maxAge: 3600*24*7 # 1 week
+        setHeaders: (res) -> res.setHeader "Access-Control-Allow-Origin", "*"
+
+    app.listen port, =>
+      log "#{name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"

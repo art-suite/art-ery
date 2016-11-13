@@ -1,18 +1,21 @@
-{log, select} = require 'art-foundation'
-Server  = require './Server'
-
-{version} = require './package.json'
-
-{defaults} = Server.Main
-
 commander = require "commander"
-.version version
-.option '-p, --port <number>',     'set the HTTP port (default: #{defaults.port})'
-.option '-r, --require <file>',    'require your pipelines with this'
+.version (require './package.json').version
+.option '-p, --port <number>',      "set the HTTP port"
+.option '-r, --require <file>',     'require your pipelines with this'
+.option '-w, --workers <number>',   'number of workers'
+.option '-s, --static [path]',      'path to server static assets out of'
 .parse process.argv
+
+{log} = require 'art-foundation'
+Server  = require './Server'
 
 if commander.require
   log "loading: #{commander.require }"
   require commander.require
 
-Server.Main.start select commander, "port"
+server = new Server.Main
+  verbose: true
+  port: commander.port
+  numWorkers: commander.workers || 1
+  static: commander.static && root: commander.static
+.start()

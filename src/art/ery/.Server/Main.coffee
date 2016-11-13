@@ -1,6 +1,9 @@
 throng  = require 'throng'
 
-{select, objectWithout, newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber} = require 'art-foundation'
+{
+  BaseObject
+  select, objectWithout, newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber
+} = require 'art-foundation'
 {success} = CommunicationStatus
 PromiseHttp = require './PromiseHttp'
 {pipelines} = require '../'
@@ -29,7 +32,7 @@ ArtEry = require 'art-ery'
 
 
 defineModule module, ->
-  class Main
+  class Main extends BaseObject
     @defaults:
       port: 8085
 
@@ -38,6 +41,19 @@ defineModule module, ->
       post:   "create"
       put:    "update"
       delete: "delete"
+
+
+    @start: (options) ->
+      new @(options).start()
+
+    constructor: (@options = {}) ->
+      ArtEry.configure merge @options, location: "server"
+      {@numWorkers, @port} = @options
+
+    @property "port numWorkers"
+
+    @setter
+      port: (port) -> @_port = (port || Main.defaults.port) | 0
 
     @findPipelineForRequest: (request) ->
       {url} = request
@@ -59,7 +75,7 @@ defineModule module, ->
       *) Use an ArtEry filter to do this. I'll probably write one and include it in ArtEry.Filters soon.
         BUT it won't be tied to a specific backend; you'll still have to do that part yourself.
     ###
-    @signSession: signSession = (plainObjectRequest, plainObjectsResponse) ->
+    signSession: signSession = (plainObjectRequest, plainObjectsResponse) ->
       {session} = plainObjectsResponse
       PromiseJsonWebToken.sign(
         objectWithout session || plainObjectRequest.session || {}, "exp"
@@ -73,14 +89,14 @@ defineModule module, ->
       .sessionSignature - required
     OUT: (promise) verified session or {} if not valid
     ###
-    @verifySession: verifySession = (plainObjectsRequest) ->
+    verifySession: verifySession = (plainObjectsRequest) ->
       {sessionSignature} = plainObjectsRequest
       return Promise.resolve({}) unless sessionSignature
       PromiseJsonWebToken.verify sessionSignature, privateSessionKey
       .then (session) -> session
       .catch (e)-> {}
 
-    @artEryPipelineApiHandler: (request, plainObjectRequest) ->
+    artEryPipelineApiHandler: (request, plainObjectRequest) ->
       if found = Main.findPipelineForRequest request
 
         verifySession plainObjectRequest
@@ -96,37 +112,29 @@ defineModule module, ->
 
           pipeline._processRequest requestOptions
           .then ({plainObjectsResponse}) ->
-            log out: plainObjectsResponse if ArtEry.config.verbose
             signSession plainObjectRequest, plainObjectsResponse
 
-    @getArtEryPipelineApiInfo: =>
-      {server, port} = @options
+    getArtEryPipelineApiInfo: ->
+      {server, port} = @
       server ||= "http://localhost"
       server += ":#{port}" if port
 
       "Art.Ery.pipeline.json.rest.api":
         newObjectFromEach pipelines, (pipeline) -> pipeline.getApiReport server: server
 
-    @artEryPipelineDefaultHandler: ({url}, plainObjectRequest) =>
+    artEryPipelineDefaultHandler: ({url}, plainObjectRequest) =>
       if url.match @defaultHandlerRegex ||= /// ^ (\/ | | \/ #{ArtEry.config.apiRoot} .*) $ ///
         status: if url.match @exactDefaultHandlerRegex ||= /// ^ (\/ | | \/ #{ArtEry.config.apiRoot} \/? ) $ ///
             "success"
           else
             "missing"
-        data: api: @getArtEryPipelineApiInfo()
-      else
-        status: "missing"
+        data: @getArtEryPipelineApiInfo()
 
-    @start: (options) =>
-      @options = options || {}
-      options.port = Main.defaults.port unless options.port?
-      options.port |= 0
-      throw new Error "no pipelines" unless 0 < objectKeyCount pipelines
-
-      startSingleServer = =>
-        ArtEry.configure location: "server"
-
-        PromiseHttp.start merge options,
+    @getter
+      promiseHttp: ->
+        @_promiseHttp ||= new PromiseHttp merge @options,
+          verbose: ArtEry.config.verbose
+          port: @port
           name: "Art.Ery.Server"
           commonResponseHeaders: "Access-Control-Allow-Origin": "*"
           apiHandlers: [
@@ -134,14 +142,24 @@ defineModule module, ->
             @artEryPipelineDefaultHandler
           ]
 
-      {numWorkers, port} = options
+      middleware: -> @promiseHttp.middleware
 
-      log ArtEryServer:
-        numWorkers: numWorkers
-        port: options.port
-        env: process.env
+    start: ->
+      unless 0 < objectKeyCount pipelines
+        log.error """
+          WARNING: there are 0 pipelines loaded; this server won't do much :).
+
+          Please require your pipelines before starting the server.
+          """
+
+      startSingleServer = => @promiseHttp.start
+        static: @options.static
+
+      {numWorkers, verbose} = @
+      log "Art.Ery.Server": env: merge process.env if verbose
 
       if numWorkers > 1
+        log "Art.Ery.Server": throng: workers: numWorkers
         throng
           start:    startSingleServer
           workers:  numWorkers
