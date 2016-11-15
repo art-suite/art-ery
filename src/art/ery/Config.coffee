@@ -1,7 +1,7 @@
-{w, Validator, defineModule, mergeInto, BaseObject} = require 'art-foundation'
+{w, Validator, defineModule, mergeInto, BaseObject, Configurable} = require 'art-foundation'
 
-defineModule module, class Config extends BaseObject
-  @config:
+defineModule module, class Config extends Configurable
+  @defaults
     tableNamePrefix: ""
 
     # the location ArtEry is currently running on
@@ -21,17 +21,4 @@ defineModule module, class Config extends BaseObject
     # increase logging level with interesting stuff
     verbose: false
 
-  @getPrefixedTableName: (tableName) => "#{@tableNamePrefix}#{tableName}"
-
-  configureOptionsValidator = new Validator do ->
-    validLocations = w "server client both"
-    location: validate: (v) -> !v || v in validLocations
-
-  mergeIntoIfTargetHasOwnProperty = (target, source) ->
-    for k, v of source
-      target[k] = v if target.hasOwnProperty k
-
-  @configure: (config = {}) =>
-    configureOptionsValidator.validateSync config
-    mergeIntoIfTargetHasOwnProperty @config, config
-
+  @getPrefixedTableName: (tableName) => "#{@config.tableNamePrefix}#{tableName}"

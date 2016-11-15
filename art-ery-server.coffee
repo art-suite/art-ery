@@ -15,6 +15,7 @@ if commander.require
 
 server = new Server.Main
   verbose: true
+  Art: Ery: verbose: true
   port: commander.port
   numWorkers: commander.workers || 1
   static: commander.static && root: commander.static

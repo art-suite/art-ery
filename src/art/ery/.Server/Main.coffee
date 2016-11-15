@@ -3,6 +3,7 @@ throng  = require 'throng'
 {
   BaseObject
   select, objectWithout, newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber
+  ConfigRegistry
 } = require 'art-foundation'
 {success} = CommunicationStatus
 PromiseHttp = require './PromiseHttp'
@@ -47,7 +48,9 @@ defineModule module, ->
       new @(options).start()
 
     constructor: (@options = {}) ->
-      ArtEry.configure merge @options, location: "server"
+      ConfigRegistry.configure
+        Art:Ery:location: "server"
+        @options
       {@numWorkers, @port} = @options
 
     @property "port numWorkers"
@@ -98,7 +101,6 @@ defineModule module, ->
 
     artEryPipelineApiHandler: (request, plainObjectRequest) ->
       if found = Main.findPipelineForRequest request
-
         verifySession plainObjectRequest
         .then (session) ->
           {pipeline, type, key} = found

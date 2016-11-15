@@ -79,12 +79,14 @@ module.exports = class Request extends require './RequestResponseBase'
 
     RestClient.restJsonRequest remoteRequestOptions
     .catch (error) =>
+      log.error "remote server error": error
       if CommunicationStatus[error?.response?.status]
         # if standard CommunicationStatus type
         #   pass it through to the normal handler
         error.response
       else
-        @failure error: error
+        log.error RestClient: error: error
+        @failure data: message: error.message
     .then (remoteResponseOptions) =>
       {data, status, filterLog, session, sessionSignature} = remoteResponseOptions
       @_toResponse status,
