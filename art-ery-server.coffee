@@ -6,12 +6,15 @@ commander = require "commander"
 .option '-s, --static [path]',      'path to server static assets out of'
 .parse process.argv
 
-{log} = require 'art-foundation'
+{log, ConfigRegistry} = require 'art-foundation'
 Server  = require './Server'
 
 if commander.require
   log "loading: #{commander.require }"
   require commander.require
+
+# normally this is hangled by art-suite-app/Client, /Node or /Server
+ConfigRegistry.configure()
 
 server = new Server.Main
   verbose: true

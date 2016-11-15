@@ -48,9 +48,7 @@ defineModule module, ->
       new @(options).start()
 
     constructor: (@options = {}) ->
-      ConfigRegistry.configure
-        Art:Ery:location: "server"
-        @options
+      ArtEry.config.location = "server"
       {@numWorkers, @port} = @options
 
     @property "port numWorkers"
