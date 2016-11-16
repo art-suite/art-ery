@@ -3,5 +3,5 @@ module.exports = [
   session: (require './Session').singleton
   package: _package = require "art-ery/package.json"
   version: _package.version
-  require './Config'
+  config: require('./Config').config
 ]

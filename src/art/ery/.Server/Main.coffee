@@ -44,7 +44,7 @@ defineModule module, ->
       delete: "delete"
 
 
-    @start: (options) ->
+    @start: (options) =>
       new @(options).start()
 
     constructor: (@options = {}) ->
