@@ -10,7 +10,7 @@ defineModule module, class MyRemote extends Pipeline
     before: handledByFilterRequest: (request) -> request.success()
 
   @handlers
-    get: ({key}) -> "Hello #{key || 'World'}!"
+    get: ({key, data}) -> "#{data?.greeting || 'Hello'} #{key || 'World'}!"
 
     missing: (request) -> request.missing()
 

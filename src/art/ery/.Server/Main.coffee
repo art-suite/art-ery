@@ -4,6 +4,7 @@ throng  = require 'throng'
   BaseObject
   select, objectWithout, newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber
   ConfigRegistry
+  deepMerge
 } = require 'art-foundation'
 {success} = CommunicationStatus
 PromiseHttp = require './PromiseHttp'
@@ -78,12 +79,15 @@ defineModule module, ->
     ###
     signSession: signSession = (plainObjectRequest, plainObjectsResponse) ->
       {session} = plainObjectsResponse
-      PromiseJsonWebToken.sign(
-        objectWithout session || plainObjectRequest.session || {}, "exp"
-        privateSessionKey
-        expiresIn: "30 days"
-      )
-      .then (sessionSignature) -> merge plainObjectsResponse, {sessionSignature}
+      if session
+        PromiseJsonWebToken.sign(
+          objectWithout session || plainObjectRequest.session || {}, "exp"
+          privateSessionKey
+          expiresIn: "30 days"
+        )
+        .then (sessionSignature) -> merge plainObjectsResponse, {sessionSignature}
+      else
+        plainObjectsResponse
 
     ###
     IN: plainObjectsRequest
@@ -91,23 +95,26 @@ defineModule module, ->
     OUT: (promise) verified session or {} if not valid
     ###
     verifySession: verifySession = (plainObjectsRequest) ->
-      {sessionSignature} = plainObjectsRequest
+      {sessionSignature, query} = plainObjectsRequest
+      sessionSignature ||= query?.sessionSignature
       return Promise.resolve({}) unless sessionSignature
       PromiseJsonWebToken.verify sessionSignature, privateSessionKey
       .then (session) -> session
       .catch (e)-> {}
 
     artEryPipelineApiHandler: (request, plainObjectRequest) ->
+      log artEryPipelineApiHandler: {plainObjectRequest}
       if found = Main.findPipelineForRequest request
         verifySession plainObjectRequest
         .then (session) ->
           {pipeline, type, key} = found
+          {query, data} = plainObjectRequest
 
           requestOptions =
             type:     type
             key:      key
             originatedOnClient: true
-            data:     merge plainObjectRequest.query, plainObjectRequest.data
+            data:     deepMerge query?.data, data
             session:  session
 
           pipeline._processRequest requestOptions
@@ -155,8 +162,12 @@ defineModule module, ->
       startSingleServer = => @promiseHttp.start
         static: @options.static
 
-      {numWorkers, verbose} = @
-      log "Art.Ery.Server": env: merge process.env if verbose
+      {numWorkers} = @
+      {verbose} = ArtEry.config
+      if verbose
+        log "Art.Ery.Server":
+          env: merge process.env
+          versions: Neptune.getVersions()
 
       if numWorkers > 1
         log "Art.Ery.Server": throng: workers: numWorkers

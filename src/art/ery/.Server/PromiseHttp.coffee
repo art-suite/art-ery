@@ -2,6 +2,7 @@
   inspect, isPlainObject, formattedInspect, isJsonType, select, defineModule, log, Promise, BaseObject, merge, isPlainArray
   dateFormat
   inspectLean
+  newObjectFromEach
 } = require 'art-foundation'
 
 http = require 'http'
@@ -76,7 +77,12 @@ defineModule module, class PromiseHttp extends BaseObject
             {url} = request
             [__, query] = url.split "?"
             if query
-              merge query: merge(querystring.parse(query)), parsedData
+              merge parsedData,
+                query: newObjectFromEach querystring.parse(query), (v) ->
+                  try
+                    JSON.parse v
+                  catch
+                    v
             else
               parsedData
 
@@ -160,6 +166,7 @@ defineModule module, class PromiseHttp extends BaseObject
 
     express = require 'express'
     app = express()
+    app.use require('compression')()
     app.use @middleware
     if staticOptions
       log "serving statuc assets from: #{staticOptions.root}"

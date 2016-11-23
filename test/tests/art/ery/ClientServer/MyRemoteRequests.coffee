@@ -28,6 +28,17 @@ module.exports = suite:
         assert.isPlainObject v.remoteRequest
         assert.isPlainObject v.remoteResponse
 
+    test "Buenos dias George!", ->
+      pipelines.myRemote.get
+        key: "George"
+        data: greeting: "Buenos dias"
+        returnResponseObject: true
+      .then (v) ->
+        assert.eq v.data, "Buenos dias George!"
+        assert.isPlainObject v.remoteRequest
+        assert.isPlainObject v.remoteResponse
+
+
     test "Hello Alice!", ->
       pipelines.myRemote.get key: "Alice"
       .then (data) -> assert.eq data, "Hello Alice!"

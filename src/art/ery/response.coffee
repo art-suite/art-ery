@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{BaseObject, arrayWith, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
+{BaseObject, objectKeyCount, arrayWith, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
 {success, missing, failure} = CommunicationStatus
 
 responseValidator = new Validator
@@ -47,7 +47,8 @@ module.exports = class Response extends require './RequestResponseBase'
       }
 
     plainObjectsResponse: ->
-      out = {@status, @data, @session}
+      out = {@status, @data}
+      out.session = @session if @session && objectKeyCount(@session) > 0
       out.beforeFilterLog = @beforeFilterLog if @beforeFilterLog?.length > 0
       out.handledBy = @handledBy
       out.afterFilterLog = @afterFilterLog if @afterFilterLog?.length > 0

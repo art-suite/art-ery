@@ -1,5 +1,5 @@
 {present, BaseObject, RestClient, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w
-} = Foundation = require 'art-foundation'
+objectKeyCount} = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
@@ -67,15 +67,16 @@ module.exports = class Request extends require './RequestResponseBase'
     data:   data
 
   sendRemoteRequest: ->
+    requestData = null
+    (requestData||={}).data = @data if @data && objectKeyCount(@data) > 0
+    (requestData||={}).sessionSignature = @sessionSignature if @sessionSignature
+
     remoteRequestOptions = getRestClientParamsForArtEryRequest
       restPath: @pipeline.restPath
       server:   @pipeline.remoteServer
       type:     @type
       key:      @key
-      data:
-        data:             @data
-        session:          @session
-        sessionSignature: @sessionSignature
+      data:     requestData
 
     RestClient.restJsonRequest remoteRequestOptions
     .catch (error) =>
