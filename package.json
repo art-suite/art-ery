@@ -34,5 +34,5 @@
     "test": "neptune-namespaces --std; webpack-dev-server -d --progress",
     "testServer": "./art-ery-server -r ./test/tests/Art/Ery/ClientServer/Pipelines -s ./test/public/"
   },
-  "version": "1.17.0"
+  "version": "1.17.1"
 }
