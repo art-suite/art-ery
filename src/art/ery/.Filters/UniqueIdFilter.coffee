@@ -44,9 +44,10 @@ defineModule module, class UniqueIdFilter extends Filter
   @before
     create: (request) ->
       request.withMergedData
-        id: if @originatedOnServer
+        id: if request.originatedOnServer
             request.data.id || @compactUniqueId
           else
+            throw new Error "specifying an ID for create is not allowed without request.originatedOnServer" if request.data.id
             @compactUniqueId
 
   @fields
