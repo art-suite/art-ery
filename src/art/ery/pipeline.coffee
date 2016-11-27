@@ -219,6 +219,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       #{escapeRegExp @restPath}
       (?:-([a-z0-9_]+))?          # optional request-type (if missing, it is derived from the HTTP method)
       (?:\/([-_.a-z0-9]+))?       # optional key
+      (?=\/|$)
       ///i
 
     beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
