@@ -1,4 +1,4 @@
-{log, createWithPostCreate, RestClient} = require 'art-foundation'
+{merge, isString, log, createWithPostCreate, RestClient} = require 'art-foundation'
 {missing, Pipeline, pipelines, session} = Neptune.Art.Ery
 
 module.exports = suite:
@@ -30,7 +30,7 @@ module.exports = suite:
         pipelines.auth.authenticate data: username: "alice", password: "alice"
         .then ->
           assert.eq session.data.username, "alice"
-          pipelines.auth.session.data = username: "bob"
+          pipelines.auth.session.data = merge pipelines.auth.session.data, username: "bob"
           pipelines.auth.loggedInAs()
         .then (loggedInAs) ->
           assert.eq session.data.username, "alice"
@@ -40,9 +40,9 @@ module.exports = suite:
         pipelines.auth.authenticate data: username: "alice", password: "alice"
         .then ->
           assert.eq session.data.username, "alice"
-          pipelines.auth.session.signature = "hackity hack hack"
+          pipelines.auth.session.data = username: "bob"
           pipelines.auth.loggedInAs()
         .then (loggedInAs) ->
-          assert.eq session.data, {}
+          assert.eq session.data, username: "bob"
           assert.eq loggedInAs, {}
 

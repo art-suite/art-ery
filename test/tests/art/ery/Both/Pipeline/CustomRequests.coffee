@@ -4,7 +4,7 @@
 module.exports = suite: ->
   setup ->
     Neptune.Art.Ery.config.location = "both"
-    Neptune.Art.Ery.PipelineRegistry._reset()
+
 
   teardown ->
     Neptune.Art.Ery.config.location = "client"

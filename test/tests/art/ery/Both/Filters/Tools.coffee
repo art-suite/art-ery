@@ -5,7 +5,7 @@ SimplePipeline = require '../SimplePipeline'
 module.exports = suite: createDatabaseFilters: ->
   setup ->
     Neptune.Art.Ery.config.location = "both"
-    Neptune.Art.Ery.PipelineRegistry._reset()
+
 
   teardown ->
     Neptune.Art.Ery.config.location = "client"

@@ -2,7 +2,7 @@ throng  = require 'throng'
 
 {
   BaseObject
-  select, objectWithout, newObjectFromEach, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber
+  select, objectWithout, object, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber
   ConfigRegistry
   deepMerge
 } = require 'art-foundation'
@@ -60,8 +60,9 @@ defineModule module, ->
     @findPipelineForRequest: (request) ->
       {url} = request
       for pipelineName, pipeline of pipelines
-        if m = url.match pipeline.restPathRegex
-          [__, type, key] = m
+        if match = url.match pipeline.restPathRegex
+          # log findPipelineForRequest: {match, url}
+          [__, type, key] = match
           type ||= httpMethodsToArtEryRequestTypes[request.method.toLocaleLowerCase()]
           return {pipeline, type, key} if type
 
@@ -85,30 +86,35 @@ defineModule module, ->
           privateSessionKey
           expiresIn: "30 days"
         )
-        .then (sessionSignature) -> merge plainObjectsResponse, {sessionSignature}
+        .then (signature) -> deepMerge plainObjectsResponse, session: {signature}
       else
         plainObjectsResponse
 
     ###
-    IN: plainObjectsRequest
-      .sessionSignature - required
+    IN: plainObjectsRequest:
+      session:         # encrypted session string
+      query: session:  # encrypted session string
     OUT: (promise) verified session or {} if not valid
     ###
     verifySession: verifySession = (plainObjectsRequest) ->
-      {sessionSignature, query} = plainObjectsRequest
-      sessionSignature ||= query?.sessionSignature
-      return Promise.resolve({}) unless sessionSignature
-      PromiseJsonWebToken.verify sessionSignature, privateSessionKey
-      .then (session) -> session
-      .catch (e)-> {}
+      {session, query} = plainObjectsRequest
+      unless sessionSignature = session || query?.session
+        Promise.resolve({})
+      else
+        PromiseJsonWebToken.verify sessionSignature, privateSessionKey
+        .then (session) -> session
+        .catch (e)->
+          log.error "session failed validation"
+          {}
 
     artEryPipelineApiHandler: (request, plainObjectRequest) ->
-      log artEryPipelineApiHandler: {plainObjectRequest}
       if found = Main.findPipelineForRequest request
         verifySession plainObjectRequest
         .then (session) ->
+          {url} = request
           {pipeline, type, key} = found
           {query, data} = plainObjectRequest
+          # log artEryPipelineApiHandler: {pipeline, type, key, query, data, url}
 
           requestOptions =
             type:     type
@@ -127,7 +133,7 @@ defineModule module, ->
       server += ":#{port}" if port
 
       "Art.Ery.pipeline.json.rest.api":
-        newObjectFromEach pipelines, (pipeline) -> pipeline.getApiReport server: server
+        object pipelines, (pipeline) -> pipeline.getApiReport server: server
 
     artEryPipelineDefaultHandler: ({url}, plainObjectRequest) =>
       if url.match @defaultHandlerRegex ||= /// ^ (\/ | | \/ #{ArtEry.config.apiRoot} .*) $ ///

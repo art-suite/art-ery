@@ -6,7 +6,7 @@ module.exports = suite:
   extendFields: ->
     setup ->
       Neptune.Art.Ery.config.location = "both"
-      Neptune.Art.Ery.PipelineRegistry._reset()
+
 
     teardown ->
       Neptune.Art.Ery.config.location = "client"
@@ -40,7 +40,7 @@ module.exports = suite:
   order: ->
     setup ->
       Neptune.Art.Ery.config.location = "both"
-      Neptune.Art.Ery.PipelineRegistry._reset()
+
 
     teardown ->
       Neptune.Art.Ery.config.location = "client"
@@ -80,7 +80,7 @@ module.exports = suite:
   all: ->
     setup ->
       Neptune.Art.Ery.config.location = "both"
-      Neptune.Art.Ery.PipelineRegistry._reset()
+
 
     teardown ->
       Neptune.Art.Ery.config.location = "client"

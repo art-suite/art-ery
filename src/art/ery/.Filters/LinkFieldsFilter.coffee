@@ -1,4 +1,4 @@
-{isPlainObject, newObjectFromEach, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
+{isPlainObject, each, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
 Filter = require '../Filter'
 {normalizeFieldProps} = Validator
 
@@ -37,7 +37,7 @@ defineModule module, class LinkFieldsFilter extends Filter
 
   booleanProps = wordsArray "link required include autoCreate"
   @normalizeLinkFields: (linkFields) ->
-    newObjectFromEach linkFields, (lf, fieldName, fieldProps) ->
+    each linkFields, lf = {}, (fieldProps, fieldName) ->
       {link, include, required, autoCreate} = normalizeFieldProps fieldProps
       if link
         lf[fieldName] = props =

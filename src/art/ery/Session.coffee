@@ -12,11 +12,9 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   ###
   @singletonClass()
 
-  @property "data signature"
+  @property "data"
 
   constructor: (@_data = {}) ->
-    super
-    @_signature = ""
 
   loadSession: ->
     @_sessionLoadPromise = jsonStore.getItem jsonStoreKey
@@ -25,6 +23,8 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
       @data = data if data
 
   @getter "sessionLoadPromise",
+    sessionSignature: -> @_data?.signature
+
     inspectedObjects: -> @_data
 
   @setter

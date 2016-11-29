@@ -10,7 +10,7 @@ module.exports = suite: ->
   Chat = null
   chat = null
   setup ->
-    Neptune.Art.Ery.PipelineRegistry._reset()
+
     Flux._reset()
     createWithPostCreate class MyPipeline extends SimplePipeline
       @filter     new UuidFilter

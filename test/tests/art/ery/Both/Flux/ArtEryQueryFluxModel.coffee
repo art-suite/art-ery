@@ -9,7 +9,7 @@ SimplePipeline = require '../SimplePipeline'
 module.exports = suite: ->
   setup ->
     Neptune.Art.Ery.config.location = "both"
-    Neptune.Art.Ery.PipelineRegistry._reset()
+
     Flux._reset()
 
     createWithPostCreate class Post extends Pipeline

@@ -13,7 +13,7 @@ module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.preCreateSync options, context: "Response options"
-    {@request, @status, @data = {}, @session, @sessionSignature, @error, @remoteRequest, @remoteResponse, @handledBy} = options
+    {@request, @status, @data = {}, @session, @error, @remoteRequest, @remoteResponse, @handledBy} = options
     @session ||= @request.session
     # log newResponse: @inspectedObjects
 
@@ -25,7 +25,7 @@ module.exports = class Response extends require './RequestResponseBase'
     @handledBy = handledBy if @status == success
     Promise.resolve @
 
-  @property "request status data session sessionSignature error remoteResponse remoteRequest handledBy"
+  @property "request status data session error remoteResponse remoteRequest handledBy"
   @getter
     type:             -> @request.type
     originatedOnServer: -> @request.originatedOnServer

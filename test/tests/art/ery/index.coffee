@@ -2,15 +2,5 @@
 # file: tests/Art/Ery/index.coffee
 
 module.exports = require './namespace'
-.addModules
-  AuthPipeline:   require './AuthPipeline'  
-  Config:         require './Config'        
-  FilterBase:     require './FilterBase'    
-  Request:        require './Request'       
-  Response:       require './response'      
-  Session:        require './Session'       
-  SimplePipeline: require './SimplePipeline'
+require './Both'
 require './ClientServer'
-require './Filters'
-require './Flux'
-require './Pipeline'

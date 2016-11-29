@@ -2,7 +2,7 @@
   inspect, isPlainObject, formattedInspect, isJsonType, select, defineModule, log, Promise, BaseObject, merge, isPlainArray
   dateFormat
   inspectLean
-  newObjectFromEach
+  object
 } = require 'art-foundation'
 
 http = require 'http'
@@ -78,7 +78,7 @@ defineModule module, class PromiseHttp extends BaseObject
             [__, query] = url.split "?"
             if query
               merge parsedData,
-                query: newObjectFromEach querystring.parse(query), (v) ->
+                query: object querystring.parse(query), (v) ->
                   try
                     JSON.parse v
                   catch

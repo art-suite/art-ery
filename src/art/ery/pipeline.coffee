@@ -8,7 +8,8 @@ Session = require './Session'
 PipelineRegistry = require './PipelineRegistry'
 
 {
-  newObjectFromEach
+  each
+  object
   compactFlatten
   BaseObject, reverseForEach, Promise, log, isPlainObject, inspect, isString, isClass, isFunction, inspect
   CommunicationStatus
@@ -164,7 +165,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       (see FluxModel.aliases)
   ###
   @aliases: ->
-    @_aliases = newObjectFromEach arguments, (map, k, v) ->
+    @_aliases = each arguments, map = {}, (v, k) ->
       map[lowerCamelCase v] = true
     @
 
@@ -218,8 +219,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       ^
       #{escapeRegExp @restPath}
       (?:-([a-z0-9_]+))?          # optional request-type (if missing, it is derived from the HTTP method)
-      (?:\/([-_.a-z0-9]+))?       # optional key
-      (?=\/|$)
+      (?:\/([^?]+))?       # optional key
+      (?=\?|$)
       ///i
 
     beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
@@ -240,7 +241,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   # Development Reports
   ###############################
   getRequestProcessingReport: (processingLocation = config.location) ->
-    newObjectFromEach @requestTypes, (type) =>
+    object @requestTypes, (type) =>
       inspectedObjectLiteral compactFlatten([
         filter.getName() for filter in @getBeforeFiltersFor type, processingLocation
         if processingLocation == "client" then "[remote request]" else "[local handler]"
@@ -251,12 +252,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     pipelineReport: (processingLocation)->
       out =
         tableName: @tableName
-        fields: newObjectFromEach @fields, (fieldProps) ->
-          newObjectFromEach Object.keys(fieldProps).sort(), (out, index, k) ->
+        fields: object @fields, (fieldProps) ->
+          each Object.keys(fieldProps).sort(), out = {}, (k) ->
             v = fieldProps[k]
             unless k == "preprocess" || k == "validate" || k == "fieldType"
-            #   out[k + if peek(k) == "e" then "d" else "ed"] = true
-            # else
               out[k] = v
 
       if processingLocation
@@ -270,7 +269,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     apiReport: (options = {}) ->
       {server} = options
-      newObjectFromEach @requestTypes, (type) =>
+      object @requestTypes, (type) =>
         {method, url} = Request.getRestClientParamsForArtEryRequest
           server: @remoteServer || server
           type: type
@@ -365,15 +364,13 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     @_processRequest new Request merge options,
       type:     type
       pipeline: @
-      session:          @session.data
-      sessionSignature: @session.signature
+      session:  @session.data
 
     .then (response) =>
-      {status, data, session, sessionSignature} = response
+      {status, data, session} = response
       if status == success
         if session
           @session.data = session
-          @session.signature = sessionSignature
         if returnResponseObject then response else data
       else
         throw response

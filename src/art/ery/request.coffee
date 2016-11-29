@@ -15,9 +15,9 @@ module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
     super
     validator.preCreateSync options, context: "Request options"
-    {@type, @key, @pipeline, @session, @data, @originatedOnServer, @originatedOnClient, @sessionSignature} = options
+    {@type, @key, @pipeline, @session, @data, @originatedOnServer, @originatedOnClient} = options
 
-  @property "type key pipeline session data originatedOnServer sessionSignature originatedOnClient"
+  @property "type key pipeline session data originatedOnServer originatedOnClient"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
@@ -69,7 +69,7 @@ module.exports = class Request extends require './RequestResponseBase'
   sendRemoteRequest: ->
     requestData = null
     (requestData||={}).data = @data if @data && objectKeyCount(@data) > 0
-    (requestData||={}).sessionSignature = @sessionSignature if @sessionSignature
+    (requestData||={}).session = @session.signature if @session.signature
 
     remoteRequestOptions = getRestClientParamsForArtEryRequest
       restPath: @pipeline.restPath
@@ -77,6 +77,8 @@ module.exports = class Request extends require './RequestResponseBase'
       type:     @type
       key:      @key
       data:     requestData
+
+    # log {remoteRequestOptions, @session}
 
     RestClient.restJsonRequest remoteRequestOptions
     .catch (error) =>
@@ -89,12 +91,11 @@ module.exports = class Request extends require './RequestResponseBase'
         log.error RestClient: error: error
         @failure data: message: error.message
     .then (remoteResponseOptions) =>
-      {data, status, filterLog, session, sessionSignature} = remoteResponseOptions
+      {data, status, filterLog, session} = remoteResponseOptions
       @_toResponse status,
         data: data
         filterLog: filterLog
         session: session
-        sessionSignature: sessionSignature
         remoteRequest: remoteRequestOptions
         remoteResponse: remoteResponseOptions
       .then (response) =>
