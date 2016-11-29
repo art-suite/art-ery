@@ -1,5 +1,5 @@
 {defineModule, log, isString, present, CommunicationStatus, wordsArray} = require 'art-foundation'
-{Response, Request, Pipeline, Session} = Neptune.Art.Ery
+{Response, Request, Pipeline, session, Session} = Neptune.Art.Ery
 {success, failure, missing} = CommunicationStatus
 
 isPresentString = (s) -> isString(s) && present s
@@ -7,6 +7,8 @@ isPresentString = (s) -> isString(s) && present s
 defineModule module, class AuthPipeline extends Pipeline
 
   @suite: ->
+    setup -> session.reset()
+
     test "clientApiMethodList", ->
       p = new AuthPipeline
       assert.eq p.clientApiMethodList, wordsArray "authenticate get"
@@ -15,7 +17,7 @@ defineModule module, class AuthPipeline extends Pipeline
       # NOTE: a new Session is provided here only for testing - to ensure a clean session
       # Most the time you just want the default, global session:
       #   auth = new AuthPipeline()
-      auth = new AuthPipeline session: new Session
+      auth = new AuthPipeline
       auth.authenticate data: username: "bar", password: "bar"
       .then ->
         assert.eq auth.session.data, username: "bar"
@@ -31,7 +33,7 @@ defineModule module, class AuthPipeline extends Pipeline
       # NOTE: a new Session is provided here only for testing - to ensure a clean session
       # Most the time you just want the default, global session:
       #   auth = new AuthPipeline()
-      auth = new AuthPipeline session: new Session
+      auth = new AuthPipeline
       auth.get()
       .then (v) -> assert.eq v, {}
       .then     -> auth.authenticate data: username: "bar", password: "bar"

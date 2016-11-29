@@ -34,6 +34,7 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   @setter
     data: (v) ->
       @queueEvent "change", data: v unless plainObjectsDeepEq v, @_data
-      @jsonStoreKey && jsonStore.setItem @jsonStoreKey, @_data = v
+      @_data = v
+      @jsonStoreKey && jsonStore.setItem @jsonStoreKey, v
 
-  reset: -> @_data = {}
+  reset: -> @data = {}
