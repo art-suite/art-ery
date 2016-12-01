@@ -1,1 +1,1 @@
-module.exports = require './src/Art/Ery/.Flux'
+module.exports = require './source/Art/Ery/.Flux'
