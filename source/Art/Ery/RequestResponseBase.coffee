@@ -68,10 +68,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       else                         @failure data: message: "invalid response data passed to RequestResponseBase#next"
         # TODO: should return an inspected version of Data IFF the server is in debug-mode
 
-  success: (responseProps) -> @_toResponse success, responseProps
-  missing: (responseProps) -> @_toResponse missing, responseProps
-  failure: (responseProps) -> @_toResponse failure, responseProps
-  clientFailure: (responseProps) -> @_toResponse clientFailure, responseProps
+  success:        (responseProps) -> @_toResponse success, responseProps
+  missing:        (responseProps) -> @_toResponse missing, responseProps
+  failure:        (responseProps) -> @_toResponse failure, responseProps
+  clientFailure:  (responseProps) -> @_toResponse clientFailure, responseProps
   # NOTE: there is no serverFailure method because you should always use just 'failure'.
   # This is because you may be running on the client or the server. If running on the client, it isn't a serverFailure.
   # If status == "failure" in the server's response, the client will convert that status to serverFailure automatically.
