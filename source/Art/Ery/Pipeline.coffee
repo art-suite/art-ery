@@ -316,8 +316,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     else if handler = @handlers[request.type]
       request.next handler.call @, request
-      .then (response) =>
-        response.handled "handler"
+      .then (response) => response.handled "handler"
 
     else
       message = "no Handler for request type: #{request.type}"
