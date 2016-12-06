@@ -3,7 +3,10 @@
   dateFormat
   inspectLean
   object
+  CommunicationStatus
 } = require 'art-foundation'
+
+{success, missing, serverFailure, failure, clientFailure} = CommunicationStatus
 
 http = require 'http'
 querystring = require 'querystring'
@@ -99,9 +102,10 @@ defineModule module, class PromiseHttp extends BaseObject
               throw new Error "INTERNAL ERROR: api handler did not return a JSON compatible type: #{inspect responseData}"
 
             statusCode: switch responseData.status
-              when "missing" then 404
-              when "failure" then 500
-              else 200
+              when success        then 200
+              when missing        then 404
+              when clientFailure  then 400
+              else 500
 
             headers: "Content-Type": 'application/json'
             data: if request.headers.accept?.match /json/

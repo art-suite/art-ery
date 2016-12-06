@@ -6,7 +6,9 @@ module.exports = suite:
     shouldFail: ->
       test "without username", ->
         assert.rejects pipelines.auth.authenticate()
-        .then (rejectedWith) -> assert.eq rejectedWith.data, message: "username not present"
+        .then (rejectedWith) ->
+          log {rejectedWith}
+          assert.eq rejectedWith.data, message: "username not present"
 
       test "without password", ->
         assert.rejects pipelines.auth.authenticate data: username: "alice"

@@ -71,32 +71,14 @@ module.exports = class Request extends require './RequestResponseBase'
     (requestData||={}).data = @data if @data && objectKeyCount(@data) > 0
     (requestData||={}).session = @session.signature if @session.signature
 
-    remoteRequestOptions = getRestClientParamsForArtEryRequest
+    remoteRequest = getRestClientParamsForArtEryRequest
       restPath: @pipeline.restPath
       server:   @pipeline.remoteServer
       type:     @type
       key:      @key
       data:     requestData
 
-    # log {remoteRequestOptions, @session}
-
-    RestClient.restJsonRequest remoteRequestOptions
-    .catch (error) =>
-      log.error "remote server error": error
-      if CommunicationStatus[error?.response?.status]
-        # if standard CommunicationStatus type
-        #   pass it through to the normal handler
-        error.response
-      else
-        log.error RestClient: error: error
-        @failure data: message: error.message
-    .then (remoteResponseOptions) =>
-      {data, status, filterLog, session} = remoteResponseOptions
-      @_toResponse status,
-        data: data
-        filterLog: filterLog
-        session: session
-        remoteRequest: remoteRequestOptions
-        remoteResponse: remoteResponseOptions
-      .then (response) =>
-        response.handled "#{remoteRequestOptions.method.toLocaleUpperCase()} #{remoteRequestOptions.url}"
+    RestClient.restJsonRequest remoteRequest
+    .catch ({status, response}) => merge response, {status}
+    .then (remoteResponse)      => @_toResponse merge remoteResponse, {remoteRequest, remoteResponse}
+    .then (response) => response.handled "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"

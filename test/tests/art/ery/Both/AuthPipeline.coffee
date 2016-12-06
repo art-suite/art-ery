@@ -1,6 +1,6 @@
 {defineModule, log, isString, present, CommunicationStatus, wordsArray} = require 'art-foundation'
 {Response, Request, Pipeline, session, Session} = Neptune.Art.Ery
-{success, failure, missing} = CommunicationStatus
+{clientFailure, success, failure, missing} = CommunicationStatus
 
 isPresentString = (s) -> isString(s) && present s
 
@@ -26,7 +26,7 @@ defineModule module, class AuthPipeline extends Pipeline
       auth = new AuthPipeline()
       assert.rejects auth.authenticate data: username: "bar", password: "baz"
       .then (response) ->
-        assert.eq response.status, failure
+        assert.eq response.status, clientFailure
         assert.isString response.data.message
 
     test "auth then get", ->
@@ -53,7 +53,7 @@ defineModule module, class AuthPipeline extends Pipeline
     authenticate: (request) ->
       {data} = request
       if message = authenticationFailed data
-        request.failure data: message: message
+        request.clientFailure data: message: message
       else
         request.success session: username: data.username
 

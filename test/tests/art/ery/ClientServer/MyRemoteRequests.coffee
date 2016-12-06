@@ -1,7 +1,21 @@
-{log, createWithPostCreate, RestClient} = require 'art-foundation'
-{missing, Pipeline, pipelines, session} = Neptune.Art.Ery
+{log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
+{Pipeline, pipelines, session} = Neptune.Art.Ery
+{clientFailure, missing, serverFailure} = CommunicationStatus
 
 module.exports = suite:
+  responseStatuses: ->
+    test "simulateMissing", ->
+      assert.rejects pipelines.myRemote.simulateMissing()
+      .then (response) -> assert.eq response.status, missing
+
+    test "simulateClientFailure", ->
+      assert.rejects pipelines.myRemote.simulateClientFailure()
+      .then (response) -> assert.eq response.status, clientFailure
+
+    test "simulateServerFailure", ->
+      assert.rejects pipelines.myRemote.simulateServerFailure()
+      .then (response) -> assert.eq response.status, serverFailure
+
   pipelines: ->
     test "restPath", ->
       assert.eq pipelines.myRemote.restPath, "/api/myRemote"
@@ -42,11 +56,6 @@ module.exports = suite:
     test "Hello Alice!", ->
       pipelines.myRemote.get key: "Alice"
       .then (data) -> assert.eq data, "Hello Alice!"
-
-    test "missing", ->
-      assert.rejects pipelines.myRemote.missing()
-      .then (response) ->
-        assert.eq response.status, "missing"
 
     test "handledByFilterRequest", ->
       pipelines.myRemote.handledByFilterRequest returnResponseObject: true

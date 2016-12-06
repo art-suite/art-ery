@@ -149,4 +149,4 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     .then (result) =>
       responseOrRequest.next result
     .catch (error) =>
-      responseOrRequest.next error, failure
+      responseOrRequest.failure data: error
