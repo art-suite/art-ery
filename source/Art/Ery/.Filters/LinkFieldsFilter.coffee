@@ -1,4 +1,4 @@
-{array, isPlainObject, each, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
+{array, isPlainObject, formattedInspect, each, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
 Filter = require '../Filter'
 {normalizeFieldProps} = Validator
 
@@ -21,20 +21,16 @@ defineModule module, class LinkFieldsFilter extends Filter
   # returns a new object
   preprocessData: ({type,pipeline, data}) ->
     processedData = merge data
-    Promise.all array @_linkFields, ({idFieldName, autoCreate, pipelineName}, fieldName) =>
-        linkedRecordData = data[fieldName]
-        linkedRecordId = data[idFieldName]
-        if linkedRecordData
-          Promise.then =>
-            if linkedRecordData.id
-              throw new Error "Two different ids for #{fieldName} provided: #{fieldName}.id: #{linkedRecordData.id} != #{idFieldName}: #{linkedRecordId}" if linkedRecordId? && linkedRecordId != linkedRecordData.id
-              linkedRecordData
-            else if autoCreate
-              @pipelines[pipelineName].create data: linkedRecordData
-            else throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field."
-          .then (linkedRecordData) =>
-            processedData[idFieldName] = linkedRecordData.id
-            delete processedData[fieldName]
+    Promise.all array @_linkFields,
+      when: ({idFieldName}, fieldName) -> !data[idFieldName] && data[fieldName]
+      with: ({idFieldName, autoCreate, pipelineName}, fieldName, __, linkedRecordData) =>
+        Promise.then =>
+          if linkedRecordData.id then linkedRecordData
+          else if autoCreate     then @pipelines[pipelineName].create data: linkedRecordData
+          else                   throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedRecordData}"
+        .then (linkedRecordData) =>
+          processedData[idFieldName] = linkedRecordData.id
+          delete processedData[fieldName]
     .then -> processedData
 
   booleanProps = wordsArray "link required include autoCreate"
