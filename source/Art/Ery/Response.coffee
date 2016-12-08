@@ -12,7 +12,7 @@ responseValidator = new Validator
 module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
-    responseValidator.preCreateSync options, context: "Response options"
+    responseValidator.preCreateSync options, context: "Art.Ery.Response options", logErrors: true
     {@request, @status, @data = {}, @session, @error, @remoteRequest, @remoteResponse, @handledBy} = options
     @session ||= @request.session
     # log newResponse: @inspectedObjects
