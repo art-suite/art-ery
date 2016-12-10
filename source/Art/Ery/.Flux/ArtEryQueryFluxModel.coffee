@@ -107,7 +107,7 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   localUpdate: (updatedRecordData) ->
     return unless updatedRecordData
     queryKey = @queryKeyFromRecord? updatedRecordData
-    throw new Error "invalid queryKey from #{formattedInspect updatedRecordData}" unless isString queryKey
+    throw new Error "ArtEryQueryFluxModel #{@getName()} localUpdate: invalid queryKey generated #{formattedInspect {queryKey,updatedRecordData}}" unless isString queryKey
     return unless fluxRecord = @fluxStoreGet queryKey
     if mergeResult = @localMerge fluxRecord.data, updatedRecordData
       @updateFluxStore queryKey, data: @localSort mergeResult

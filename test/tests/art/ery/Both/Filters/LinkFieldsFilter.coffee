@@ -17,7 +17,7 @@ module.exports = suite: ->
 
   test "fields are set correctly", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter new LinkFieldsFilter fields =
+      @filter new LinkFieldsFilter fields: fields =
         user: "required link"
         post: link: "post"
 
@@ -27,7 +27,7 @@ module.exports = suite: ->
 
   test "linked objects get converted to ids for writing", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter new LinkFieldsFilter fields =
+      @filter new LinkFieldsFilter fields: fields =
         user: link: "user", required: true
 
     pipelines.myPipeline.create
@@ -40,7 +40,7 @@ module.exports = suite: ->
       ;
 
     createWithPostCreate class Post extends SimplePipeline
-      @filter new LinkFieldsFilter fields =
+      @filter new LinkFieldsFilter fields: fields =
         media: link: autoCreate: required: true
 
     pipelines.post.create
@@ -58,7 +58,7 @@ module.exports = suite: ->
       ;
 
     createWithPostCreate class PostPipeline extends SimplePipeline
-      @filter new LinkFieldsFilter fields =
+      @filter new LinkFieldsFilter fields: fields =
         user: "include required link"
 
     pipelines.user.create
@@ -85,7 +85,7 @@ module.exports = suite: ->
             {userId: userId1, message: "Hi!"}
             {userId: userId2, message: "Howdy!"}
           ]
-      @filter new LinkFieldsFilter
+      @filter new LinkFieldsFilter fields:
         user: link: "user", required: true, include: true
 
     Promise.all([

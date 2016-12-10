@@ -25,6 +25,6 @@ defineModule module, class Tools
       new UserOwnedFilter if fields.userOwned
       new UniqueIdFilter
       new TimestampFilter
-      new LinkFieldsFilter linkFields if hasProperties linkFields
-      new ValidationFilter otherFields if hasProperties otherFields
+      new LinkFieldsFilter fields: linkFields if hasProperties linkFields
+      new ValidationFilter fields: otherFields if hasProperties otherFields
     ]

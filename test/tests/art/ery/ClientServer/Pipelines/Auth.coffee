@@ -20,7 +20,7 @@ defineModule module, class Auth extends Pipeline
     authenticate: (request) ->
       {data} = request
       if message = authenticationFailed data
-        request.failure data: message: message
+        request.clientFailure data: message: message
       else
         request.success session: username: data.username
 

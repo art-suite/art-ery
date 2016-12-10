@@ -3,7 +3,7 @@ Request = require './Request'
 Response = require './Response'
 {config} = require './Config'
 
-{toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
+{toPlainObjects, toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
 {success, failure} = CommunicationStatus
 
 ###
@@ -98,10 +98,11 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
 
   constructor: (options = {}) ->
     super
-    {@serverSideOnly, @clientSideOnly, @name, @location} = options
+    {@serverSideOnly, @location, @clientSideOnly, @name, fields} = options
     @name ||= @class.getName()
     @_location ||= @class.location || "server"
     @shouldFilter()
+    @extendFields fields if fields
     @after options.after
     @before options.before
 
@@ -134,19 +135,22 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
 
   ###
   OUT:
-    promise.then (successful Request or Response instance) ->
-    .catch (failingResponse) ->
+    promise.then (request or response) ->
+      NOTE: response may be failing
+    .catch -> internal errors only
   ###
-  _processFilter: (responseOrRequest, filterFunction) ->
+  _processFilter: (requestOrResponse, filterFunction) ->
 
     Promise.then =>
       if filterFunction
-        responseOrRequest.addFilterLog @
-        filterFunction.call @, responseOrRequest
+        requestOrResponse.addFilterLog @
+        filterFunction.call @, requestOrResponse
       else
         # pass-through if no filter
-        responseOrRequest
+        requestOrResponse
     .then (result) =>
-      responseOrRequest.next result
-    .catch (error) =>
-      responseOrRequest.failure data: error
+      requestOrResponse.next result
+    # .catch (error) =>
+    #   {message, info} = error
+    #   # log _processFilter_failure: toPlainObjects {message, info}
+    #   requestOrResponse.failure data: toPlainObjects {message, info}

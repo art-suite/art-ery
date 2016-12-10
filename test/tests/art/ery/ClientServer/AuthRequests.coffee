@@ -1,22 +1,23 @@
-{present, merge, isString, log, createWithPostCreate, RestClient} = require 'art-foundation'
+{present, merge, isString, log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
 {missing, Pipeline, pipelines, session} = Neptune.Art.Ery
+{clientFailure} = CommunicationStatus
 
 module.exports = suite:
   authenticate:
     shouldFail: ->
       test "without username", ->
         assert.rejects pipelines.auth.authenticate()
-        .then (rejectedWith) ->
-          log {rejectedWith}
-          assert.eq rejectedWith.data, message: "username not present"
+        .then ({info:{response}}) ->
+          assert.eq response.status, clientFailure
+          assert.eq response.data, message: "username not present"
 
       test "without password", ->
         assert.rejects pipelines.auth.authenticate data: username: "alice"
-        .then (rejectedWith) -> assert.eq rejectedWith.data, message: "password not present"
+        .then ({info:{response}}) -> assert.eq response.data, message: "password not present"
 
       test "with mismatching username and password", ->
         assert.rejects pipelines.auth.authenticate data: username: "alice", password: "hi"
-        .then (rejectedWith) -> assert.eq rejectedWith.data, message: "username and password don't match"
+        .then ({info:{response}}) -> assert.eq response.data, message: "username and password don't match"
 
     sessions: ->
       setup -> session.reset()

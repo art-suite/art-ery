@@ -26,7 +26,7 @@ module.exports = suite: ->
       returnResponseObject: true
     .then (response) ->
       assert.eq ["MyBeforeFooFilter"], (a.toString() for a in response.beforeFilterLog)
-      assert.eq "handler", response.handledBy
+      assert.eq response.handledBy, handler: "foo"
       assert.eq ["MyAfterFooFilter"], (a.toString() for a in response.afterFilterLog)
       assert.eq response.data,
         foo: 1

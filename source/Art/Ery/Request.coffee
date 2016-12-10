@@ -14,7 +14,7 @@ validator = new Validator
 module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
     super
-    validator.preCreateSync options, context: "Request options", logErrors: true
+    validator.preCreateSync options, context: "Art.Ery.Request options", logErrors: true
     {@type, @key, @pipeline, @session, @data, @originatedOnServer, @originatedOnClient} = options
 
   @property "type key pipeline session data originatedOnServer originatedOnClient"
@@ -28,6 +28,13 @@ module.exports = class Request extends require './RequestResponseBase'
 
   @getter
     request: -> @
+
+    # Also implemented in Response
+    beforeFilterLog:  -> @filterLog || []
+    afterFilterLog:   -> []
+    isSuccessful:     -> true
+    notSuccessful:    -> false
+    isRequest:        -> true
 
     props: ->
       {
@@ -79,6 +86,6 @@ module.exports = class Request extends require './RequestResponseBase'
       data:     requestData
 
     RestClient.restJsonRequest remoteRequest
-    .catch ({status, response}) => merge response, {status}
-    .then (remoteResponse)      => @_toResponse merge remoteResponse, {remoteRequest, remoteResponse}
+    .catch ({info: {status, response}}) => merge response, {status}
+    .then (remoteResponse)              => @_toResponse merge remoteResponse, {remoteRequest, remoteResponse}
     .then (response) => response.handled "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"

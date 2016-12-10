@@ -65,7 +65,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       return data if data instanceof RequestResponseBase
       if !data?               then @missing()
       else if isJsonType data then @success {data}
-      else                         @failure data: message: "invalid response data passed to RequestResponseBase#next"
+      else
+        log.error invalidXYZ: data
+        throw new Error "invalid response data passed to RequestResponseBaseNext"
         # TODO: should return an inspected version of Data IFF the server is in debug-mode
 
   success:        (responseProps) -> @_toResponse success, responseProps
@@ -92,9 +94,6 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       {status} = responseProps = status
       throw new Error "missing status" unless status
     Promise.resolve responseProps
-    .catch (e) =>
-      status = failure
-      e
     .then (responseProps = {}) =>
       return responseProps if responseProps instanceof RequestResponseBase
       # log _toResponse: {status, responseProps}
@@ -113,9 +112,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         else
           log.error "Internal Error: ArtEry.RequestResponseBase#_toResponse expecting responseProps or error", responseProps
 
-      response = new ArtEry.Response merge {@request, status}, responseProps
+      new ArtEry.Response merge @props, {@request, status, filterLog: @afterFilterLog}, responseProps
 
-      if status == success
-        Promise.resolve response
-      else
-        Promise.reject response
+      # response
+      # if status == success
+      #   Promise.resolve response
+      # else
+      #   Promise.reject response

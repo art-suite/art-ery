@@ -6,15 +6,15 @@ module.exports = suite:
   responseStatuses: ->
     test "simulateMissing", ->
       assert.rejects pipelines.myRemote.simulateMissing()
-      .then (response) -> assert.eq response.status, missing
+      .then ({info:{response}}) -> assert.eq response.status, missing
 
     test "simulateClientFailure", ->
       assert.rejects pipelines.myRemote.simulateClientFailure()
-      .then (response) -> assert.eq response.status, clientFailure
+      .then ({info:{response}}) -> assert.eq response.status, clientFailure
 
     test "simulateServerFailure", ->
       assert.rejects pipelines.myRemote.simulateServerFailure()
-      .then (response) -> assert.eq response.status, serverFailure
+      .then ({info:{response}}) -> assert.eq response.status, serverFailure
 
   pipelines: ->
     test "restPath", ->
@@ -60,5 +60,5 @@ module.exports = suite:
     test "handledByFilterRequest", ->
       pipelines.myRemote.handledByFilterRequest returnResponseObject: true
       .then (response) ->
-        assert.eq response.remoteResponse.handledBy, "beforeFilter: handleByFilter"
+        assert.eq response.remoteResponse.handledBy, beforeFilter: "handleByFilter"
         assert.eq response.handledBy, "POST http://localhost:8085/api/myRemote-handledByFilterRequest"

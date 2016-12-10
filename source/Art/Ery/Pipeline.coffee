@@ -24,6 +24,7 @@ PipelineRegistry = require './PipelineRegistry'
   peek
   inspectedObjectLiteral
   escapeRegExp
+  ErrorWithInfo
 } = Foundation
 {normalizeFieldProps} = Validator
 
@@ -294,6 +295,14 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
           throw new Error "query delaration must be a function or have a 'query' property that is a function"
         v
 
+  ###
+  OUT:
+    promise.then -> request OR response
+      requests are always 'successful-so-far'
+      responses may or maynot be successful, but they are always returned via the promise-success path
+
+    promise.catch -> always means an internal failure
+  ###
   _applyBeforeFilters: (request) ->
     filters = @getBeforeFiltersFor request.type
     filterIndex = 0
@@ -304,48 +313,73 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       else
         (filter = filters[filterIndex++]).processBefore partiallyBeforeFilteredRequest
         .then (result) =>
-          result.handled "beforeFilter: #{filter}" if result.isResponse
+          result.handled beforeFilter: filter.getName() if result.isResponse && result.isSuccessful
           applyNextFilter result
 
     applyNextFilter request
 
-  _applyHandler: (request) ->
-    return request if request.isResponse
-    if config.location == "client" && @remoteServer
-      request.sendRemoteRequest @remoteServer
+  ###
+  IN:
+    request OR response
 
-    else if handler = @handlers[request.type]
-      request.next handler.call @, request
-      .then (response) => response.handled "handler"
+    if response, it is immediately returned
+  OUT:
+    promise.then -> response
+      response may or maynot be successful, but it is always returned via the promise-success path
 
-    else
-      message = "no Handler for request type: #{request.type}"
-      log.error message, request: request
-      request.missing data: {message}
-
-  _applyAfterFilters: (response) ->
-    filters = @getAfterFiltersFor response.type
-    filterIndex = 0
-
-    applyNextFilter = (partiallyAfterFilteredReponse)->
-      if partiallyAfterFilteredReponse.notSuccessful || filterIndex >= filters.length
-        Promise.resolve partiallyAfterFilteredReponse
+    promise.catch -> always means an internal failure
+  ###
+  _applyHandler: (requestOrResponse) ->
+    Promise.try =>
+      if requestOrResponse.isResponse
+        return requestOrResponse
       else
-        filters[filterIndex++].processAfter partiallyAfterFilteredReponse
-        .then (result) -> applyNextFilter result
+        request = requestOrResponse
 
-    applyNextFilter response
+      if config.location == "client" && @remoteServer
+        request.sendRemoteRequest @remoteServer
+
+      else if handler = @handlers[request.type]
+        request.next handler.call @, request
+        .then (response) => response.handled handler: requestOrResponse.type
+
+      else
+        message = "no Handler for request type: #{request.type}"
+        log.error message, request: request
+        request.missing data: {message}
+
+  ###
+  OUT:
+    promise.then -> response
+      response may or maynot be successful, but it is always returned via the promise-success path
+
+    promise.catch -> always means an internal failure
+  ###
+  _applyAfterFilters: (response) ->
+    Promise.try =>
+      return response if response.notSuccessful
+      filters = @getAfterFiltersFor response.type
+      filterIndex = 0
+
+      applyNextFilter = (partiallyAfterFilteredReponse)->
+        if partiallyAfterFilteredReponse.notSuccessful || filterIndex >= filters.length
+          Promise.resolve partiallyAfterFilteredReponse
+        else
+          filters[filterIndex++].processAfter partiallyAfterFilteredReponse
+          .then (result) -> applyNextFilter result
+
+      applyNextFilter response
+
+  _normalizeRequest: (request) ->
+    if isPlainObject request
+      new Request merge request, pipeline: @
+    else
+      request
 
   _processRequest: (request) ->
-    request = new Request merge request, pipeline: @ if isPlainObject request
-    @_applyBeforeFilters request
-    .then (request)  => @_applyHandler request
-    .then (response) => @_applyAfterFilters response
-    .catch (error)   =>
-      # log.error
-      #   Pipeline_processRequest:
-      #     error: error
-      request.next error
+    @_applyBeforeFilters @_normalizeRequest request
+    .then (requestOrResponse)  => @_applyHandler requestOrResponse
+    .then (response)           => @_applyAfterFilters response
 
   # client actions just return the data and update the local session object if successful
   # otherwise, they "reject" the whole response object.
@@ -354,6 +388,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     all the Request options are valid here
     returnResponseObject: true [default: false]
       if true, the response object is returned, otherwise, just the data field is returned.
+
+  OUT:
+    promise.then (response) -> response.isSuccessful == true
+    promise.catch ()
   ###
   noOptions = {}
   _processClientRequest: (type, options = noOptions) ->
@@ -368,13 +406,14 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
         session:  sessionData
 
     .then (response) =>
-      {status, data, session} = response
-      if status == success
+      # log _processClientRequest: {response}
+      {data, session} = response
+      if response.isSuccessful
         if session
           @session.data = session
         if returnResponseObject then response else data
       else
-        throw response
+        throw new ErrorWithInfo "#{@getName()}.#{type} request #{response.status}", {response}
 
   @_clientApiRequest: (requestType) ->
     @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()

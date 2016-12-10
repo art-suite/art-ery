@@ -25,7 +25,7 @@ defineModule module, class AuthPipeline extends Pipeline
     test "auth failure", ->
       auth = new AuthPipeline()
       assert.rejects auth.authenticate data: username: "bar", password: "baz"
-      .then (response) ->
+      .then ({info: {response}}) ->
         assert.eq response.status, clientFailure
         assert.isString response.data.message
 

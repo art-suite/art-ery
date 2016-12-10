@@ -14,24 +14,18 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
 
     test "get -> missing", ->
       simplePipeline = new SimplePipeline
-      simplePipeline.get "doesn't exist"
-      .then (response) -> throw new Error "shouldn't succeed"
-      .catch (response) ->
-        assert.eq response.status, missing
+      assert.rejects simplePipeline.get "doesn't exist"
+      .then ({info:{response}}) -> assert.eq response.status, missing
 
     test "update -> missing", ->
       simplePipeline = new SimplePipeline
-      simplePipeline.update "doesn't exist"
-      .then (response) -> throw new Error "shouldn't succeed"
-      .catch (response) ->
-        assert.eq response.status, missing
+      assert.rejects simplePipeline.update "doesn't exist"
+      .then ({info:{response}}) -> assert.eq response.status, missing
 
     test "delete -> missing", ->
       simplePipeline = new SimplePipeline
-      simplePipeline.delete "doesn't exist"
-      .then (response) -> throw new Error "shouldn't succeed"
-      .catch (response) ->
-        assert.eq response.status, missing
+      assert.rejects simplePipeline.delete "doesn't exist"
+      .then ({info:{response}}) -> assert.eq response.status, missing
 
     test "create returns new record", ->
       simplePipeline = new SimplePipeline
@@ -58,11 +52,11 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
 
     test "create -> delete", ->
       simplePipeline = new SimplePipeline
-      simplePipeline.create data: foo: "bar"
+      p = simplePipeline.create data: foo: "bar"
       .then ({id}) -> simplePipeline.delete key: id
       .then ({id}) -> simplePipeline.get key: id
-      .then (response) -> throw new Error "shouldn't succeed"
-      .catch (response) -> assert.eq response.status, missing
+      assert.rejects p
+      .then ({info:{response}}) -> assert.eq response.status, missing
 
   constructor: ->
     super

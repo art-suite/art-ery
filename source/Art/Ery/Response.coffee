@@ -15,22 +15,23 @@ module.exports = class Response extends require './RequestResponseBase'
     responseValidator.preCreateSync options, context: "Art.Ery.Response options", logErrors: true
     {@request, @status, @data = {}, @session, @error, @remoteRequest, @remoteResponse, @handledBy} = options
     @session ||= @request.session
-    # log newResponse: @inspectedObjects
+    # log.error newResponse: @inspectedObjects
 
   isResponse: true
   toString: -> "ArtEry.Response(#{@type}: #{@status}): #{@message}"
 
-  # OUT: promise.then => @
-  handled: (handledBy) ->
-    @handledBy = handledBy if @status == success
-    Promise.resolve @
+  # OUT: @
+  handled: (_handledBy) ->
+    return @ unless @isSuccessful
+    @handledBy = _handledBy
+    @
 
   @property "request status data session error remoteResponse remoteRequest handledBy"
   @getter
     type:             -> @request.type
     originatedOnServer: -> @request.originatedOnServer
-    beforeFilterLog:  -> @request.filterLog
-    afterFilterLog:   -> @filterLog
+    beforeFilterLog:  -> @request.filterLog || []
+    afterFilterLog:   -> @filterLog || []
     message:          -> @data?.message
     isSuccessful:     -> @_status == success
     notSuccessful:    -> @_status != success

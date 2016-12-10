@@ -1,13 +1,21 @@
-{defineModule, log, Validator} = require 'art-foundation'
+{defineModule, log, Validator, merge} = require 'art-foundation'
 Filter = require '../Filter'
 
 defineModule module, class ValidationFilter extends Filter
   @location: "both"
 
-  constructor: (@_fields) ->
+  constructor: (options) ->
     super
-    @_validator = new Validator @_fields
+    @_validator = new Validator @fields
 
   @before
-    create: (request) -> request.withData @_validator.preCreate request.data, context: "ValidationFilter(pipelineName: '#{request.pipeline.getName()}')"
-    update: (request) -> request.withData @_validator.preUpdate request.data, context: "ValidationFilter(pipelineName: '#{request.pipeline.getName()}')"
+    create: (request) -> @_validate "preCreate", request
+    update: (request) -> @_validate "preUpdate", request
+
+  _validate: (method, request) ->
+    Promise.resolve request
+    .then (request) =>
+      @_validator[method] request.data, context: "#{request.pipeline?.getName() || "no pipeline?"} #{@class.getName()}"
+      .then (data) -> request.withData data
+      .catch ({message, info}) -> request.clientFailure data: merge {message}, info
+

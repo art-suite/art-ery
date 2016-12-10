@@ -1,25 +1,24 @@
-{array, isPlainObject, formattedInspect, each, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
+{timeout, array, isPlainObject, formattedInspect, each, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
 Filter = require '../Filter'
 {normalizeFieldProps} = Validator
 
-defineModule module, class LinkFieldsFilter extends Filter
+defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   @location: "server"
 
-  constructor: (@_linkFields) ->
-    super
-    @_initValidator()
+  constructor: (options) ->
 
-  _initValidator: ->
-    @_linkFields = LinkFieldsFilter.normalizeLinkFields @_linkFields
+    fields = {}
+    @_linkFields = LinkFieldsFilter.normalizeLinkFields options.fields
     for fieldName, fieldProps of @_linkFields
       props = merge fieldProps, fieldType:  "trimmedString"
       delete props.idFieldName
-      @extendFields fieldProps.idFieldName, normalizeFieldProps props
+      fields[fieldProps.idFieldName] = normalizeFieldProps props
 
-    @_validator = new Validator @fields
+    super merge options, {fields}
 
-  # returns a new object
-  preprocessData: ({type,pipeline, data}) ->
+  # returns a new request
+  preprocessRequest: (request) ->
+    {type, pipeline, data} = request
     processedData = merge data
     Promise.all array @_linkFields,
       when: ({idFieldName}, fieldName) -> !data[idFieldName] && data[fieldName]
@@ -31,7 +30,7 @@ defineModule module, class LinkFieldsFilter extends Filter
         .then (linkedRecordData) =>
           processedData[idFieldName] = linkedRecordData.id
           delete processedData[fieldName]
-    .then -> processedData
+    .then -> request.withData processedData
 
   booleanProps = wordsArray "link required include autoCreate"
   @normalizeLinkFields: (linkFields) ->
@@ -61,8 +60,8 @@ defineModule module, class LinkFieldsFilter extends Filter
     .then -> linkedData
 
   @before
-    create: (request) -> request.withData @_validator.preCreate @preprocessData(request), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"
-    update: (request) -> request.withData @_validator.preUpdate @preprocessData(request), context: "LinkFieldsFilter for #{request.pipeline.getName()} fields"
+    create: (request) -> @_validate "preCreate", @preprocessRequest request
+    update: (request) -> @_validate "preUpdate", @preprocessRequest request
 
   # to support 'include' for query results, just alter this to be an 'after-all-requests'
   # and have it detect is data is an array

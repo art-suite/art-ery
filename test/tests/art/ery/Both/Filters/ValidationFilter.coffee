@@ -6,9 +6,9 @@ module.exports = suite: ->
   test "fields are set correctly", ->
     foo = bar = id = null
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter new ValidationFilter
+      @filter new ValidationFilter fields:
         foo: foo = preprocess: (o) -> "#{o}#{o}"
-      @filter new ValidationFilter fields =
+      @filter new ValidationFilter fields: fields =
         bar: bar = validate: (v) -> (v | 0) == v
         id: id = Validator.fieldTypes.id
 
@@ -19,7 +19,7 @@ module.exports = suite: ->
 
   test "preprocess", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter new ValidationFilter
+      @filter new ValidationFilter fields:
         foo: preprocess: (o) -> "#{o}#{o}"
 
     MyPipeline.singleton.create data: foo: 123
@@ -28,18 +28,16 @@ module.exports = suite: ->
 
   test "required field - missing", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter new ValidationFilter
+      @filter new ValidationFilter fields:
         foo: required: true
 
     assert.rejects MyPipeline.singleton.create data: bar: 123
-    .then (response) ->
-      assert.eq response.data,
-        validationFailure: "ValidationFilter(pipelineName: 'myPipeline'): create: field(s) are missing"
-        missingFields:     foo: undefined
+    .then ({info: {response}}) ->
+      assert.eq response.data.errors, foo: "missing"
 
   test "required field - present", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter new ValidationFilter
+      @filter new ValidationFilter fields:
         foo: required: true
 
     MyPipeline.singleton.create data: foo: 123
@@ -48,20 +46,15 @@ module.exports = suite: ->
 
   test "validate - invalid", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter new ValidationFilter
+      @filter new ValidationFilter fields:
         foo: Validator.fieldTypes.trimmedString
 
-    MyPipeline.singleton.create data: foo: 123
-    .then (response) ->
-      throw "should not succeed"
-    .catch (response) ->
-      assert.eq response.data,
-        validationFailure: "ValidationFilter(pipelineName: 'myPipeline'): create: field(s) are invalid"
-        invalidFields:     foo: 123
+    assert.rejects MyPipeline.singleton.create data: foo: 123
+    .then ({info: {response}}) -> assert.eq response.data.errors, foo: "invalid"
 
   test "validate - valid with preprocessing", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter new ValidationFilter
+      @filter new ValidationFilter fields:
         foo: Validator.fieldTypes.trimmedString
 
     MyPipeline.singleton.create data: foo: "  123  "

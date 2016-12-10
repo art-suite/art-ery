@@ -22,7 +22,7 @@ module.exports = suite:
       pipelines.filterLocation.filterTest returnResponseObject: true
       .then (response) ->
         config.location = location
-        assert.eq response.handledBy, "handler"
+        assert.eq response.handledBy, handler: "filterTest"
         assert.eq response.data.customLog, [
           "serverFilter@both"
           "bothFilter@both"
