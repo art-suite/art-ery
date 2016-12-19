@@ -8,13 +8,14 @@ defineModule module, class UserOwnedFilter extends Filter
     # ensure we are setting userId to session.userId and session.userId is set
     # (unless reuest.originatedOnServer)
     create: (request) ->
-      {data, session} = request
+      {userId} = request.session
 
-      unless session.userId && !data.userId
+      {data} = request
+      if data.userId && data.userId != userId
         request.requireServerOrigin "to create a record where data.userId != session.userId"
+        userId = data.userId
 
-      request.withMergedData
-        userId: data.userId || session.userId
+      request.withMergedData {userId}
 
     # ensure updates don't modify the userId
     # ensure the current user can only update their own records

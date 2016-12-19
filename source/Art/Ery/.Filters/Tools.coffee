@@ -9,7 +9,7 @@ UserOwnedFilter = require './UserOwnedFilter'
 defineModule module, class Tools
   @createDatabaseFilters: (fields = {}) ->
     if fields.userOwned
-      fields.user = "link"
+      fields.user = "required link"
 
     linkFields = {}
     otherFields = {}
