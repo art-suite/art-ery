@@ -22,9 +22,9 @@ defineModule module, class Tools
         otherFields[k] = v
 
     [
-      new UserOwnedFilter if fields.userOwned
       new UniqueIdFilter
       new TimestampFilter
       new LinkFieldsFilter fields: linkFields if hasProperties linkFields
+      new UserOwnedFilter if fields.userOwned
       new ValidationFilter fields: otherFields if hasProperties otherFields
     ]

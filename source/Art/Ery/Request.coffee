@@ -21,10 +21,31 @@ module.exports = class Request extends require './RequestResponseBase'
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
-  requireServerOrigin: (message = "(no further explanation)")->
-    unless @originatedOnServer
-      throw @failure data: message: "#{@type}-request: originatedOnServer required #{message || ""}"
-    @
+  ###
+  OUT:
+    Success: promise.then -> request
+    Failure: promise.then -> failing response
+
+  Success if @originatedOnServer is true
+  ###
+  requireServerOrigin: -> (message) ->
+    if @originatedOnServer
+      Promise.resolve @
+    else
+      @failure data: message: "#{@requestPipelineAndType}: originatedOnServer required #{message || ""}"
+
+  ###
+  OUT:
+    Success: promise.then -> request
+    Failure: promise.then -> failing response
+
+  Success if either testResult or @originatedOnServer are true.
+  ###
+  requireServerOriginOr: (testResult, message) ->
+    if testResult || @originatedOnServer
+      Promise.resolve @
+    else
+      @failure data: message: "#{@requestPipelineAndType}: originatedOnServer required #{message || ""}"
 
   @getter
     request: -> @
@@ -35,6 +56,7 @@ module.exports = class Request extends require './RequestResponseBase'
     isSuccessful:     -> true
     notSuccessful:    -> false
     isRequest:        -> true
+    requestPipelineAndType: -> "#{@pipeline.name}-#{@type}"
 
     props: ->
       {
