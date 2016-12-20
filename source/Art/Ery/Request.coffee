@@ -28,7 +28,7 @@ module.exports = class Request extends require './RequestResponseBase'
 
   Success if @originatedOnServer is true
   ###
-  requireServerOrigin: -> (message) ->
+  requireServerOrigin: (message) ->
     if @originatedOnServer
       Promise.resolve @
     else
