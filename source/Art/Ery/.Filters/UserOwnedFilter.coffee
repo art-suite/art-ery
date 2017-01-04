@@ -9,13 +9,18 @@ defineModule module, class UserOwnedFilter extends Filter
     data ||= request.data
     userId && userId == data.userId
 
+  @ownershipInfo: ownershipInfo = (request, data) ->
+    {userId} = request.session
+    data ||= request.data
+    "(you are #{userId}, record owner is #{data?.userId})"
+
   @before
     # ensure we are setting userId to session.userId and session.userId is set
     # (unless reuest.originatedOnServer)
     create: (request) ->
       request.withMergedData userId: request.data.userId || request.session.userId
       .then (requestWithUserId) ->
-        requestWithUserId.requireServerOriginOr isOwner(requestWithUserId), "to create a record you do not own"
+        requestWithUserId.requireServerOriginOr isOwner(requestWithUserId), "to create a record you do not own #{ownershipInfo request}"
 
     # ensure updates don't modify the userId
     # ensure the current user can only update their own records
@@ -23,8 +28,8 @@ defineModule module, class UserOwnedFilter extends Filter
     update: (request) ->
       {key} = request
 
-      request.requireServerOriginOr !request.data.userId || isOwner(request), "to change a record's owner"
+      request.requireServerOriginOr !request.data.userId || isOwner(request), "to change a record's owner #{ownershipInfo request}"
       .then -> request.pipeline.get key: key
       .then (currentRecord) ->
-        request.requireServerOriginOr isOwner(request, currentRecord), "to update a record you do not own"
+        request.requireServerOriginOr isOwner(request, currentRecord), "to update a record you do not own #{ownershipInfo request}"
 

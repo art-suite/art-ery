@@ -398,7 +398,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     {returnResponseObject} = options
     options = key: options if isString options
 
-    @session.loadedDataPromise
+    Promise
+    .resolve options.session || @session.loadedDataPromise
     .then (sessionData) =>
       @_processRequest new Request merge options,
         type:     type

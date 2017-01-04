@@ -18,14 +18,14 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
 
   # returns a new request
   preprocessRequest: (request) ->
-    {type, pipeline, data} = request
+    {type, pipeline, data, session} = request
     processedData = merge data
     Promise.all array @_linkFields,
       when: ({idFieldName}, fieldName) -> !data[idFieldName] && data[fieldName]
       with: ({idFieldName, autoCreate, pipelineName}, fieldName, __, linkedRecordData) =>
         Promise.then =>
           if linkedRecordData.id then linkedRecordData
-          else if autoCreate     then @pipelines[pipelineName].create data: linkedRecordData
+          else if autoCreate     then @pipelines[pipelineName].create {session, data: linkedRecordData}
           else                   throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedRecordData}"
         .then (linkedRecordData) =>
           processedData[idFieldName] = linkedRecordData.id
@@ -46,12 +46,12 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
 
 
   # OUT: promise.then -> new data
-  includeLinkedFields: (data) ->
+  includeLinkedFields: (session, data) ->
     linkedData = shallowClone data
     promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
       do (fieldName, idFieldName, pipelineName, include) =>
         Promise
-        .then           => id && @pipelines[pipelineName].get key: id
+        .then           => id && @pipelines[pipelineName].get {session, key: id}
         .then (value)   -> linkedData[fieldName] = if value? then value else null
         .catch (response) ->
           log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
@@ -68,14 +68,14 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   # Idealy, we'd also use the bulkGet feature
   @after
     all: (response) ->
-      switch response.request.type
+      {request, session, data} = response
+      switch request.type
         when "create", "update" then response
         else
-          {data} = response
           response.withData if isPlainArray data
             # TODO: use bulkGet for efficiency
-            Promise.all(@includeLinkedFields record for record in data)
+            Promise.all(@includeLinkedFields session, record for record in data)
           else if isPlainObject data
-            @includeLinkedFields response.data
+            @includeLinkedFields session, data
           else
             data

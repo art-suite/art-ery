@@ -93,8 +93,9 @@ defineModule module, class PromiseHttp extends BaseObject
             apiHandler request, parsedData
 
           .catch (error) ->
+            log.error "#{getLogTime()}": PromiseHttp: apiHandler: {error}
             status: "failure"
-            message: "#{new Date} PromiseHttp request: #{request.method} #{request.url}, ERROR: #{formattedInspect error}"
+            data: message:  "#{error}"
 
           .then (responseData) ->
             return false unless responseData
@@ -113,7 +114,7 @@ defineModule module, class PromiseHttp extends BaseObject
               else
                 formattedInspect responseData, 160
 
-  logTime = ->
+  getLogTime = ->
     dateFormat "UTC:yyyy-mm-dd_HH-MM-ss"
 
   @getter middleware: ->
@@ -138,11 +139,12 @@ defineModule module, class PromiseHttp extends BaseObject
             {headers, data, statusCode = 200} = plainResponse
 
 
-            logObject =
-              "#{request.method}": request.url
+            # TODO: I want to move this logging into the Art.Ery server, where we have more specific data
+            # I also don't want to log signed sessions - it's a security risk. But, we can log the parsed sessions, which is really what we want anyway.
+            logObject = "#{request.method}": request.url
             logObject.in = receivedData if receivedData
 
-            log "#{logTime().replace /\:/g, '_'}: pid: #{process.pid}, status: #{statusCode}, out: #{plainResponse?.data?.length || 0}bytes, #{inspectLean logObject}"
+            log "#{getLogTime().replace /\:/g, '_'}: pid: #{process.pid}, status: #{statusCode}, out: #{plainResponse?.data?.length || 0}bytes, #{inspectLean logObject}"
             if @verbose
               log response: try
                 JSON.parse data
@@ -150,6 +152,10 @@ defineModule module, class PromiseHttp extends BaseObject
                 data
 
             response.statusCode = statusCode
+            if (statusCode/100 | 0) == 5
+              log.error "#{getLogTime()}": response: merge plainResponse,
+                data: try JSON.parse data
+
             response.setHeader k, v for k, v of merge @_commonResponseHeaders, headers
             response.end data
           else if next
@@ -158,9 +164,9 @@ defineModule module, class PromiseHttp extends BaseObject
             log.error "REQUEST NOT HANDLED: #{request.method}: #{request.url}"
 
         .catch (error) =>
-          log.error "#{logTime()} PromiseHttp: #{request.method} #{request.url}, ERROR:", error
+          log.error "#{getLogTime()} PromiseHttp: #{request.method} #{request.url}, ERROR:", error
           console.error error
-          response.end "#{logTime()} PromiseHttp: #{request.method} #{request.url}, ERROR: #{formattedInspect error}"
+          response.end "#{getLogTime()} PromiseHttp: #{request.method} #{request.url}, ERROR: #{formattedInspect error}"
 
   start: ->
     {port, name} = @options

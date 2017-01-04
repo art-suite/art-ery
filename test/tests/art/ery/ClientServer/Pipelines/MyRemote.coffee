@@ -12,6 +12,8 @@ defineModule module, class MyRemote extends Pipeline
   @handlers
     get: ({key, data}) -> "#{data?.greeting || 'Hello'} #{key || 'World'}!"
 
+    hello: ({session}) -> "Hello, #{session.username}!"
+
     simulateMissing: (request) -> request.missing()
 
     simulateServerFailure: -> throw new Error "Boom!"

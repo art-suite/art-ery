@@ -1,7 +1,7 @@
 Foundation = require 'art-foundation'
 {EventedMixin} = require 'art-events'
 {config} = require './Config'
-{isPlainObject, BaseObject, merge, inspect, isString, isObject, log, Validator, plainObjectsDeepEq, JsonStore} = Foundation
+{isPlainObject, Promise, BaseObject, merge, inspect, isString, isObject, log, Validator, plainObjectsDeepEq, JsonStore} = Foundation
 
 module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   jsonStore = new JsonStore
@@ -17,7 +17,9 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   constructor: (@_data = {}, @_jsonStoreKey) ->
 
   loadSession: ->
-    @_sessionLoadPromise ||= if @jsonStoreKey && config.location != "server"
+    if config.location == "server"
+      throw new Error "INTERNAL ERROR: Attempt to access the global session Serverside."
+    @_sessionLoadPromise ||= if @jsonStoreKey
       jsonStore.getItem @jsonStoreKey
       .then (data) =>
         log loadSession: {@jsonStoreKey, @data}

@@ -1,4 +1,5 @@
 throng  = require 'throng'
+require 'colors'
 
 {
   BaseObject

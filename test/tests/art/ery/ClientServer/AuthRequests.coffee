@@ -30,6 +30,13 @@ module.exports = suite:
           assert.eq session.data.username, "alice"
           assert.eq username, "alice"
 
+      test "sessions get passed to sub-requests serverside", ->
+        pipelines.auth.authenticate data: username: "Bill", password: "Bill"
+        .then -> pipelines.myRemote.hello()
+        .then (res) -> assert.eq res, "Hello, Bill!", "direct myRemote call"
+        .then -> pipelines.auth.hello()
+        .then (res) -> assert.eq res, "Hello, Bill!", "myRemote call via auth call"
+
       test "altering the session has no effect", ->
         pipelines.auth.authenticate data: username: "alice", password: "alice"
         .then ->
