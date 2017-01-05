@@ -173,7 +173,7 @@ defineModule module, ->
       {verbose} = ArtEry.config
       if verbose
         log "Art.Ery.Server":
-          env: merge process.env
+          env: object process.env, when: (v, k) -> k.match /^art/
           versions: Neptune.getVersions()
 
       if numWorkers > 1
