@@ -4,6 +4,7 @@
   inspectedObjectLiteral
   toInspectedObjects
   formattedInspect
+  Promise
 } = require 'art-foundation'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
@@ -80,42 +81,37 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   ###
   IN:
+    status: legal CommunicationStatus
     responseProps: (optionally Promise returning:)
-      an object which is directly passed into the Response constructor
-      OR instanceof RequestResponseBase
-      OR anything else:
-        considered internal error, but it will create a valid, failing Response object
+      PlainObject:          directly passed into the Response constructor
+      String:               becomes data: message: string
+      RequestResponseBase:  returned directly
+      else:                 considered internal error, but it will create a valid, failing Response object
   OUT:
     promise.then (response) ->
     .catch -> # should never happen
   ###
   _toResponse: (status, responseProps) ->
-    if isPlainObject(status)
-      {status} = responseProps = status
-      throw new Error "missing status" unless status
+    throw new Error "missing status" unless isString status
+
     Promise.resolve responseProps
     .then (responseProps = {}) =>
-      return responseProps if responseProps instanceof RequestResponseBase
-      # log _toResponse: {status, responseProps}
+      switch
+        when isPlainObject responseProps
+          new ArtEry.Response merge @propsForResponse, responseProps, {status, @request}
 
-      responseProps = data: message: responseProps if isString responseProps
-      unless isPlainObject responseProps
-        status = failure
-        message = null
-        responseProps = data: message: if responseProps instanceof Error
-          log.error(
-            message = "Internal Error: ArtEry.RequestResponseBase#_toResponse received Error instance: #{formattedInspect responseProps}"
-            @
-            responseProps
-          )
-          message
+        when responseProps instanceof RequestResponseBase
+          responseProps
+
+        when isString responseProps
+          @_toResponse status, data: message: responseProps
+
         else
-          log.error "Internal Error: ArtEry.RequestResponseBase#_toResponse expecting responseProps or error", responseProps
+          @_toResponse failure, @_generateErrorResponseProps responseProps
 
-      new ArtEry.Response merge @props, {@request, status, filterLog: @afterFilterLog}, responseProps
-
-      # response
-      # if status == success
-      #   Promise.resolve response
-      # else
-      #   Promise.reject response
+  _toErrorResponseProps: (error) ->
+    log @, {responseProps},
+      data: message: if responseProps instanceof Error
+          "Internal Error: ArtEry.RequestResponseBase#_toResponse received Error instance: #{formattedInspect responseProps}"
+        else
+          "Internal Error: ArtEry.RequestResponseBase#_toResponse received unsupported type"

@@ -1,4 +1,4 @@
-{defineModule, log, Validator, merge} = require 'art-foundation'
+{defineModule, log, Validator, merge, Promise} = require 'art-foundation'
 Filter = require '../Filter'
 
 defineModule module, class ValidationFilter extends Filter

@@ -46,6 +46,7 @@ module.exports = class Response extends require './RequestResponseBase'
         @remoteRequest
         @remoteResponse
       }
+    propsForResponse: -> @props
 
     plainObjectsResponse: ->
       out = {@status, @data}

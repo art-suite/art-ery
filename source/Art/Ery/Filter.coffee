@@ -125,7 +125,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
 
   @getter
     inspectedObjects: ->
-      "#{@name}":
+      "#{@getNamespacePath()}(#{@name})":
         toInspectedObjects @props
 
     props: ->

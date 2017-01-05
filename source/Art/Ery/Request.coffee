@@ -1,4 +1,4 @@
-{present, BaseObject, RestClient, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w
+{present, Promimse, BaseObject, RestClient, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w
 objectKeyCount} = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
@@ -109,5 +109,5 @@ module.exports = class Request extends require './RequestResponseBase'
 
     RestClient.restJsonRequest remoteRequest
     .catch ({info: {status, response}}) => merge response, {status}
-    .then (remoteResponse)              => @_toResponse merge remoteResponse, {remoteRequest, remoteResponse}
+    .then (remoteResponse)              => @_toResponse remoteResponse.status, merge remoteResponse, {remoteRequest, remoteResponse}
     .then (response) => response.handled "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"
