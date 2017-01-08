@@ -378,7 +378,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       request
 
   _processRequest: (request) ->
-    log "ArtEry: #{request.shortInspect}"
+    log "ArtEry: #{request.shortInspect}" if config.verbose
     @_applyBeforeFilters @_normalizeRequest request
     .then (requestOrResponse)  => @_applyHandler requestOrResponse
     .then (response)           => @_applyAfterFilters response
