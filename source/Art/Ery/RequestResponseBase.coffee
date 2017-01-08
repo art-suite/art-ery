@@ -46,7 +46,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       else
         throw new ErrorWithInfo "subRequest #{pipelineName}.#{type} request #{status}", {response}
 
-  rootRequestCachedGet: (pipelineName, key) ->
+  cachedPipelineGet: (pipelineName, key) ->
     ((@requestCache[pipelineName] ||= {}).get ||= {})[key] ||= @subrequest pipelineName, "get", {key}
 
   ###

@@ -51,7 +51,7 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
     promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
       do (fieldName, idFieldName, pipelineName, include) =>
         Promise
-        .then           => id && request.rootRequestCachedGet pipelineName, id
+        .then           => id && request.cachedPipelineGet pipelineName, id
         .then (value)   -> linkedData[fieldName] = if value? then value else null
         .catch (response) ->
           log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
