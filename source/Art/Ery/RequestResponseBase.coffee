@@ -25,6 +25,30 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       "#{@class.namespacePath}":
         toInspectedObjects @props
 
+  subrequest: (pipelineName, type, requestOptions = {}) ->
+    pipeline = ArtEry.pipelines[pipelineName]
+
+    @rootRequest._subrequestCount++
+
+    pipeline._processRequest new ArtEry.Request merge requestOptions, {
+        type
+        pipeline
+        @session
+        parentRequest: @
+        @rootRequest
+        originatedOnServer: true
+      }
+    .then (response) =>
+      # log _processClientRequest: {response}
+      {data, status} = response
+      if response.isSuccessful
+        if requestOptions.returnResponseObject then response else data
+      else
+        throw new ErrorWithInfo "subRequest #{pipelineName}.#{type} request #{status}", {response}
+
+  rootRequestCachedGet: (pipelineName, key) ->
+    ((@requestCache[pipelineName] ||= {}).get ||= {})[key] ||= @subrequest pipelineName, "get", {key}
+
   ###
   IN: data can be a plainObject or a promise returning a plainObject
   OUT: promise.then (newRequestWithNewData) ->

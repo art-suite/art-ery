@@ -36,6 +36,7 @@ module.exports = suite:
           filterLog:          undefined
           originatedOnServer: undefined
           originatedOnClient: undefined
+          subrequestCount:    0
 
         """
 

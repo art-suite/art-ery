@@ -25,6 +25,7 @@ PipelineRegistry = require './PipelineRegistry'
   inspectedObjectLiteral
   escapeRegExp
   ErrorWithInfo
+  formattedInspect
 } = Foundation
 {normalizeFieldProps} = Validator
 
@@ -377,6 +378,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       request
 
   _processRequest: (request) ->
+    log "ArtEry: #{request.shortInspect}"
     @_applyBeforeFilters @_normalizeRequest request
     .then (requestOrResponse)  => @_applyHandler requestOrResponse
     .then (response)           => @_applyAfterFilters response

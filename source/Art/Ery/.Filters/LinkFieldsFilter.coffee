@@ -46,12 +46,12 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
 
 
   # OUT: promise.then -> new data
-  includeLinkedFields: (session, data) ->
+  includeLinkedFields: (request, session, data) ->
     linkedData = shallowClone data
     promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
       do (fieldName, idFieldName, pipelineName, include) =>
         Promise
-        .then           => id && @pipelines[pipelineName].get {session, key: id}
+        .then           => id && request.rootRequestCachedGet pipelineName, id
         .then (value)   -> linkedData[fieldName] = if value? then value else null
         .catch (response) ->
           log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
@@ -74,8 +74,8 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
         else
           response.withData if isPlainArray data
             # TODO: use bulkGet for efficiency
-            Promise.all(@includeLinkedFields session, record for record in data)
+            Promise.all(@includeLinkedFields request, session, record for record in data)
           else if isPlainObject data
-            @includeLinkedFields session, data
+            @includeLinkedFields request, session, data
           else
             data

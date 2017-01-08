@@ -84,6 +84,7 @@ module.exports = suite: ->
           [
             {userId: userId1, message: "Hi!"}
             {userId: userId2, message: "Howdy!"}
+            {userId: userId1, message: "How about that ArtEry!?!"}
           ]
       @filter new LinkFieldsFilter fields:
         user: link: "user", required: true, include: true
@@ -92,9 +93,10 @@ module.exports = suite: ->
       pipelines.user.create(data: name: "George").then (user) -> userId1 = user.id
       pipelines.user.create(data: name: "Frank" ).then (user) -> userId2 = user.id
     ])
-    .then (post) -> pipelines.postPipeline.getSampleData()
-    .then (post) ->
-      assert.eq post, [
+    .then (post) -> pipelines.postPipeline.getSampleData returnResponseObject: true
+    .then ({data, subrequestCount}) ->
+      assert.eq subrequestCount, 2
+      assert.eq data, [
         {
           userId:  "0"
           message: "Hi!"
@@ -103,5 +105,9 @@ module.exports = suite: ->
           userId:  "1"
           message: "Howdy!"
           user:    name: "Frank", id: "1"
+        },{
+          userId: "0"
+          message: "How about that ArtEry!?!"
+          user:   name: "George", id: "0"
         }
       ]

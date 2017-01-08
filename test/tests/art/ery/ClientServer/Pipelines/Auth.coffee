@@ -33,5 +33,5 @@ defineModule module, class Auth extends Pipeline
       else
         request.success()
 
-    hello: ({session}) ->
-      @pipelines.myRemote.hello {session} # request.session.username
+    hello: (request) ->
+      request.subrequest "myRemote", "hello" # request.session.username

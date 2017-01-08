@@ -28,6 +28,8 @@ module.exports = class Response extends require './RequestResponseBase'
 
   @property "request status data session error remoteResponse remoteRequest handledBy"
   @getter
+    rootRequest:      -> @request.rootRequest
+    parentRequest:    -> @request.parentRequest
     type:             -> @request.type
     originatedOnServer: -> @request.originatedOnServer
     beforeFilterLog:  -> @request.filterLog || []
@@ -35,6 +37,7 @@ module.exports = class Response extends require './RequestResponseBase'
     message:          -> @data?.message
     isSuccessful:     -> @_status == success
     notSuccessful:    -> @_status != success
+    subrequestCount:  -> @request.subrequestCount
     props: ->
       {
         @request
@@ -45,6 +48,7 @@ module.exports = class Response extends require './RequestResponseBase'
         @handledBy
         @remoteRequest
         @remoteResponse
+        @subrequestCount
       }
     propsForResponse: -> @props
 

@@ -15,9 +15,12 @@ module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
     super
     validator.preCreateSync options, context: "Art.Ery.Request options", logErrors: true
-    {@type, @key, @pipeline, @session, @data, @originatedOnServer, @originatedOnClient} = options
+    {@type, @key, @pipeline, @session, @parentRequest, @rootRequest = @, @data, @originatedOnServer, @originatedOnClient} = options
+    @rootRequest ||= @
+    @_subrequestCount = 0
+    @_requestCache = null
 
-  @property "type key pipeline session data originatedOnServer originatedOnClient"
+  @property "type key pipeline session data originatedOnServer originatedOnClient rootRequest parentRequest"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
@@ -47,8 +50,12 @@ module.exports = class Request extends require './RequestResponseBase'
     else
       @failure data: message: "#{@requestPipelineAndType}: originatedOnServer required #{message || ""}"
 
-  @getter
+  @getter "subrequestCount",
     request: -> @
+    shortInspect: ->
+      "#{if @parentRequest then @parentRequest.shortInspect + ":" else ""}#{@pipeline.getName()}-#{@type}(#{@key})"
+
+    requestCache: -> @rootRequest._requestCache ||= {}
 
     # Also implemented in Response
     beforeFilterLog:  -> @filterLog || []
@@ -68,6 +75,7 @@ module.exports = class Request extends require './RequestResponseBase'
         @filterLog
         @originatedOnServer
         @originatedOnClient
+        @subrequestCount
       }
 
     urlKeyClause: -> if present @key then "/#{@key}" else ""
