@@ -57,6 +57,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     Promise.resolve(data).then (resolvedData) =>
       new @class merge @props, data: resolvedData
 
+  withKey: (newKey) ->
+    Promise.resolve(newKey).then (key) =>
+      new @class merge @props, {key}
+
   ###
   IN: data can be a plainObject or a promise returning a plainObject
   OUT: promise.then (newRequestWithNewData) ->
