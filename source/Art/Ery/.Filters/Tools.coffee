@@ -29,11 +29,11 @@ defineModule module, class Tools
       fields.user = "required link"
       if isString userOwned
         fields.user = "#{fields.user} #{userOwned}"
-      fields = objectWithout "userOwned"
+      fields = objectWithout fields, "userOwned"
 
     if id
       uniqueIdProps = id
-      fields = objectWithout "id"
+      fields = objectWithout fields, "id"
 
     linkFields = {}
     otherFields = {}
