@@ -23,7 +23,7 @@ defineModule module, class Tools
     Last, if we treat it as any other field-declaration keyword, we can do:
       user: "include owner"
   ###
-  @createDatabaseFilters: (fields = {}) ->
+  @createDatabaseFilters: (fields = {}, PipelineClass) ->
     {id, userOwned} = fields
     if userOwned
       fields.user = "required link"
@@ -46,7 +46,7 @@ defineModule module, class Tools
         otherFields[k] = v
 
     [
-      new UniqueIdFilter uniqueIdProps
+      new UniqueIdFilter uniqueIdProps unless PipelineClass && PipelineClass._primaryKey != "id"
       new TimestampFilter
       new LinkFieldsFilter fields: linkFields if hasProperties linkFields
       new UserOwnedFilter if userOwned

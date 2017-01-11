@@ -4,6 +4,7 @@ Request = require './Request'
 Filter = require './Filter'
 Session = require './Session'
 {config} = require './Config'
+Filters = require './Filters'
 
 PipelineRegistry = require './PipelineRegistry'
 
@@ -55,6 +56,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     else throw "invalid filter: #{inspect filter} #{filter instanceof Filter}"
 
   @getAliases: -> @_aliases || {}
+
+  @addDatabaseFilters: (options) ->
+    @filter Filters.createDatabaseFilters options, @
 
   ###########################
   # Declarative API
