@@ -25,7 +25,7 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
       with: ({idFieldName, autoCreate, pipelineName}, fieldName, __, linkedRecordData) =>
         Promise.then =>
           if linkedRecordData.id then linkedRecordData
-          else if autoCreate     then @pipelines[pipelineName].create {session, data: linkedRecordData}
+          else if autoCreate     then request.subrequest pipelineName, "create", data: linkedRecordData
           else                   throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedRecordData}"
         .then (linkedRecordData) =>
           processedData[idFieldName] = linkedRecordData.id

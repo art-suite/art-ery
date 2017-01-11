@@ -155,7 +155,8 @@ defineModule module, class ArtEryFluxModel extends FluxModel
               # on error, roll back flux-Store to the last known-good data
               status: success, data: data
             else
-              status: e.info.response.status || failure
+              status: e.info?.response?.status || failure
+              data: e.info
           .then (fluxRecord) =>
             @updateFluxStore key, fluxRecord
             data

@@ -28,15 +28,7 @@ module.exports = suite:
         session: {}
       assert.eq formattedInspect(request),   """
         Neptune.Art.Ery.Request:
-          pipeline:           pipeline
-          type:               "get"
-          key:                "123"
-          session:            {}
-          data:               undefined
-          filterLog:          undefined
-          originatedOnServer: undefined
-          originatedOnClient: undefined
-          subrequestCount:    0
+          pipeline: pipeline, type: "get", key: "123", session: {}, subrequestCount: 0
 
         """
 

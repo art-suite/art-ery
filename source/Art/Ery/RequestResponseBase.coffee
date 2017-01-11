@@ -5,6 +5,8 @@
   toInspectedObjects
   formattedInspect
   Promise
+  ErrorWithInfo
+  object
 } = require 'art-foundation'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
@@ -23,7 +25,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   @getter
     inspectedObjects: ->
       "#{@class.namespacePath}":
-        toInspectedObjects @props
+        object @props,
+          when: (v) -> v?
+          with: (v) -> toInspectedObjects v
 
   subrequest: (pipelineName, type, requestOptions = {}) ->
     pipeline = ArtEry.pipelines[pipelineName]

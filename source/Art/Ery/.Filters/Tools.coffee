@@ -49,6 +49,6 @@ defineModule module, class Tools
       new UniqueIdFilter uniqueIdProps
       new TimestampFilter
       new LinkFieldsFilter fields: linkFields if hasProperties linkFields
-      new UserOwnedFilter if fields.userOwned
+      new UserOwnedFilter if userOwned
       new ValidationFilter fields: otherFields if hasProperties otherFields
     ]

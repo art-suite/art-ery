@@ -69,6 +69,7 @@ module.exports = class Request extends require './RequestResponseBase'
       {
         @pipeline
         @type
+        @parentRequest
         @key
         @session
         @data
