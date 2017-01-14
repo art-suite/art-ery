@@ -3,10 +3,11 @@
 
 module.exports = require './namespace'
 .addModules
-  LinkFieldsFilter: require './LinkFieldsFilter'
-  TimestampFilter:  require './TimestampFilter' 
-  Tools:            require './Tools'           
-  UniqueIdFilter:   require './UniqueIdFilter'  
-  UserOwnedFilter:  require './UserOwnedFilter' 
-  UuidFilter:       require './UuidFilter'      
-  ValidationFilter: require './ValidationFilter'
+  AfterEventsFilter: require './AfterEventsFilter'
+  LinkFieldsFilter:  require './LinkFieldsFilter' 
+  TimestampFilter:   require './TimestampFilter'  
+  Tools:             require './Tools'            
+  UniqueIdFilter:    require './UniqueIdFilter'   
+  UserOwnedFilter:   require './UserOwnedFilter'  
+  UuidFilter:        require './UuidFilter'       
+  ValidationFilter:  require './ValidationFilter' 

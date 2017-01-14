@@ -1,9 +1,10 @@
-{defineModule, log, isString, isFunction, Validator, hasProperties, objectWithout} = require 'art-foundation'
+{present, defineModule, log, isString, isFunction, Validator, hasProperties, objectWithout} = require 'art-foundation'
 UniqueIdFilter = require './UniqueIdFilter'
 TimestampFilter = require './TimestampFilter'
 ValidationFilter = require './ValidationFilter'
 LinkFieldsFilter = require './LinkFieldsFilter'
 UserOwnedFilter = require './UserOwnedFilter'
+AfterEventsFilter = require './AfterEventsFilter'
 {normalizeFieldProps} = Validator
 
 defineModule module, class Tools
@@ -45,10 +46,13 @@ defineModule module, class Tools
       else
         otherFields[k] = v
 
+    log
+
     [
-      new UniqueIdFilter uniqueIdProps unless PipelineClass && PipelineClass._primaryKey != "id"
+      new UniqueIdFilter uniqueIdProps unless present(PipelineClass?._primaryKey) && PipelineClass._primaryKey != "id"
       new TimestampFilter
       new LinkFieldsFilter fields: linkFields if hasProperties linkFields
       new UserOwnedFilter if userOwned
       new ValidationFilter fields: otherFields if hasProperties otherFields
+      new AfterEventsFilter
     ]

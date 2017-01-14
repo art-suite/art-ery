@@ -23,6 +23,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   addFilterLog: (filter) -> @_filterLog = arrayWith @_filterLog, "#{filter}"
 
   @getter
+    pipelineName: -> @pipeline.getName()
     inspectedObjects: ->
       "#{@class.namespacePath}":
         object @props,

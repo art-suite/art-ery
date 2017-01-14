@@ -33,6 +33,7 @@ module.exports = suite: createDatabaseFilters: ->
       TimestampFilter
       LinkFieldsFilter
       ValidationFilter
+      AfterEventsFilter
       "
 
   test "create", ->
@@ -69,21 +70,14 @@ module.exports = suite: createDatabaseFilters: ->
       TimestampFilter
       LinkFieldsFilter
       UserOwnedFilter
+      AfterEventsFilter
       "
 
   test "userOwned and another field", ->
     {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipeline
-      @filter createDatabaseFilters
+      @addDatabaseFilters
         userOwned: true
         myField: "strings"
-
-    assert.eq Object.keys(myPipeline.fields), w "
-      id
-      createdAt
-      updatedAt
-      userId
-      myField
-      "
 
     assert.eq (array myPipeline.filters, (v) -> v.name), w "
       UniqueIdFilter
@@ -91,4 +85,13 @@ module.exports = suite: createDatabaseFilters: ->
       LinkFieldsFilter
       UserOwnedFilter
       ValidationFilter
+      AfterEventsFilter
+      "
+
+    assert.eq Object.keys(myPipeline.fields), w "
+      id
+      createdAt
+      updatedAt
+      userId
+      myField
       "
