@@ -183,6 +183,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   getPrefixedTableName: (tableName) => "#{@tableNamePrefix}#{tableName}"
 
+  @classGetter
+    pipelineName: -> @_pipelineName || decapitalize @getName()
+
   @getter "options",
     tableNamePrefix: -> @class._tableNamePrefix || config.tableNamePrefix
     tableName: -> @getPrefixedTableName @name
