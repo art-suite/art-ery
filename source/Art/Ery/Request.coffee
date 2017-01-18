@@ -1,5 +1,9 @@
-{present, Promimse, BaseObject, RestClient, merge, inspect, isString, isObject, log, Validator, CommunicationStatus, arrayWith, w
-objectKeyCount} = Foundation = require 'art-foundation'
+{
+  present, Promise, BaseObject, RestClient, merge,
+  inspect, isString, isObject, log, Validator,
+  CommunicationStatus, arrayWith, w
+  objectKeyCount, isString, isPlainObject
+} = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
@@ -8,7 +12,7 @@ validator = new Validator
   pipeline:           required: instanceof: Neptune.Art.Ery.Pipeline
   session:            w "required object"
   data:               "object"
-  key:                "string"
+  key:                validate: (v) -> isString(v) || isPlainObject(v)
   originatedOnServer: "boolean"
 
 module.exports = class Request extends require './RequestResponseBase'
