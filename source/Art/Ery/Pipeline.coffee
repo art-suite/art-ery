@@ -390,17 +390,23 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     .then (requestOrResponse)  => @_applyHandler requestOrResponse
     .then (response)           => @_applyAfterFilters response
 
-  # client actions just return the data and update the local session object if successful
-  # otherwise, they "reject" the whole response object.
   ###
-  options
-    all the Request options are valid here
-    returnResponseObject: true [default: false]
-      if true, the response object is returned, otherwise, just the data field is returned.
+  IN:
+    type: request type string
+    options:
+      # options are passed to new Request
+      # options are passed to response.toResponse
 
-  OUT:
-    promise.then (response) -> response.isSuccessful == true
-    promise.catch ()
+  OUT: response.toPromise options
+    (SEE Response#toPromise for valid options)
+
+    With no options, this means:
+    promise.then (response.data) ->
+      # status == success
+
+    promise.catch (errorWithInfo) ->
+      {response} = errorWithInfo.info
+      # status != success
   ###
   noOptions = {}
   _processClientRequest: (type, options = noOptions) ->
@@ -416,14 +422,11 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
         session:  sessionData
 
     .then (response) =>
-      # log _processClientRequest: {response}
-      {data, session} = response
-      if response.isSuccessful
-        if session
-          @session.data = session
-        if returnResponseObject then response else data
-      else
-        throw new ErrorWithInfo "#{@getName()}.#{type} request #{response.status}", {response}
+      @_processResponseSession response
+      response.toPromise options
+
+  _processResponseSession: (response) ->
+    @session.data = response.session if response.session
 
   @_clientApiRequest: (requestType) ->
     @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()

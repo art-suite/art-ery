@@ -44,12 +44,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         originatedOnServer: true
       }
     .then (response) =>
-      # log _processClientRequest: {response}
-      {data, status} = response
-      if response.isSuccessful
-        if requestOptions.returnResponseObject then response else data
-      else
-        throw new ErrorWithInfo "subRequest #{pipelineName}.#{type} request #{status}", {response}
+      response.toPromise requestOptions
 
   cachedPipelineGet: (pipelineName, key) ->
     ((@requestCache[pipelineName] ||= {}).get ||= {})[key] ||= @subrequest pipelineName, "get", {key}

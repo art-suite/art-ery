@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{BaseObject, objectKeyCount, arrayWith, inspect, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
+{Promise, BaseObject, objectKeyCount, arrayWith, inspect, ErrorWithInfo, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
 {success, missing, failure} = CommunicationStatus
 
 responseValidator = new Validator
@@ -38,6 +38,7 @@ module.exports = class Response extends require './RequestResponseBase'
     afterFilterLog:   -> @filterLog || []
     message:          -> @data?.message
     isSuccessful:     -> @_status == success
+    isMissing:        -> @_status == missing
     notSuccessful:    -> @_status != success
     subrequestCount:  -> @request.subrequestCount
     props: ->
@@ -61,3 +62,42 @@ module.exports = class Response extends require './RequestResponseBase'
       out.handledBy = @handledBy
       out.afterFilterLog = @afterFilterLog if @afterFilterLog?.length > 0
       out
+
+  ###
+  IN: options:
+    returnNullIfMissing: true [default: false]
+      if status == missing
+        if returnNullIfMissing
+          promise.resolve null
+        else
+          promise.reject new ErrorWithInfo
+
+    returnResponseObject: true [default: false]
+      if true, the response object is returned, otherwise, just the data field is returned.
+
+  OUT:
+    # if response.isSuccessful && returnResponseObject == true
+    promise.then (response) ->
+
+    # if response.isSuccessful && returnResponseObject == false
+    promise.then (data) ->
+
+    # if response.isMissing && returnNullIfMissing == true
+    promise.then (data) -> # data == null
+
+    # else
+    promise.catch (errorWithInfo) ->
+      {response} = errorWithInfo.info
+
+  ###
+  toPromise: (options) ->
+    {returnNullIfMissing, returnResponseObject} = options if options
+    {data, isSuccessful, isMissing} = @
+
+    if isMissing && returnNullIfMissing
+      data = null
+      isSuccessful = true
+
+    if isSuccessful
+          Promise.resolve if returnResponseObject then @ else data
+    else  Promise.reject  new ErrorWithInfo "#{@pipeline.getName()}.#{@type} request status: #{@status}", response: @

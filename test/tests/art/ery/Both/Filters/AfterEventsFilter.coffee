@@ -34,6 +34,6 @@ module.exports = suite: ->
           assert.eq response.data, "hello"
           resolve()
 
-      AfterEventsFilter.registerPipelineListener myPipeline, "myRequest"
+      AfterEventsFilter.registerPipelineListener myPipeline, "myPipeline", "myRequest"
 
       myPipeline.myRequest {}
