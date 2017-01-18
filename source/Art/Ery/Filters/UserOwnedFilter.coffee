@@ -29,7 +29,12 @@ defineModule module, class UserOwnedFilter extends Filter
       {key} = request
 
       request.requireServerOriginOr !request.data.userId || isOwner(request), "to change a record's owner #{ownershipInfo request}"
-      .then -> request.pipeline.get key: key
-      .then (currentRecord) ->
-        request.requireServerOriginOr isOwner(request, currentRecord), "to update a record you do not own #{ownershipInfo request}"
+      .then ->
+        if request.originatedOnServer
+          # gets a free pass
+          request
+        else
+          request.pipeline.get key: key
+          .then (currentRecord) ->
+            request.requireServerOriginOr isOwner(request, currentRecord), "to update a record you do not own #{ownershipInfo request}"
 
