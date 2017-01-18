@@ -12,11 +12,8 @@ defineModule module, class AfterEventsFilter extends Filter
     pushIfNotPresent ((@handlers[pipelineName] ||= {})[requestType]||=[]), actionOrPipeline
 
   @registerPipelineListener: (listeningPipeline, listeningToPipelineName, requestType) ->
-    pipelineName = listeningPipeline.getPipelineName()
     throw new Error "listeningPipeline must implement handleRequestAfterEvent" unless isFunction listeningPipeline.handleRequestAfterEvent
     throw new Error "listeningToPipelineName must be a string" unless isString listeningToPipelineName
-    # return if ((@_registeredPipelineHandlers[pipelineName]||={})[listeningToPipelineName]||={})[requestType]
-    # @_registeredPipelineHandlers[pipelineName][listeningToPipelineName][requestType] = true
     @on listeningToPipelineName, requestType, listeningPipeline
 
   @after
