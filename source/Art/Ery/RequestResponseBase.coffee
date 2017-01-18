@@ -32,6 +32,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   subrequest: (pipelineName, type, requestOptions = {}) ->
     pipeline = ArtEry.pipelines[pipelineName]
+    throw new Error "Pipeline not registered: #{formattedInspect pipelineName}" unless pipeline
 
     @rootRequest._subrequestCount++
 
