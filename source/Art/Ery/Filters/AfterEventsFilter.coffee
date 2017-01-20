@@ -16,16 +16,20 @@ defineModule module, class AfterEventsFilter extends Filter
     throw new Error "listeningToPipelineName must be a string" unless isString listeningToPipelineName
     @on listeningToPipelineName, requestType, listeningPipeline
 
+  @sendEvents: (response, pipelineName, requestType) ->
+    actionPromises = for actionOrPipeline in AfterEventsFilter.handlers[pipelineName]?[requestType] || []
+      if isFunction actionOrPipeline.handleRequestAfterEvent
+        actionOrPipeline.handleRequestAfterEvent response
+      else
+        actionOrPipeline response
+
+    Promise.all actionPromises
+    .then -> response
+
   @after
     all: (response) ->
       {pipeline, type} = response
       pipelineName = pipeline.getName()
 
-      actionPromises = for actionOrPipeline in AfterEventsFilter.handlers[pipelineName]?[type] || []
-        if isFunction actionOrPipeline.handleRequestAfterEvent
-          actionOrPipeline.handleRequestAfterEvent response
-        else
-          actionOrPipeline response
+      AfterEventsFilter.sendEvents response, pipelineName, type
 
-      Promise.all actionPromises
-      .then -> response
