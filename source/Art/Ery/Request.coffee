@@ -19,12 +19,12 @@ module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
     super
     validator.preCreateSync options, context: "Art.Ery.Request options", logErrors: true
-    {@type, @key, @pipeline, @session, @parentRequest, @rootRequest = @, @data, @originatedOnServer, @originatedOnClient} = options
+    {@type, @key, @pipeline, @session, @requestOptions, @parentRequest, @rootRequest = @, @data, @originatedOnServer, @originatedOnClient} = options
     @rootRequest ||= @
     @_subrequestCount = 0
     @_requestCache = null
 
-  @property "type key pipeline session data originatedOnServer originatedOnClient rootRequest parentRequest"
+  @property "type key requestOptions, pipeline session data originatedOnServer originatedOnClient rootRequest parentRequest"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
@@ -77,6 +77,7 @@ module.exports = class Request extends require './RequestResponseBase'
         @key
         @session
         @data
+        @requestOptions
         @filterLog
         @originatedOnServer
         @originatedOnClient
@@ -109,15 +110,17 @@ module.exports = class Request extends require './RequestResponseBase'
     data:   data
 
   sendRemoteRequest: ->
+    {data, session, requestOptions, pipeline, type, key} = @
     requestData = null
-    (requestData||={}).data = @data if @data && objectKeyCount(@data) > 0
-    (requestData||={}).session = @session.signature if @session.signature
+    (requestData||={}).data = data if data && objectKeyCount(data) > 0
+    (requestData||={}).requestOptions = requestOptions if requestOptions && objectKeyCount(requestOptions) > 0
+    (requestData||={}).session = session.signature if session.signature
 
     remoteRequest = getRestClientParamsForArtEryRequest
-      restPath: @pipeline.restPath
-      server:   @pipeline.remoteServer
-      type:     @type
-      key:      @key
+      restPath: pipeline.restPath
+      server:   pipeline.remoteServer
+      type:     type
+      key:      key
       data:     requestData
 
     RestClient.restJsonRequest remoteRequest
