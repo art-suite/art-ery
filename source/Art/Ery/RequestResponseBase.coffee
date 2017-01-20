@@ -47,8 +47,22 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     .then (response) =>
       response.toPromise requestOptions
 
-  cachedPipelineGet: (pipelineName, key) ->
-    ((@requestCache[pipelineName] ||= {}).get ||= {})[key] ||= @subrequest pipelineName, "get", {key}
+  cachedSubrequest: (pipelineName, type, key) ->
+    throw new Error "key must be a string" unless isString key
+    ((@requestCache[pipelineName] ||= {})[type] ||= {})[key] ||= @subrequest pipelineName, type, {key}
+
+  cachedGet: cachedGet = (pipelineName, key) -> @cachedSubrequest pipelineName, "get", key
+  cachedPipelineGet: cachedGet # depricated(?) alias
+
+  # like cachedGet, excepts it success with null if it doesn't exist or if key doesn't exist
+  cachedGetIfExists: (pipelineName, key) ->
+    return Promise.resolve null unless key?
+    @cachedGet pipelineName, key
+    .catch (error) ->
+      if error.info.response.status == missing
+        Promise.resolve null
+      else throw error
+
 
   ###
   IN: data can be a plainObject or a promise returning a plainObject
