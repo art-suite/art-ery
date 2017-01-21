@@ -1,4 +1,4 @@
-{defineModule, log, Promise, isFunction, isString, pushIfNotPresent} = require 'art-foundation'
+{defineModule, log, Promise, isFunction, isString, pushIfNotPresent, formattedInspect} = require 'art-foundation'
 Filter = require '../Filter'
 
 defineModule module, class AfterEventsFilter extends Filter
@@ -16,20 +16,21 @@ defineModule module, class AfterEventsFilter extends Filter
     throw new Error "listeningToPipelineName must be a string" unless isString listeningToPipelineName
     @on listeningToPipelineName, requestType, listeningPipeline
 
-  @sendEvents: (response, pipelineName, requestType) ->
-    actionPromises = for actionOrPipeline in AfterEventsFilter.handlers[pipelineName]?[requestType] || []
-      if isFunction actionOrPipeline.handleRequestAfterEvent
-        actionOrPipeline.handleRequestAfterEvent response
-      else
-        actionOrPipeline response
+  @sendEvents: (response) ->
+    Promise.resolve response
+    .then (response) ->
+      {pipelineName, requestType} = response
 
-    Promise.all actionPromises
+      actionPromises = for actionOrPipeline in AfterEventsFilter.handlers[pipelineName]?[requestType] || []
+        if isFunction actionOrPipeline.handleRequestAfterEvent
+          actionOrPipeline.handleRequestAfterEvent response
+        else
+          actionOrPipeline response
+
+      Promise.all actionPromises
     .then -> response
 
   @after
     all: (response) ->
-      {pipeline, type} = response
-      pipelineName = pipeline.getName()
-
-      AfterEventsFilter.sendEvents response, pipelineName, type
+      AfterEventsFilter.sendEvents response
 
