@@ -100,4 +100,4 @@ module.exports = class Response extends require './RequestResponseBase'
 
     if isSuccessful
           Promise.resolve if returnResponseObject then @ else data
-    else  Promise.reject  new ErrorWithInfo "#{@pipeline.getName()}.#{@type} request status: #{@status}", response: @
+    else  Promise.reject  new ErrorWithInfo "#{@pipeline.getName()}.#{@type} request status: #{@status}, data: #{@data?.message || formattedInspect @data}", response: @
