@@ -23,6 +23,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   addFilterLog: (filter) -> @_filterLog = arrayWith @_filterLog, "#{filter}"
 
   @getter
+    requestType: -> @type
     pipelineName: -> @pipeline.getName()
     inspectedObjects: ->
       "#{@class.namespacePath}":
@@ -30,22 +31,26 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
           when: (v) -> v?
           with: (v) -> toInspectedObjects v
 
-  subrequest: (pipelineName, type, requestOptions = {}) ->
+  createSubRequest: (pipelineName, type, requestOptions) ->
+    throw new Error "requestOptions must be an object" if requestOptions && !isPlainObject requestOptions
     pipeline = ArtEry.pipelines[pipelineName]
     throw new Error "Pipeline not registered: #{formattedInspect pipelineName}" unless pipeline
 
-    @rootRequest._subrequestCount++
+    new ArtEry.Request merge requestOptions, {
+      type
+      pipeline
+      @session
+      parentRequest: @
+      @rootRequest
+      originatedOnServer: true
+    }
 
-    pipeline._processRequest new ArtEry.Request merge requestOptions, {
-        type
-        pipeline
-        @session
-        parentRequest: @
-        @rootRequest
-        originatedOnServer: true
-      }
-    .then (response) =>
-      response.toPromise requestOptions
+  subrequest: (pipelineName, type, requestOptions) ->
+    subrequest = @createSubRequest pipelineName, type, requestOptions
+
+    @rootRequest._subrequestCount++
+    subrequest.pipeline._processRequest subrequest
+    .then (response) => response.toPromise requestOptions
 
   cachedSubrequest: (pipelineName, type, key) ->
     throw new Error "key must be a string" unless isString key
