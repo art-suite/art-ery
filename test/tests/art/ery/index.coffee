@@ -4,3 +4,4 @@
 module.exports = require './namespace'
 require './Both'
 require './ClientServer'
+require './Core'

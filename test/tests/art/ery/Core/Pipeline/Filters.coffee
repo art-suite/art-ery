@@ -11,15 +11,15 @@ module.exports = suite: ->
 
   test "filter logs", ->
     createWithPostCreate class MyPipeline extends Pipeline
-      @handlers foo: (request) -> merge request.data, foo: 1, bar: 2
+      @handlers foo: (request) -> merge request.data, myHandlerRan: true
 
       @filter
         name: "MyBeforeFooFilter"
-        before: foo: (request) -> request.withMergedData MyBeforeFooFilter: true
+        before: foo: (request) -> log "beforeFilter", request.withMergedData myBeforeFooFilterRan: true
 
       @filter
         name: "MyAfterFooFilter"
-        after: foo: (response) -> response.withMergedData MyAfterFooFilter: true
+        after: foo: (response) -> log "afterFilter", response.withMergedData myAfterFooFilterRan: true
 
     p = new MyPipeline
     p.foo
@@ -29,7 +29,6 @@ module.exports = suite: ->
       assert.eq response.handledBy, handler: "foo"
       assert.eq ["MyAfterFooFilter"], (a.toString() for a in response.afterFilterLog)
       assert.eq response.data,
-        foo: 1
-        bar: 2
-        MyAfterFooFilter: true
-        MyBeforeFooFilter: true
+        myHandlerRan: true
+        myBeforeFooFilterRan: true
+        myAfterFooFilterRan: true

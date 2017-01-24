@@ -53,7 +53,7 @@ module.exports = suite:
           assert.eq session.data.username, "alice"
           pipelines.auth.session.data = username: "bob"
           pipelines.auth.loggedInAs()
-        .then ({username}) ->
+        .then (response) ->
           assert.eq session.data.username, "bob"
-          assert.eq false, present username
+          assert.doesNotExist response
 

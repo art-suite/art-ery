@@ -3,7 +3,7 @@ module.exports = (require "art-foundation/configure_webpack")
   dirname: __dirname
   package:
     scripts:
-      testServer: "./art-ery-server -r ./test/tests/Art/Ery/ClientServer/Pipelines -s ./test/public/"
+      testServer: "artConfig='#{JSON.stringify verbose: true, 'Art.Ery.verbose': true}' ./art-ery-server -r ./test/tests/Art/Ery/ClientServer/Pipelines -s ./test/public/"
     description: "
       A pipelined business-logic framework for cloud-backed data. ArtEry
       conceptially allows you to write apps 100% as client-code, but with the

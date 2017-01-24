@@ -1,8 +1,10 @@
 {
+  each
   present, Promise, BaseObject, RestClient, merge,
   inspect, isString, isObject, log, Validator,
   CommunicationStatus, arrayWith, w
   objectKeyCount, isString, isPlainObject
+  objectWithout
 } = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
@@ -11,20 +13,33 @@ validator = new Validator
   type:               w "required string"
   pipeline:           required: instanceof: Neptune.Art.Ery.Pipeline
   session:            w "required object"
-  data:               "object"
-  key:                validate: (v) -> isString(v) || isPlainObject(v)
+  parentRequest:      instanceof: Request
+  rootRequest:        instanceof: Request
   originatedOnServer: "boolean"
+  props:              "object"
+
 
 module.exports = class Request extends require './RequestResponseBase'
+
   constructor: (options) ->
     super
     validator.preCreateSync options, context: "Art.Ery.Request options", logErrors: true
-    {@type, @key, @pipeline, @session, @requestOptions, @parentRequest, @rootRequest = @, @data, @originatedOnServer, @originatedOnClient} = options
+    {@type, @pipeline, @session, @parentRequest, @rootRequest = @, @originatedOnServer, @props = {}} = options
+
+    @_props.key  = options.key  if options.key?
+    @_props.data = options.data if options.data?
+
     @rootRequest ||= @
     @_subrequestCount = 0
     @_requestCache = null
 
-  @property "type key requestOptions, pipeline session data originatedOnServer originatedOnClient rootRequest parentRequest"
+  @property "type pipeline session originatedOnServer rootRequest parentRequest props data key"
+
+  @getter
+    key:  -> @_props.key
+    data: -> @_props.data
+    requestOptions: ->
+      throw new Error "DEPRICATED: use props.requestOptions"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
@@ -69,18 +84,15 @@ module.exports = class Request extends require './RequestResponseBase'
     isRequest:        -> true
     requestPipelineAndType: -> "#{@pipeline.name}-#{@type}"
 
-    props: ->
+    propsForClone: ->
       {
         @pipeline
         @type
-        @parentRequest
-        @key
+        @props
         @session
-        @data
-        @requestOptions
+        @parentRequest
         @filterLog
         @originatedOnServer
-        @originatedOnClient
         @subrequestCount
       }
 
@@ -109,21 +121,26 @@ module.exports = class Request extends require './RequestResponseBase'
     url:    url
     data:   data
 
+  @getter
+    remoteRequestProps: ->
+      {session, props, pipeline, type, key} = @
+      requestData = null
+
+      each props,
+        when: (v, k) -> v != undefined && k != "key"
+        with: (v, k) -> (requestData||={})[k] = v
+
+      (requestData||={}).session = session.signature if session.signature
+
+      getRestClientParamsForArtEryRequest
+        restPath: pipeline.restPath
+        server:   pipeline.remoteServer
+        type:     type
+        key:      key
+        data:     requestData
+
   sendRemoteRequest: ->
-    {data, session, requestOptions, pipeline, type, key} = @
-    requestData = null
-    (requestData||={}).data = data if data && objectKeyCount(data) > 0
-    (requestData||={}).requestOptions = requestOptions if requestOptions && objectKeyCount(requestOptions) > 0
-    (requestData||={}).session = session.signature if session.signature
-
-    remoteRequest = getRestClientParamsForArtEryRequest
-      restPath: pipeline.restPath
-      server:   pipeline.remoteServer
-      type:     type
-      key:      key
-      data:     requestData
-
-    RestClient.restJsonRequest remoteRequest
+    RestClient.restJsonRequest remoteRequest = @remoteRequestProps
     .catch ({info: {status, response}}) => merge response, {status}
     .then (remoteResponse)              => @_toResponse remoteResponse.status, merge remoteResponse, {remoteRequest, remoteResponse}
     .then (response) => response.handled "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"

@@ -7,6 +7,7 @@
   Promise
   ErrorWithInfo
   object
+  objectWithDefinedValues
 } = require 'art-foundation'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
@@ -27,9 +28,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     pipelineName: -> @pipeline.getName()
     inspectedObjects: ->
       "#{@class.namespacePath}":
-        object @props,
-          when: (v) -> v?
-          with: (v) -> toInspectedObjects v
+        toInspectedObjects objectWithDefinedValues @propsForClone
 
   createSubRequest: (pipelineName, type, requestOptions) ->
     throw new Error "requestOptions must be an object" if requestOptions && !isPlainObject requestOptions
@@ -74,20 +73,20 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   OUT: promise.then (newRequestWithNewData) ->
   ###
   withData: (data) ->
-    Promise.resolve(data).then (resolvedData) =>
-      new @class merge @props, data: resolvedData
+    Promise.resolve(data).then (data) =>
+      new @class merge @propsForClone, props: merge @_props, {data}
 
-  withKey: (newKey) ->
-    Promise.resolve(newKey).then (key) =>
-      new @class merge @props, {key}
+  # withKey: (newKey) ->
+  #   Promise.resolve(newKey).then (key) =>
+  #     new @class merge @propsForClone, {key}
 
   ###
   IN: data can be a plainObject or a promise returning a plainObject
   OUT: promise.then (newRequestWithNewData) ->
   ###
   withMergedData: (data) ->
-    Promise.resolve(data).then (resolvedData) =>
-      new @class merge @props, data: merge @data, resolvedData
+    Promise.resolve(data).then (data) =>
+      new @class merge @propsForClone, props: merge @_props, data: merge @data, data
 
   ###
   IN:
@@ -145,15 +144,18 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     Promise.resolve responseProps
     .then (responseProps = {}) =>
       switch
+        when responseProps instanceof RequestResponseBase
+          log.warn "_toResponse is instanceof RequestResponseBase - is this EVER used???"
+          # if used, shouldn't this still transform Request objects into Response objects?
+          responseProps
+
         when isPlainObject responseProps
           new ArtEry.Response merge @propsForResponse, responseProps, {status, @request}
-
-        when responseProps instanceof RequestResponseBase
-          responseProps
 
         when isString responseProps
           @_toResponse status, data: message: responseProps
 
+        # unsupported responseProps type is an internal failure
         else
           @_toResponse failure, @_generateErrorResponseProps responseProps
 

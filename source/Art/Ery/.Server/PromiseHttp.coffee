@@ -100,7 +100,7 @@ defineModule module, class PromiseHttp extends BaseObject
           .then (responseData) ->
             return false unless responseData
             unless isJsonType responseData
-              throw new Error "INTERNAL ERROR: api handler did not return a JSON compatible type: #{inspect responseData}"
+              throw new Error "INTERNAL ERROR: api handler did not return a JSON compatible type: #{formattedInspect responseData}"
 
             statusCode: switch responseData.status
               when success        then 200

@@ -87,7 +87,7 @@ defineModule module, ->
           privateSessionKey
           expiresIn: "30 days"
         )
-        .then (signature) -> deepMerge plainObjectsResponse, session: {signature}
+        .then (signature) -> merge plainObjectsResponse, session: merge session, {signature}
       else
         plainObjectsResponse
 
