@@ -54,60 +54,75 @@ module.exports = suite:
           session:  {}
           pipeline: new Pipeline
 
-  validation: ->
-    test "new Request - invalid", ->
-      assert.throws -> new Request
-
-    test "new Request - missing session", ->
-      assert.throws ->
+  validation:
+    "valid new Request": ->
+      test "type: 'get'", ->
         new Request
           type: "get"
           key: "123"
           pipeline: new Pipeline
+          session: {}
 
+      test "type: 'create'", ->
+        new Request
+          type: "create"
+          pipeline: new Pipeline
+          session: {}
 
-    test "new Request type: 'get' - valid", ->
-      new Request
-        type: "get"
-        key: "123"
-        pipeline: new Pipeline
-        session: {}
+      test "type: 'update'", ->
+        new Request
+          type: "update"
+          key: "123"
+          pipeline: new Pipeline
+          session: {}
 
-    test "inspectedObjects new Request", ->
-      request = new Request
-        type:     "get"
-        key:      "123"
-        pipeline: new Pipeline
-        session:  {}
+      test "type: 'delete'", ->
+        new Request
+          type: "delete"
+          key: "123"
+          pipeline: new Pipeline
+          session: {}
 
-      assert.selectedPropsEq
-        type:             "get"
-        props:            key: "123"
-        session:          {}
-        subrequestCount:  0
-        request.inspectedObjects["Neptune.Art.Ery.Request"]
+      test "inspectedObjects new Request", ->
+        request = new Request
+          type:     "get"
+          key:      "123"
+          pipeline: new Pipeline
+          session:  {}
 
-    test "new Request type: 'create' - valid", ->
-      new Request
-        type: "create"
-        pipeline: new Pipeline
-        session: {}
-        data: {}
+        assert.selectedPropsEq
+          type:             "get"
+          props:            key: "123"
+          session:          {}
+          subrequestCount:  0
+          request.inspectedObjects["Neptune.Art.Ery.Request"]
 
-    test "new Request type: 'update' - valid", ->
-      new Request
-        type: "update"
-        key: "123"
-        pipeline: new Pipeline
-        session: {}
-        data: {}
+    "invalid new Request": ->
+      test "missing everything", ->
+        assert.throws -> new Request
 
-    test "new Request type: 'delete' - valid", ->
-      new Request
-        type: "delete"
-        key: "123"
-        pipeline: new Pipeline
-        session: {}
+      test "missing session", ->
+        assert.throws ->
+          new Request
+            type: "get"
+            key: "123"
+            pipeline: new Pipeline
+
+      test "key: {}", ->
+        assert.throws ->
+          new Request
+            session: {}
+            type: "get"
+            key: {}
+            pipeline: new Pipeline
+
+      test "props: key: {}", ->
+        assert.throws ->
+          new Request
+            session: {}
+            type: "get"
+            props: key: {}
+            pipeline: new Pipeline
 
   properties: ->
     test "getKey", ->

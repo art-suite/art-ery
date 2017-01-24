@@ -37,13 +37,17 @@ IN: options:
   NOTE: Request only cares about @key for two things:
     - REST urls
     - cachedGet
-    Otherwise, ArtEry.Request doesn't care
 
+    In general, type: "get" and key: "string" is a CACHEABLE request.
+    This is why it must be a string.
+    Currently there are no controls for HOW cacheable type-get is, though.
+    All other requests are NOT cacheable.
 ###
 module.exports = class Request extends require './RequestResponseBase'
 
   constructor: (options) ->
     super
+    options.key ||= options.props?.key # so the validator can check it
     requestConstructorValidator().preCreateSync options, context: "Art.Ery.Request options", logErrors: true
     {@type, @pipeline, @session, @parentRequest, @rootRequest = @, @originatedOnServer, @props = {}} = options
 

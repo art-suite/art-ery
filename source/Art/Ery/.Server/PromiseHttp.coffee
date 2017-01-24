@@ -146,10 +146,15 @@ defineModule module, class PromiseHttp extends BaseObject
 
             log "#{getLogTime().replace /\:/g, '_'}: pid: #{process.pid}, status: #{statusCode}, out: #{plainResponse?.data?.length || 0}bytes, #{inspectLean logObject}"
             if @verbose
-              log response: try
-                JSON.parse data
-              catch
-                data
+              log
+                requestData: try
+                  JSON.parse receivedData
+                catch
+                  receivedData
+                responseData: try
+                  JSON.parse data
+                catch
+                  data
 
             response.statusCode = statusCode
             if (statusCode/100 | 0) == 5
