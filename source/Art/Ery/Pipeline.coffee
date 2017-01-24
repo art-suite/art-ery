@@ -44,7 +44,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @postCreateConcreteClass: ({hotReloaded}) ->
     @register() unless hotReloaded
     @_defineQueryHandlers()
-    @_initClientApiRequest()
+    @_defineClientHandlerMethods()
     @_initFields()
     super
 
@@ -429,13 +429,13 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   _processResponseSession: (response) ->
     @session.data = response.session if response.session
 
-  @_clientApiRequest: (requestType) ->
+  @_defineClientRequestMethod: (requestType) ->
     @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()
     @::[requestType] ||= (options) -> @_processClientRequest requestType, options
 
-  @_initClientApiRequest: ->
+  @_defineClientHandlerMethods: ->
     for name, handler of @getHandlers()
-      @_clientApiRequest name
+      @_defineClientRequestMethod name
 
   @_initFields: ->
     @extendFields filter.fields for filter in @getFilters()
