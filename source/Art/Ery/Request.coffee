@@ -9,21 +9,42 @@
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
 
-validator = new Validator
-  type:               w "required string"
-  pipeline:           required: instanceof: Neptune.Art.Ery.Pipeline
-  session:            w "required object"
-  parentRequest:      instanceof: Request
-  rootRequest:        instanceof: Request
-  originatedOnServer: "boolean"
-  props:              "object"
+# validator must be initialized after Request and Pipeline have bene defined
+_validator = null
+requestConstructorValidator = ->
+  _validator ||= new Validator
+    pipeline:           required: instanceof: ArtEry.Pipeline
+    type:               required: fieldType: "string"
+    session:            required: fieldType: "object"
+    parentRequest:      instanceof: ArtEry.Request
+    rootRequest:        instanceof: ArtEry.Request
+    originatedOnServer: "boolean"
+    props:              "object"
+    key:                "string"
 
+###
+new Request(options)
 
+IN: options:
+  see requestConstructorValidator for the validated options
+  below are special-case options
+
+  # aliases
+  data: >> @props.data
+  key:  >> @props.key
+
+  NOTE: Request doesn't care about @data, the alias is proved only as a convenience
+  NOTE: Request only cares about @key for two things:
+    - REST urls
+    - cachedGet
+    Otherwise, ArtEry.Request doesn't care
+
+###
 module.exports = class Request extends require './RequestResponseBase'
 
   constructor: (options) ->
     super
-    validator.preCreateSync options, context: "Art.Ery.Request options", logErrors: true
+    requestConstructorValidator().preCreateSync options, context: "Art.Ery.Request options", logErrors: true
     {@type, @pipeline, @session, @parentRequest, @rootRequest = @, @originatedOnServer, @props = {}} = options
 
     @_props.key  = options.key  if options.key?
@@ -38,8 +59,7 @@ module.exports = class Request extends require './RequestResponseBase'
   @getter
     key:  -> @_props.key
     data: -> @_props.data
-    requestOptions: ->
-      throw new Error "DEPRICATED: use props.requestOptions"
+    requestOptions: -> throw new Error "DEPRICATED: use props.requestOptions"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 

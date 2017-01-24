@@ -9,11 +9,35 @@ responseValidator = new Validator
   session:  "object"
   props:    "object"
 
+###
+new Response
+
+IN:
+  request: Request (required)
+  status: CommunicationStatus (required)
+  props: plainObject with all JSON values
+  session: plainObject with all JSON values
+
+  data: JSON value
+    data is an alias for @props.data
+    EFFECT: replaces @props.data
+    NOTE: for clientRequest, @props.data is the value returned unless returnResponseObject is requested
+
+  remoteRequest: remoteResponse:
+    Available for inspecting what exactly went over-the-wire.
+    Otherwise ignored by Response
+
+  handledBy:
+    Available for inspecting what code actually handled the request.
+    Otherwise ignored by Response
+###
+
+
 module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.preCreateSync options, context: "Art.Ery.Response options", logErrors: true
-    {@request, @status, @props = {}, @session, @error, @remoteRequest, @remoteResponse, @handledBy} = options
+    {@request, @status, @props = {}, @session, @remoteRequest, @remoteResponse, @handledBy} = options
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
@@ -30,7 +54,7 @@ module.exports = class Response extends require './RequestResponseBase'
     @handledBy = _handledBy
     @
 
-  @property "request status props session error remoteResponse remoteRequest handledBy"
+  @property "request status props session remoteResponse remoteRequest handledBy"
   @getter
     data:               -> @_props.data
     requestCache:       -> @request.rootRequest
