@@ -18,7 +18,10 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
 
   # returns a new request
   preprocessRequest: (request) ->
-    {type, pipeline, data, session} = request
+    # empty updates or creates are possible, and that's OK
+    # for example, add: or setDefault: values may be specified for updates.
+    {type, pipeline, data = {}, session} = request
+
     processedData = merge data
     Promise.all array @_linkFields,
       when: ({idFieldName}, fieldName) -> !data[idFieldName] && data[fieldName]
