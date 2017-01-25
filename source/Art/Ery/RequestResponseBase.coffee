@@ -58,16 +58,17 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     # This doesn't help if the 'get' fires before the 'update', but it does help
     # if we are lucky and it happens the other way.
     if type == "update" && !requestOptions?.props?.returnValues && isString subrequest.key
-      @_getSetGetCache pipelineName, type, subrequest.key, promise
+      @_getPipelineTypeCache(pipelineName, type)[subrequest.key] = promise
 
     promise
 
-  _getSetGetCache: (pipelineName, type, key, value) ->
-    ((@requestCache[pipelineName] ||= {})[type] ||= {})[key] ||= value
+  _getPipelineTypeCache: (pipelineName, type) ->
+    (@requestCache[pipelineName] ||= {})[type] ||= {}
 
   cachedSubrequest: (pipelineName, type, key) ->
     throw new Error "key must be a string" unless isString key
-    @_getSetGetCache pipelineName, type, key, @subrequest pipelineName, type, {key}
+    log cachedSubrequest: {pipelineName, type, key}
+    @_getPipelineTypeCache(pipelineName, type)[key] ||= @subrequest pipelineName, type, {key}
 
   cachedGet: cachedGet = (pipelineName, key) -> @cachedSubrequest pipelineName, "get", key
   cachedPipelineGet: cachedGet # depricated(?) alias
