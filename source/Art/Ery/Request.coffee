@@ -5,6 +5,7 @@
   CommunicationStatus, arrayWith, w
   objectKeyCount, isString, isPlainObject
   objectWithout
+  isFunction
 } = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
@@ -51,6 +52,8 @@ module.exports = class Request extends require './RequestResponseBase'
     requestConstructorValidator().preCreateSync options, context: "Art.Ery.Request options", logErrors: true
     {@type, @pipeline, @session, @parentRequest, @rootRequest = @, @originatedOnServer, @props = {}} = options
 
+    throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
+
     @_props.key  = options.key  if options.key?
     @_props.data = options.data if options.data?
 
@@ -67,32 +70,42 @@ module.exports = class Request extends require './RequestResponseBase'
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
+  ##############################
+  # requirement helpers
+  ##############################
   ###
   OUT:
     Success: promise.then -> request
     Failure: promise.then -> failing response
 
+  Success if test is true
+  ###
+  require: (test, message) ->
+    if test
+      Promise.resolve @
+    else
+      message = message() if isFunction message
+      @failure data: message: "#{@requestPipelineAndType}: requirement: #{message || ""}"
+
+  ###
   Success if @originatedOnServer is true
+  OUT: see require
   ###
   requireServerOrigin: (message) ->
-    if @originatedOnServer
-      Promise.resolve @
-    else
-      @failure data: message: "#{@requestPipelineAndType}: originatedOnServer required #{message || ""}"
+    @requireServerOriginOr true, message
 
   ###
-  OUT:
-    Success: promise.then -> request
-    Failure: promise.then -> failing response
-
   Success if either testResult or @originatedOnServer are true.
+  OUT: see require
   ###
   requireServerOriginOr: (testResult, message) ->
-    if testResult || @originatedOnServer
-      Promise.resolve @
-    else
-      @failure data: message: "#{@requestPipelineAndType}: originatedOnServer required #{message || ""}"
+    @require testResult || @originatedOnServer, ->
+      message = "to #{message}" unless message.match /\s*to\s/
+      "originatedOnServer required #{message || ''}"
 
+  ##############################
+  # MISC
+  ##############################
   @getter "subrequestCount",
     request: -> @
     shortInspect: ->
