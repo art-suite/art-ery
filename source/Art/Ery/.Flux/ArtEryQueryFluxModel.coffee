@@ -94,13 +94,15 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
     arrayWith previousQueryData, updatedRecordData
 
   ###
-  OVERRIDE
-  localUpdate gets called whenever whenever a fluxStore entry is created or updated for the recordsModel.
+  ArtEryFluxModel calls localUpdate on all its queries whenever
+  a fluxStore entry is created or updated for the ArtEryFluxModel.
 
+  OVERRIDABLE
   Can override for custom behavior!
 
-  This implementation assumes there is only one possible query any particular record will belong to,
-  and it assumes the queryKey can be computed via @queryKeyFromRecord.
+  This implementation assumes there is only one possible result-set for a given query
+  any particular record will belong to, and it assumes the queryKey
+  can be computed via @queryKeyFromRecord.
 
   NOTE: @queryKeyFromRecord must be implemented!
   ###
