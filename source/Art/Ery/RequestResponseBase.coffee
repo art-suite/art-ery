@@ -39,7 +39,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       type
       pipeline
       @session
-      parentRequest: @
+      parentRequest: @request
       @rootRequest
       originatedOnServer: true
     }
@@ -48,12 +48,26 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     subrequest = @createSubRequest pipelineName, type, requestOptions
 
     @rootRequest._subrequestCount++
-    subrequest.pipeline._processRequest subrequest
+    promise = subrequest.pipeline._processRequest subrequest
     .then (response) => response.toPromise requestOptions
+
+    # update returns the same data a 'get' would - cache it in case we need it
+    # USE CASE: I just noticed Oz doing this in triggers on message creation:
+    #   updating post
+    #   reading post to update postParticipant
+    # This doesn't help if the 'get' fires before the 'update', but it does help
+    # if we are lucky and it happens the other way.
+    if type == "update" && !requestOptions?.props?.returnValues && isString subrequest.key
+      @_getSetGetCache pipelineName, type, subrequest.key, promise
+
+    promise
+
+  _getSetGetCache: (pipelineName, type, key, value) ->
+    ((@requestCache[pipelineName] ||= {})[type] ||= {})[key] ||= value
 
   cachedSubrequest: (pipelineName, type, key) ->
     throw new Error "key must be a string" unless isString key
-    ((@requestCache[pipelineName] ||= {})[type] ||= {})[key] ||= @subrequest pipelineName, type, {key}
+    @_getSetGetCache pipelineName, type, key, @subrequest pipelineName, type, {key}
 
   cachedGet: cachedGet = (pipelineName, key) -> @cachedSubrequest pipelineName, "get", key
   cachedPipelineGet: cachedGet # depricated(?) alias
