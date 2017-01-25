@@ -7,7 +7,7 @@ defineModule module, class UserOwnedFilter extends Filter
   @isOwner: isOwner = (request, data) ->
     {userId} = request.session
     data ||= request.data
-    userId && userId == data.userId
+    userId && userId == data?.userId
 
   @ownershipInfo: ownershipInfo = (request, data) ->
     {userId} = request.session
@@ -28,12 +28,13 @@ defineModule module, class UserOwnedFilter extends Filter
     update: (request) ->
       {key} = request
 
-      request.requireServerOriginOr !request.data.userId || isOwner(request), "to change a record's owner #{ownershipInfo request}"
+      request.requireServerOriginOr !request.data?.userId || isOwner(request), "to change a record's owner #{ownershipInfo request}"
       .then ->
         if request.originatedOnServer
           # gets a free pass
           request
         else
+          # TODO the new ArtEryAws lets us do this check during update: conditionExpression: userId: request.session.userId
           request.pipeline.get key: key
           .then (currentRecord) ->
             request.requireServerOriginOr isOwner(request, currentRecord), "to update a record you do not own #{ownershipInfo request}"
