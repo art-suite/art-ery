@@ -67,7 +67,6 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   cachedSubrequest: (pipelineName, type, key) ->
     throw new Error "key must be a string" unless isString key
-    log cachedSubrequest: {pipelineName, type, key}
     @_getPipelineTypeCache(pipelineName, type)[key] ||= @subrequest pipelineName, type, {key}
 
   cachedGet: cachedGet = (pipelineName, key) -> @cachedSubrequest pipelineName, "get", key
