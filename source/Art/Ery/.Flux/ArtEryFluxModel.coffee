@@ -111,7 +111,7 @@ defineModule module, class ArtEryFluxModel extends FluxModel
   load: (key) ->
     throw new Error "invalid key: #{inspect key}" unless isString key
     @_getUpdateSerializer key
-    .updateFluxStore => @_pipeline.get key: key
+    .updateFluxStore => @_pipeline.get key: key, props: include: "auto"
     false
 
   create: (data) ->
