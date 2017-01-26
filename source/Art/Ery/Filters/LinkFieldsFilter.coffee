@@ -50,6 +50,9 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
 
   # OUT: promise.then -> new data
   includeLinkedFields: (request, session, data) ->
+    {include} = request.rootRequest.props
+    return data unless include == "auto"
+
     linkedData = shallowClone data
     promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
       do (fieldName, idFieldName, pipelineName, include) =>
