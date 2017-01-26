@@ -18,7 +18,6 @@ requestConstructorValidator = ->
     type:               required: fieldType: "string"
     session:            required: fieldType: "object"
     parentRequest:      instanceof: ArtEry.Request
-    rootRequest:        instanceof: ArtEry.Request
     originatedOnServer: "boolean"
     props:              "object"
     key:                "string"
@@ -50,14 +49,14 @@ module.exports = class Request extends require './RequestResponseBase'
     super
     options.key ||= options.props?.key # so the validator can check it
     requestConstructorValidator().preCreateSync options, context: "Art.Ery.Request options", logErrors: true
-    {@type, @pipeline, @session, @parentRequest, @rootRequest = @, @originatedOnServer, @props = {}} = options
+    {@type, @pipeline, @session, @parentRequest, @originatedOnServer, @props = {}} = options
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
     @_props.key  = options.key  if options.key?
     @_props.data = options.data if options.data?
 
-    @rootRequest ||= @
+    @rootRequest = @parentRequest?.rootRequest || @
     @_subrequestCount = 0
     @_requestCache = null
 
@@ -109,7 +108,7 @@ module.exports = class Request extends require './RequestResponseBase'
   @getter "subrequestCount",
     request: -> @
     shortInspect: ->
-      "#{if @parentRequest then @parentRequest.shortInspect + ":" else ""}#{@pipeline.getName()}-#{@type}(#{@key})"
+      "#{if @parentRequest then @parentRequest.shortInspect + " > " else ""}#{@pipeline.getName()}-#{@type}(#{@key || ''})"
 
     requestCache: -> @rootRequest._requestCache ||= {}
 
