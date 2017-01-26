@@ -100,7 +100,7 @@ defineModule module, class ArtEryFluxModel extends FluxModel
       _pipeline:      _pipeline
       _recordsModel:  recordsModel
 
-      query: (key) -> @_pipeline[modelName] key: key
+      query: (key) -> @_pipeline[modelName] key: key, props: include: "auto"
 
   ###
   IN: key: string
