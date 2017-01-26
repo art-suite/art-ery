@@ -57,6 +57,7 @@ module.exports = class Response extends require './RequestResponseBase'
   @property "request status props session remoteResponse remoteRequest handledBy"
   @getter
     data:               -> @_props.data
+    key:                -> @request.key
     requestCache:       -> @request.rootRequest
     pipeline:           -> @request.pipeline
     rootRequest:        -> @request.rootRequest
