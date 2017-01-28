@@ -66,7 +66,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     (@requestCache[pipelineName] ||= {})[type] ||= {}
 
   cachedSubrequest: (pipelineName, type, key) ->
-    throw new Error "key must be a string" unless isString key
+    throw new Error "key must be a string (#{formattedInspect {key}})" unless isString key
     @_getPipelineTypeCache(pipelineName, type)[key] ||= @subrequest pipelineName, type, {key}
 
   cachedGet: cachedGet = (pipelineName, key) -> @cachedSubrequest pipelineName, "get", key
@@ -140,6 +140,15 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   # This is because you may be running on the client or the server. If running on the client, it isn't a serverFailure.
   # If status == "failure" in the server's response, the client will convert that status to serverFailure automatically.
 
+  ##############################
+  # Data Updates
+  ##############################
+  dataUpdated: (pipelineName, key, data) ->
+    @rootRequest.dataUpdated pipelineName, key, data
+
+  ##########################
+  # PRIVATE
+  ##########################
   ###
   IN:
     status: legal CommunicationStatus

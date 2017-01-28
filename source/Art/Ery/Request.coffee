@@ -58,18 +58,31 @@ module.exports = class Request extends require './RequestResponseBase'
     @_props.key  = options.key  if options.key?
     @_props.data = options.data if options.data?
 
-    @rootRequest = @parentRequest?.rootRequest || @
+    @_rootRequest = @parentRequest?._rootRequest || @
     @_subrequestCount = 0
     @_requestCache = null
+    @_dataUpdates = null
 
   @property "type pipeline session originatedOnServer rootRequest parentRequest props data key"
 
-  @getter
+  @getter "dataUpdates",
     key:  -> @_props.key
     data: -> @_props.data
     requestOptions: -> throw new Error "DEPRICATED: use props.requestOptions"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
+
+  ##############################
+  # Data Updates
+  ##############################
+  ###
+  IN:
+    data: should be exactly the same data a 'get' request would return
+      IMPORTANT: this data could be used to seed the requestCache for future
+      gets, so it needs to be the same value 'gets' return.
+  ###
+  dataUpdated: (pipelineName, key, data) ->
+    (@dataUpdates[pipelineName]||={})[key]=data
 
   ##############################
   # requirement helpers
@@ -108,11 +121,12 @@ module.exports = class Request extends require './RequestResponseBase'
   # MISC
   ##############################
   @getter "subrequestCount",
-    request: -> @
+    request:      -> @
     shortInspect: ->
       "#{if @parentRequest then @parentRequest.shortInspect + " > " else ""}#{@pipeline.getName()}-#{@type}(#{@key || ''})"
 
     requestCache: -> @rootRequest._requestCache ||= {}
+    dataUpdates:  -> @rootRequest._dataUpdates ||= {}
 
     # Also implemented in Response
     beforeFilterLog:  -> @filterLog || []

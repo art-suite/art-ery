@@ -1,6 +1,13 @@
 {log, formattedInspect, merge} = require 'art-foundation'
 {Request, Pipeline} = Neptune.Art.Ery
 
+createRequest = (params) ->
+  new Request merge
+    type:   "get"
+    session:  {}
+    pipeline: new Pipeline
+    params
+
 module.exports = suite:
   props: ->
     test "new Request key and data set via props:", ->
@@ -228,3 +235,24 @@ module.exports = suite:
         url:    "/api/pipeline/myKey"
         data:   props: myAdd: myCount: 1
         newRequest(type: "update", key: "myKey", props: myAdd: myCount: 1).remoteRequestProps
+
+  updates: ->
+    test "one dataUpdated once", ->
+      request = createRequest()
+      request.dataUpdated "myUser", "abc123", id: "abc123", name: "Shane"
+      assert.eq request.dataUpdates, myUser: abc123: id: "abc123", name: "Shane"
+
+    test "one dataUpdated twice", ->
+      request = createRequest()
+      request.dataUpdated "myUser", "abc123", id: "abc123", name: "Shane"
+      request.dataUpdated "myUser", "abc123", id: "abc123", name: "Bob"
+      assert.eq request.dataUpdates, myUser: abc123: id: "abc123", name: "Bob"
+
+    test "two dataUpdated", ->
+      request = createRequest()
+      request.dataUpdated "myUser", "abc123", id: "abc123", name: "Alice"
+      request.dataUpdated "myUser", "xyz789", id: "xyz789", name: "Bill"
+      assert.eq request.dataUpdates,
+        myUser:
+          abc123: id: "abc123", name: "Alice"
+          xyz789: id: "xyz789", name: "Bill"
