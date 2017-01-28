@@ -79,15 +79,12 @@ defineModule module, class PromiseHttp extends BaseObject
           .then (parsedData) ->
             {url} = request
             [__, query] = url.split "?"
-            if query
-              merge parsedData,
-                query: object querystring.parse(query), (v) ->
-                  try
-                    JSON.parse v
-                  catch
-                    v
-            else
-              parsedData
+            merge parsedData,
+              query && object querystring.parse(query), (v) ->
+                try
+                  JSON.parse v
+                catch
+                  v
 
           .then (parsedData) ->
             apiHandler request, parsedData

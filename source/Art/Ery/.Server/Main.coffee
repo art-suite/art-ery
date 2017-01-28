@@ -9,7 +9,7 @@ require 'colors'
 } = require 'art-foundation'
 {success} = CommunicationStatus
 PromiseHttp = require './PromiseHttp'
-{pipelines} = require '../'
+{pipelines, Request} = require '../'
 PromiseJsonWebToken = require './PromiseJsonWebToken'
 
 ###
@@ -58,13 +58,11 @@ defineModule module, ->
     @setter
       port: (port) -> @_port = (port || Main.defaults.port) | 0
 
-    @findPipelineForRequest: (request) ->
-      {url} = request
+    @findPipelineForRequest: ({url, method}) ->
       for pipelineName, pipeline of pipelines
         if match = url.match pipeline.restPathRegex
-          # log findPipelineForRequest: {match, url}
           [__, type, key] = match
-          type ||= httpMethodsToArtEryRequestTypes[request.method.toLocaleLowerCase()]
+          type ||= httpMethodsToArtEryRequestTypes[method.toLocaleLowerCase()]
           return {pipeline, type, key} if type
 
       null
@@ -79,17 +77,17 @@ defineModule module, ->
       *) Use an ArtEry filter to do this. I'll probably write one and include it in ArtEry.Filters soon.
         BUT it won't be tied to a specific backend; you'll still have to do that part yourself.
     ###
-    signSession: signSession = (plainObjectRequest, plainObjectsResponse) ->
-      {session} = plainObjectsResponse
+    signSession: signSession = (requestData, responseData) ->
+      {session} = responseData
       if session
         PromiseJsonWebToken.sign(
-          objectWithout session || plainObjectRequest.session || {}, "exp"
+          objectWithout session || requestData.session || {}, "exp"
           privateSessionKey
           expiresIn: "30 days"
         )
-        .then (signature) -> merge plainObjectsResponse, session: merge session, {signature}
+        .then (signature) -> merge responseData, session: merge session, {signature}
       else
-        plainObjectsResponse
+        responseData
 
     ###
     IN: plainObjectsRequest:
@@ -97,9 +95,8 @@ defineModule module, ->
       query: session:  # encrypted session string
     OUT: (promise) verified session or {} if not valid
     ###
-    verifySession: verifySession = (plainObjectsRequest) ->
-      {session, query} = plainObjectsRequest
-      unless sessionSignature = session || query?.session
+    verifySession: verifySession = (session) ->
+      unless sessionSignature = session
         Promise.resolve({})
       else
         PromiseJsonWebToken.verify sessionSignature, privateSessionKey
@@ -108,25 +105,15 @@ defineModule module, ->
           log.error "session failed validation"
           {}
 
-    artEryPipelineApiHandler: (request, plainObjectRequest) ->
+    artEryPipelineApiHandler: (request, requestData) ->
       if found = Main.findPipelineForRequest request
-        verifySession plainObjectRequest
+        verifySession requestData.session
         .then (session) ->
-          {url} = request
           {pipeline, type, key} = found
-          {query, data} = plainObjectRequest
-          # log artEryPipelineApiHandler: {pipeline, type, key, query, data, url}
+          pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
 
-          requestOptions =
-            type:     type
-            key:      key
-            originatedOnClient: true
-            data:     deepMerge query?.data, data
-            session:  session
-
-          pipeline._processRequest requestOptions
           .then ({plainObjectsResponse}) ->
-            signSession plainObjectRequest, plainObjectsResponse
+            signSession requestData, plainObjectsResponse
 
     getArtEryPipelineApiInfo: ->
       {server, port} = @

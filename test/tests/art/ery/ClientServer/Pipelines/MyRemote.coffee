@@ -20,4 +20,8 @@ defineModule module, class MyRemote extends Pipeline
 
     simulateClientFailure: (request) -> request.clientFailure()
 
+    simulatePropsInput: (request) -> request.props
+
+    simulatePropsOutput: (request) -> request.success props: myExtras: true
+
     handledByFilterRequest: ->

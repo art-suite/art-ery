@@ -6,6 +6,8 @@
   objectKeyCount, isString, isPlainObject
   objectWithout
   isFunction
+  object
+  objectHasKeys
 } = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
 {success, missing, failure, validStatus} = CommunicationStatus
@@ -159,21 +161,36 @@ module.exports = class Request extends require './RequestResponseBase'
 
   @getter
     remoteRequestProps: ->
-      {session, props, pipeline, type, key} = @
-      requestData = null
+      {session, data, props, pipeline, type, key} = @
 
-      each props,
-        when: (v, k) -> v != undefined && k != "key"
-        with: (v, k) -> (requestData||={})[k] = v
+      propsCount = 0
+      props = object props, when: (v, k) -> v != undefined && k != "key" && k != "data"
+      data  = object data,  when: (v) -> v != undefined
 
-      (requestData||={}).session = session.signature if session.signature
+      remoteRequestData = null
+      (remoteRequestData||={}).session = session.signature if session.signature
+      (remoteRequestData||={}).props   = props if 0 < objectHasKeys props
+      (remoteRequestData||={}).data    = data  if 0 < objectHasKeys data
 
       getRestClientParamsForArtEryRequest
         restPath: pipeline.restPath
         server:   pipeline.remoteServer
         type:     type
         key:      key
-        data:     requestData
+        data:     remoteRequestData
+
+  @createFromRemoteRequestProps: (options) ->
+    {session, pipeline, type, key, requestData} = options
+    {data, props} = requestData
+    new Request {
+      pipeline
+      type
+      session
+      key
+      data
+      props
+      originatedOnClient: true
+    }
 
   sendRemoteRequest: ->
     RestClient.restJsonRequest remoteRequest = @remoteRequestProps

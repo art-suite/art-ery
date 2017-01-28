@@ -23,42 +23,54 @@ module.exports = suite:
     test "remoteServer", ->
       assert.eq pipelines.myRemote.remoteServer, "http://localhost:8085"
 
-  remote: ->
-    test "heartbeat", ->
-      RestClient.get "http://localhost:8085"
-      .then (v) ->
-        assert.isString v
-        assert.match v, /Art.Ery.pipeline/
-      .catch (e) ->
-        log.error "START THE TEST SERVER: npm run testServer"
-        throw e
+  remote:
+    basic: ->
+      test "heartbeat", ->
+        RestClient.get "http://localhost:8085"
+        .then (v) ->
+          assert.isString v
+          assert.match v, /Art.Ery.pipeline/
+        .catch (e) ->
+          log.error "START THE TEST SERVER: npm run testServer"
+          throw e
 
-    test "Hello George!", ->
-      pipelines.myRemote.get
-        key: "George"
-        returnResponseObject: true
-      .then (v) ->
-        assert.eq v.data, "Hello George!"
-        assert.isPlainObject v.remoteRequest
-        assert.isPlainObject v.remoteResponse
+      test "Hello George!", ->
+        pipelines.myRemote.get
+          key: "George"
+          returnResponseObject: true
+        .then (v) ->
+          assert.eq v.data, "Hello George!"
+          assert.isPlainObject v.remoteRequest
+          assert.isPlainObject v.remoteResponse
 
-    test "Buenos dias George!", ->
-      pipelines.myRemote.get
-        key: "George"
-        data: greeting: "Buenos dias"
-        returnResponseObject: true
-      .then (v) ->
-        assert.eq v.data, "Buenos dias George!"
-        assert.isPlainObject v.remoteRequest
-        assert.isPlainObject v.remoteResponse
+      test "Buenos dias George!", ->
+        pipelines.myRemote.get
+          key: "George"
+          data: greeting: "Buenos dias"
+          returnResponseObject: true
+        .then (v) ->
+          assert.eq v.data, "Buenos dias George!"
+          assert.isPlainObject v.remoteRequest
+          assert.isPlainObject v.remoteResponse
 
+      test "Hello Alice!", ->
+        pipelines.myRemote.get key: "Alice"
+        .then (data) -> assert.eq data, "Hello Alice!"
 
-    test "Hello Alice!", ->
-      pipelines.myRemote.get key: "Alice"
-      .then (data) -> assert.eq data, "Hello Alice!"
+      test "handledByFilterRequest", ->
+        pipelines.myRemote.handledByFilterRequest returnResponseObject: true
+        .then (response) ->
+          assert.eq response.remoteResponse.handledBy, beforeFilter: "handleByFilter"
+          assert.eq response.handledBy, "POST http://localhost:8085/api/myRemote-handledByFilterRequest"
 
-    test "handledByFilterRequest", ->
-      pipelines.myRemote.handledByFilterRequest returnResponseObject: true
-      .then (response) ->
-        assert.eq response.remoteResponse.handledBy, beforeFilter: "handleByFilter"
-        assert.eq response.handledBy, "POST http://localhost:8085/api/myRemote-handledByFilterRequest"
+    "custom props": ->
+
+      test "simulatePropsInput", ->
+        pipelines.myRemote.simulatePropsInput props: name: "alice"
+        .then (data) ->
+          assert.eq data, name: "alice"
+
+      test "simulatePropsOutput", ->
+        pipelines.myRemote.simulatePropsOutput returnResponseObject: true
+        .then ({props}) ->
+          assert.eq props, myExtras: true

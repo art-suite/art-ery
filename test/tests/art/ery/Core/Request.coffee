@@ -226,5 +226,5 @@ module.exports = suite:
       assert.eq
         method: "put"
         url:    "/api/pipeline/myKey"
-        data:   myAdd: myCount: 1
+        data:   props: myAdd: myCount: 1
         newRequest(type: "update", key: "myKey", props: myAdd: myCount: 1).remoteRequestProps
