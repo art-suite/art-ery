@@ -121,9 +121,6 @@ defineModule module, class ArtEryFluxModel extends FluxModel
       query: (key) -> @_pipeline[modelName] key: key, props: include: "auto"
 
 
-  fluxStoreEntryUpdated: ({key, fluxRecord, previousFluxRecord, dataChanged}) ->
-    @_updateQueries fluxRecord.data if dataChanged && fluxRecord.status == success
-
   ########################
   # FluxModel Overrides
   ########################
@@ -139,6 +136,14 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     @_getUpdateSerializer key
     .updateFluxStore => @_pipeline.get key: key, props: include: "auto"
     false
+
+  ###
+  called whenever a fluxRecord for this model is updated
+  NOTE: you can manually trigger a fluxRecord update, and therefor this function with:
+    @updateFluxStore key, {data}
+  ###
+  fluxStoreEntryUpdated: ({key, fluxRecord, previousFluxRecord, dataChanged}) ->
+    @_updateQueries fluxRecord.data if dataChanged && fluxRecord.status == success
 
   ########################
   # Pipeline API Overrides

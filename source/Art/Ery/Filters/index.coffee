@@ -5,6 +5,7 @@ module.exports = require './namespace'
 .includeInNamespace require './Filters'
 .addModules
   AfterEventsFilter: require './AfterEventsFilter'
+  DataUpdatesFilter: require './DataUpdatesFilter'
   LinkFieldsFilter:  require './LinkFieldsFilter' 
   TimestampFilter:   require './TimestampFilter'  
   Tools:             require './Tools'            

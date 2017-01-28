@@ -140,12 +140,6 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   # This is because you may be running on the client or the server. If running on the client, it isn't a serverFailure.
   # If status == "failure" in the server's response, the client will convert that status to serverFailure automatically.
 
-  ##############################
-  # Data Updates
-  ##############################
-  dataUpdated: (pipelineName, key, data) ->
-    @rootRequest.dataUpdated pipelineName, key, data
-
   ##########################
   # PRIVATE
   ##########################

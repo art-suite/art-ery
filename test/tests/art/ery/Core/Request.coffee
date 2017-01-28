@@ -1,12 +1,12 @@
-{log, formattedInspect, merge} = require 'art-foundation'
+{log, formattedInspect, merge, deepMerge} = require 'art-foundation'
 {Request, Pipeline} = Neptune.Art.Ery
 
-createRequest = (params) ->
+newRequest = (options) ->
   new Request merge
     type:   "get"
-    session:  {}
     pipeline: new Pipeline
-    params
+    session: {}
+    options
 
 module.exports = suite:
   props: ->
@@ -189,10 +189,6 @@ module.exports = suite:
           derivedRequest
 
   remoteRequestProps: ->
-    newRequest = (options) ->
-      new Request merge
-        pipeline: new Pipeline, session: {}
-        options
 
     test "create", ->
       assert.eq
@@ -236,23 +232,34 @@ module.exports = suite:
         data:   props: myAdd: myCount: 1
         newRequest(type: "update", key: "myKey", props: myAdd: myCount: 1).remoteRequestProps
 
-  updates: ->
-    test "one dataUpdated once", ->
-      request = createRequest()
-      request.dataUpdated "myUser", "abc123", id: "abc123", name: "Shane"
-      assert.eq request.dataUpdates, myUser: abc123: id: "abc123", name: "Shane"
+    test "responseProps doesn't get passed to remote", ->
+      request = newRequest()
+      request.responseProps = foo: "bar"
+      assert.eq
+        method: "get"
+        url:    "/api/pipeline"
+        data:   null
+        request.remoteRequestProps
 
-    test "one dataUpdated twice", ->
-      request = createRequest()
-      request.dataUpdated "myUser", "abc123", id: "abc123", name: "Shane"
-      request.dataUpdated "myUser", "abc123", id: "abc123", name: "Bob"
-      assert.eq request.dataUpdates, myUser: abc123: id: "abc123", name: "Bob"
+  responseProps: ->
+    test "basic", ->
+      request = newRequest()
+      request.responseProps = foo: "bar"
+      request.success()
+      .then (response) ->
+        assert.eq response.props, foo: "bar"
 
-    test "two dataUpdated", ->
-      request = createRequest()
-      request.dataUpdated "myUser", "abc123", id: "abc123", name: "Alice"
-      request.dataUpdated "myUser", "xyz789", id: "xyz789", name: "Bill"
-      assert.eq request.dataUpdates,
-        myUser:
-          abc123: id: "abc123", name: "Alice"
-          xyz789: id: "xyz789", name: "Bill"
+    test "auto merges with response's props", ->
+      request = newRequest()
+      request.responseProps = foo: "bar", whereFrom: "responseProps"
+      request.success props: far: "out", whereFrom: "response init"
+      .then (response) ->
+        assert.eq response.props, foo: "bar", far: "out", whereFrom: "response init"
+
+    test "with deepMerge - the common usecase", ->
+      request = newRequest()
+      request.responseProps = foo: bar: 123
+      request.responseProps = deepMerge request.responseProps, foo: baz: 789
+      request.success()
+      .then (response) ->
+        assert.eq response.props, foo: bar: 123, baz: 789

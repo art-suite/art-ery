@@ -41,11 +41,15 @@ module.exports = class Response extends require './RequestResponseBase'
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
+    {responseProps} = @request
+    if responseProps
+      @props = merge responseProps, @props
+
     @_props.data = options.data if options.data
 
     @session ||= @request.session
 
-  isResponse: true
+  isResponse:     true
   toString: -> "ArtEry.Response(#{@type}: #{@status}): #{@message}"
 
   # OUT: @
@@ -56,6 +60,7 @@ module.exports = class Response extends require './RequestResponseBase'
 
   @property "request status props session remoteResponse remoteRequest handledBy"
   @getter
+    isRootResponse:     -> @request.isRootRequest
     data:               -> @_props.data
     key:                -> @request.key
     requestCache:       -> @request.rootRequest

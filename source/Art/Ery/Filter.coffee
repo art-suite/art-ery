@@ -37,6 +37,9 @@ Art.Ery.location values:
   "client"
   "both" - this is the "serverless" mode, it's all run client-side, but it includes both client-side and server-side filters.
 
+SBD: Just realized that location == "client" still means "server" for server-side subrequests.
+  Maybe 'client' should be 'requester' instead of 'client'?
+  'requester' and 'server'?
 ###
 
 defineModule module, class Filter extends require './ArtEryBaseObject'
