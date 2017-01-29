@@ -1,4 +1,5 @@
 {
+  each
   inspect, isPlainObject, formattedInspect, isJsonType, select, defineModule, log, Promise, BaseObject, merge, isPlainArray
   dateFormat
   inspectLean
@@ -114,24 +115,27 @@ defineModule module, class PromiseHttp extends BaseObject
   getLogTime = ->
     dateFormat "UTC:yyyy-mm-dd_HH-MM-ss"
 
+  _processRequestWithHandlers: (request, requestData) ->
+    Promise.then =>
+      serilizer = new Promise.Serializer
+      serilizer.then -> false
+      each @handlers, (handler, i) ->
+        serilizer.then (previous) ->
+          previous || handler request, requestData
+      serilizer
+
   @getter middleware: ->
     (request, response, next) =>
 
-      receivedData = ""
+      requestData = ""
       request.on 'data', (chunk) =>
-        receivedData = "#{receivedData}#{chunk}"
+        requestData = "#{requestData}#{chunk}"
 
       request.on 'end', =>
-        Promise.then =>
-          serilizer = new Promise.Serializer
-          serilizer.then -> false
-          for handler, i in @handlers
-            do (handler, i) ->
-              serilizer.then (previous) ->
-                previous || handler request, receivedData
-          serilizer
+        @_processRequestWithHandlers request, requestData
 
         .then (plainResponse) =>
+          log {plainResponse}
           if plainResponse
             {headers, data, statusCode = 200} = plainResponse
 
@@ -139,15 +143,15 @@ defineModule module, class PromiseHttp extends BaseObject
             # TODO: I want to move this logging into the Art.Ery server, where we have more specific data
             # I also don't want to log signed sessions - it's a security risk. But, we can log the parsed sessions, which is really what we want anyway.
             logObject = "#{request.method}": request.url
-            logObject.in = receivedData if receivedData
+            logObject.in = requestData if requestData
 
             log "#{getLogTime().replace /\:/g, '_'}: pid: #{process.pid}, status: #{statusCode}, out: #{plainResponse?.data?.length || 0}bytes, #{inspectLean logObject}"
             if @verbose
               log
                 requestData: try
-                  JSON.parse receivedData
+                  JSON.parse requestData
                 catch
-                  receivedData
+                  requestData
                 responseData: try
                   JSON.parse data
                 catch
@@ -184,7 +188,7 @@ defineModule module, class PromiseHttp extends BaseObject
       log "serving statuc assets from: #{staticOptions.root}"
       app.use express.static staticOptions.root, merge staticOptions,
         maxAge: 3600*24*7 # 1 week
-        setHeaders: (res) -> res.setHeader "Access-Control-Allow-Origin", "*"
+        setHeaders: (res) -> res.setHeader "Access-Control-Allow-Origin", "*" # CORS
 
     app.listen port, =>
       log "#{name || 'PromiseHttpServer'} listening on: http://localhost:#{port}"
