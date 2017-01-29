@@ -1,5 +1,5 @@
 {defineModule, log} = require 'art-foundation'
-{Pipeline} = require 'art-ery'
+{Pipeline, TimestampFilter, DataUpdatesFilter} = require 'art-ery'
 
 defineModule module, class MyRemote extends Pipeline
 
@@ -9,8 +9,22 @@ defineModule module, class MyRemote extends Pipeline
     name: "handleByFilter"
     before: handledByFilterRequest: (request) -> request.success()
 
+  @filter TimestampFilter
+  @filter DataUpdatesFilter
+
   @handlers
     get: ({key, data}) -> "#{data?.greeting || 'Hello'} #{key || 'World'}!"
+
+    create: ({data}) -> data
+    update: ({data}) -> data
+
+    subupdates: (request) ->
+      {d1, d2} = request.data
+
+      Promise.all([
+        request.subrequest "myRemote", "update", data: d1
+        request.subrequest "myRemote", "update", data: d2
+      ]).then -> request.success()
 
     hello: ({session}) -> "Hello, #{session.username}!"
 

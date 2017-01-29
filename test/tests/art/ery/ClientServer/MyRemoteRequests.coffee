@@ -74,3 +74,34 @@ module.exports = suite:
         pipelines.myRemote.simulatePropsOutput returnResponseObject: true
         .then ({props}) ->
           assert.eq props, myExtras: true
+
+    dataUpdates: ->
+      test "update request", ->
+        pipelines.myRemote.update returnResponseObject: true, key: "foo", data: name: "alice"
+        .then ({props}) ->
+          assert.eq
+            data:
+              name: "alice"
+              updatedAt: props.data.updatedAt - 0
+            props
+
+      test "create request", ->
+        pipelines.myRemote.create returnResponseObject: true, key: "foo", data: name: "alice"
+        .then ({props}) ->
+          assert.eq
+            data:
+              name: "alice"
+              createdAt: props.data.updatedAt - 0
+              updatedAt: props.data.updatedAt - 0
+            props
+
+      test "subupdates", ->
+        pipelines.myRemote.subupdates
+          returnResponseObject: true
+          data:
+            d1: name: "alice"
+            d2: name: "bill"
+        .then ({props}) ->
+          assert.eq
+            data: {}
+            props
