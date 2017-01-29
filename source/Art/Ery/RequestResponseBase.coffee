@@ -12,6 +12,7 @@
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
 {success, missing, failure, clientFailure} = CommunicationStatus
+{config} = require './Config'
 
 defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
@@ -24,6 +25,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   addFilterLog: (filter) -> @_filterLog = arrayWith @_filterLog, "#{filter}"
 
   @getter
+    location: -> config.location
     requestType: -> @type
     pipelineName: -> @pipeline.getName()
     inspectedObjects: ->
