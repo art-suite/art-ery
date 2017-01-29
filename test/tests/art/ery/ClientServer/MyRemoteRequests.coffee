@@ -1,5 +1,6 @@
 {log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
 {Pipeline, pipelines, session} = Neptune.Art.Ery
+{ApplicationState} = ArtFlux = require 'art-flux'
 {clientFailure, missing, serverFailure} = CommunicationStatus
 
 module.exports = suite:
@@ -82,7 +83,7 @@ module.exports = suite:
           assert.eq
             data:
               name: "alice"
-              updatedAt: props.data.updatedAt - 0
+              updatedAt: 123456789
             props
 
       test "create request", ->
@@ -91,17 +92,21 @@ module.exports = suite:
           assert.eq
             data:
               name: "alice"
-              createdAt: props.data.updatedAt - 0
-              updatedAt: props.data.updatedAt - 0
+              createdAt: 123456789
+              updatedAt: 123456789
             props
 
       test "subupdates", ->
         pipelines.myRemote.subupdates
           returnResponseObject: true
           data:
-            d1: name: "alice"
-            d2: name: "bill"
+            postId: "post123"
+            commentId: "comment123"
+            name: "alice"
         .then ({props}) ->
           assert.eq
-            data: {}
+            dataUpdates:
+              myRemote:
+                post123:    name: "alice", updatedAt: 123456789, createdAt: 123456789
+                comment123: name: "alice", updatedAt: 123456789
             props

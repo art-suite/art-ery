@@ -10,17 +10,17 @@ defineModule module, class DataUpdatesFilter extends Filter
 
   # for subrequests, this will still be on the server
   # for rootRequest, this will actually run on the app-client - which is where we need to do the Flux updates
-  @location: "client"
+  @location: "both"
 
   @after all: (response) ->
     if response.isRootResponse
-      if Neptune.Art.Flux && dataUpdates = response.props.dataUpdates
+      if response.location != "server" && Neptune.Art.Flux && dataUpdates = response.props.dataUpdates
         log DataUpdatesFilter: updatesDectected: {dataUpdates}
 
         {models} = Neptune.Art.Flux
         for pipelineName, dataUpdatesByKey of dataUpdates when model = models[pipelineName]
-          for key, data of updatesByKey
-            log "#{pipelineName}.updateFluxStore": {key, data}
+          for key, data of dataUpdatesByKey
+            log "#{model.name}.updateFluxStore": {key, data}
             model.updateFluxStore key, {data}
 
     else
