@@ -2,6 +2,7 @@ PipelineRegistry = require "./PipelineRegistry"
 Filters = require './Filters'
 
 module.exports = [
+  Filters
   pipelines: PipelineRegistry.pipelines
   session: (require './Session').singleton
   package: _package = require "art-ery/package.json"
