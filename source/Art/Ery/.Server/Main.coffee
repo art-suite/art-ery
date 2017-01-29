@@ -123,8 +123,18 @@ defineModule module, ->
       "Art.Ery.pipeline.json.rest.api":
         object pipelines, (pipeline) -> pipeline.getApiReport server: server
 
+    allowAllCorsPreflightHandler: ({method, headers}) =>
+      log {method, headers}
+      method == "OPTIONS" &&
+        status: "success"
+        headers:
+          "Access-Control-Allow-Origin": "*"
+          "Access-Control-Allow-Methods": "GET, POST, PUT, UPDATE, DELETE"
+          "Access-Control-Allow-Headers": ""
+          "Content-Type": "text/html; charset=utf-8"
+
     artEryPipelineDefaultHandler: ({url}, plainObjectRequest) =>
-      if url.match @defaultHandlerRegex ||= /// ^ (\/ | | \/ #{ArtEry.config.apiRoot} .*) $ ///
+      if url.match @defaultHandlerRegex ||= /// ^ (\/ #{ArtEry.config.apiRoot} .*) $ ///
         status: if url.match @exactDefaultHandlerRegex ||= /// ^ (\/ | | \/ #{ArtEry.config.apiRoot} \/? ) $ ///
             "success"
           else
@@ -137,11 +147,17 @@ defineModule module, ->
           verbose: ArtEry.config.verbose
           port: @port
           name: "Art.Ery.Server"
-          commonResponseHeaders: "Access-Control-Allow-Origin": "*"
+
           apiHandlers: [
             @artEryPipelineApiHandler
             @artEryPipelineDefaultHandler
           ]
+
+          # CORS: allow absolutely everything!
+          # This is ONLY safe because we don't use cookies, ever:
+          #   Our session information is passed as normal data, and is stored in localStorage.
+          commonResponseHeaders: "Access-Control-Allow-Origin": "*"
+          handlers: [@allowAllCorsPreflightHandler]
 
       middleware: -> @promiseHttp.middleware
 
