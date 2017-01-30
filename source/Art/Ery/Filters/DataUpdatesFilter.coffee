@@ -1,4 +1,4 @@
-{each, formattedInspect, deepMerge, merge, defineModule, log, Validator, m} = require 'art-foundation'
+{each, formattedInspect, deepMerge, merge, defineModule, log, Validator, m, isFunction} = require 'art-foundation'
 Filter = require '../Filter'
 
 ###
@@ -13,24 +13,26 @@ defineModule module, class DataUpdatesFilter extends Filter
   @location: "both"
 
   @after all: (response) ->
-    if response.isRootResponse
-      if response.location != "server" && Neptune.Art.Flux && dataUpdates = response.props.dataUpdates
-        log DataUpdatesFilter: updatesDectected: {dataUpdates}
+    if response.isRootResponse && response.location != "server" && Neptune.Art.Flux
+      {dataUpdates, dataDeletes} = response.props
 
-        {models} = Neptune.Art.Flux
-        for pipelineName, dataUpdatesByKey of dataUpdates when model = models[pipelineName]
-          each dataUpdatesByKey, (data, key) ->
-            model.updateFluxStore key, (oldFluxRecord) ->
-              newFluxRecord = merge oldFluxRecord, data: merge oldFluxRecord.data, data
-              log DataUpdatesFilter: update: {oldFluxRecord, newFluxRecord}
+      {models} = Neptune.Art.Flux
+      for pipelineName, dataUpdatesByKey of dataUpdates when isFunction (model = models[pipelineName])?.dataUpdated
+        each dataUpdatesByKey, (data, key) -> model.dataUpdated key, data
 
-              newFluxRecord
+      for pipelineName, dataUpdatesByKey of dataDeletes when isFunction (model = models[pipelineName])?.dataDeleted
+        each dataUpdatesByKey, (data, key) -> model.dataDeleted key, data
 
-    else
+    if !response.isRootResponse
       {key, type} = response
-      if key && (type == 'create' || type == 'update')
+      key ?
+      field = switch type
+        when "create", "update" then "dataUpdates"
+        when "delete" then "dataDeletes"
+
+      if key && field
         {data, pipelineName, rootRequest: {responseProps}} = response
-        responseProps.dataUpdates = deepMerge responseProps.dataUpdates,
+        responseProps[field] = deepMerge responseProps[field],
           "#{pipelineName}": "#{key}": response.data
 
     response

@@ -5,6 +5,7 @@ ArtEry = require 'art-ery'
 ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 
 {
+  each
   log
   CommunicationStatus
   select
@@ -142,9 +143,16 @@ defineModule module, class ArtEryFluxModel extends FluxModel
   NOTE: you can manually trigger a fluxRecord update, and therefor this function with:
     @updateFluxStore key, {data}
   ###
-  fluxStoreEntryUpdated: ({key, fluxRecord, previousFluxRecord, dataChanged}) ->
-    log "ArtEryFluxModel #{@name} fluxStoreEntryUpdated": {key, fluxRecord, previousFluxRecord, dataChanged}
-    # @_updateQueries fluxRecord.data if dataChanged && fluxRecord.status == success
+  # fluxStoreEntryUpdated: ({key, fluxRecord, previousFluxRecord, dataChanged}) ->
+  #   log "ArtEryFluxModel #{@name} fluxStoreEntryUpdated": {key, fluxRecord, previousFluxRecord, dataChanged}
+  #   @_updateQueries fluxRecord.data if dataChanged && fluxRecord.status == success
+
+  dataUpdated: (key, data) ->
+    @updateFluxStore key, (oldFluxRecord) -> merge oldFluxRecord, data: oldFluxRecord.data, data
+    @_updateQueries data
+
+  dataDeleted: (key, data) ->
+    @updateFluxStore key, -> status: missing
 
   ########################
   # Pipeline API Overrides
@@ -269,6 +277,7 @@ defineModule module, class ArtEryFluxModel extends FluxModel
       delete @_updateSerializers[key]
     updateSerializer
 
-  _updateQueries: (updatedRecord) ->
-    queryModel.localUpdate updatedRecord for modelName, queryModel of @_queryModels
+  _updateQueries: (updatedRecord, wasDeleted = false) ->
+    each @_queryModels, (queryModel) ->
+      queryModel.localUpdate updatedRecord, wasDeleted
     null

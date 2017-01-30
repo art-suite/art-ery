@@ -18,6 +18,7 @@ ArtEry = require 'art-ery'
   formattedInspect
   propsEq
   defineModule
+  arrayWithout
 } = Foundation
 
 {missing, failure, success, pending} = CommunicationStatus
@@ -80,18 +81,28 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   IN:
     previousQueryData: array of records or null
     updatedRecordData: single record or null
-  OUT: return preciousQueryData if nothing changed, else return a new array
+  OUT: return null if nothing changed, else return a new array
   ###
-  localMerge: (previousQueryData, updatedRecordData) ->
-    return previousQueryData unless updatedRecordData
-    return [updatedRecordData] unless previousQueryData?.length > 0
+  localMerge: (previousQueryData, updatedRecordData, wasDeleted) ->
+    return null unless updatedRecordData
+
+    unless previousQueryData?.length > 0
+      return if wasDeleted then [] else [updatedRecordData]
 
     for currentRecordData, i in previousQueryData
       if @recordsModel.keysEqual currentRecordData, updatedRecordData
-        return null if propsEq currentRecordData, updatedRecordData # no change!
-        return arrayWithElementReplaced previousQueryData, updatedRecordData, i
+        return if wasDeleted
+          arrayWithout previousQueryData, i
+        else if propsEq currentRecordData, updatedRecordData
+          null
+        else
+          arrayWithElementReplaced previousQueryData, updatedRecordData, i
 
-    arrayWith previousQueryData, updatedRecordData
+    # updatedRecordData wasn't in previousQueryData
+    if wasDeleted
+      null
+    else
+      arrayWith previousQueryData, updatedRecordData
 
   ###
   ArtEryFluxModel calls localUpdate on all its queries whenever
@@ -106,10 +117,15 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
 
   NOTE: @queryKeyFromRecord must be implemented!
   ###
-  localUpdate: (updatedRecordData) ->
-    return unless updatedRecordData
-    queryKey = @queryKeyFromRecord? updatedRecordData
+  localUpdate: (updatedRecordData, wasDeleted = false) ->
+    if (results = @getQueryResultsFromFluxStoreGivenExampleRecord updatedRecordData) && results.records
+      {records, queryKey} = results
+
+      if mergeResult = @localMerge records, updatedRecordData, wasDeleted
+        @updateFluxStore queryKey, data: @localSort mergeResult
+
+  getQueryResultsFromFluxStoreGivenExampleRecord: (exampleRecord) ->
+    return unless exampleRecord
+    queryKey = @queryKeyFromRecord? exampleRecord
     throw new Error "ArtEryQueryFluxModel #{@getName()} localUpdate: invalid queryKey generated #{formattedInspect {queryKey,updatedRecordData}}" unless isString queryKey
-    return unless fluxRecord = @fluxStoreGet queryKey
-    if mergeResult = @localMerge fluxRecord.data, updatedRecordData
-      @updateFluxStore queryKey, data: @localSort mergeResult
+    {queryKey, records: @fluxStoreGet(queryKey)?.data}
