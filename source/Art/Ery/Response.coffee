@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{Promise, BaseObject, object, isPlainArray, objectKeyCount, arrayWith, inspect, ErrorWithInfo, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
+{pureMerge, Promise, BaseObject, object, isPlainArray, objectKeyCount, arrayWith, inspect, ErrorWithInfo, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
 {success, missing, failure} = CommunicationStatus
 
 responseValidator = new Validator
@@ -9,6 +9,22 @@ responseValidator = new Validator
   session:  "object"
   props:    "object"
 
+###
+TODO: Merge Response back into Request
+
+  Turns out, Response has very little special functionality.
+  At this point, the RequestuestResponseBase / Request / Response class structure
+  actually requires more code than just one, Request class would.
+
+What to add to Request:
+
+  @writeOnceProperty "responseStatus responseSession responseProps"
+
+  @getter
+    hasResponse: -> !!@responseStatus
+
+  Split out: filterLog into beforeFilterLog and afterFilterLog.
+###
 ###
 new Response
 
@@ -41,9 +57,7 @@ module.exports = class Response extends require './RequestResponseBase'
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
-    {responseProps} = @request
-    if responseProps
-      @props = merge responseProps, @props
+    @request._responseProps = @props = pureMerge @request.responseProps, @props
 
     @_props.data = options.data if options.data
 
@@ -60,23 +74,13 @@ module.exports = class Response extends require './RequestResponseBase'
 
   @property "request status props session remoteResponse remoteRequest handledBy"
   @getter
-    isRootResponse:     -> @request.isRootRequest
     data:               -> @_props.data
-    key:                -> @request.key
-    requestCache:       -> @request.rootRequest
-    pipeline:           -> @request.pipeline
-    rootRequest:        -> @request.rootRequest
-    parentRequest:      -> @request.parentRequest
-    type:               -> @request.type
-    originatedOnServer: -> @request.originatedOnServer
 
     beforeFilterLog:    -> @request.filterLog || []
     afterFilterLog:     -> @filterLog || []
-    message:            -> @data?.message
     isSuccessful:       -> @_status == success
     isMissing:          -> @_status == missing
     notSuccessful:      -> @_status != success
-    subrequestCount:    -> @request.subrequestCount
     propsForClone: ->
       {
         @request
@@ -98,6 +102,21 @@ module.exports = class Response extends require './RequestResponseBase'
             when isPlainObject v then objectKeyCount(v) > 0
             when isPlainArray  v then v.length > 0
             else v != undefined
+
+    # DEPRICATED
+    # message:            -> @data?.message
+
+  # Request pass-throughs
+  @getter
+    isRootResponse:     -> @request.isRootRequest
+    key:                -> @request.key
+    requestCache:       -> @request.rootRequest
+    pipeline:           -> @request.pipeline
+    rootRequest:        -> @request.rootRequest
+    parentRequest:      -> @request.parentRequest
+    type:               -> @request.type
+    originatedOnServer: -> @request.originatedOnServer
+    subrequestCount:    -> @request.subrequestCount
 
   ###
   IN: options:
