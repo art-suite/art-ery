@@ -143,7 +143,8 @@ defineModule module, class ArtEryFluxModel extends FluxModel
     @updateFluxStore key, {data}
   ###
   fluxStoreEntryUpdated: ({key, fluxRecord, previousFluxRecord, dataChanged}) ->
-    @_updateQueries fluxRecord.data if dataChanged && fluxRecord.status == success
+    log "ArtEryFluxModel #{@name} fluxStoreEntryUpdated": {key, fluxRecord, previousFluxRecord, dataChanged}
+    # @_updateQueries fluxRecord.data if dataChanged && fluxRecord.status == success
 
   ########################
   # Pipeline API Overrides

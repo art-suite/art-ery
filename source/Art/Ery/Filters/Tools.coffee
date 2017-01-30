@@ -5,6 +5,7 @@ ValidationFilter = require './ValidationFilter'
 LinkFieldsFilter = require './LinkFieldsFilter'
 UserOwnedFilter = require './UserOwnedFilter'
 AfterEventsFilter = require './AfterEventsFilter'
+DataUpdatesFilter = require './DataUpdatesFilter'
 {normalizeFieldProps} = Validator
 
 defineModule module, class Tools
@@ -55,4 +56,5 @@ defineModule module, class Tools
       new UserOwnedFilter if userOwned
       new ValidationFilter fields: otherFields if hasProperties otherFields
       new AfterEventsFilter
+      new DataUpdatesFilter
     ]

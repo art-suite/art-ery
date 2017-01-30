@@ -34,6 +34,7 @@ module.exports = suite: createDatabaseFilters: ->
       LinkFieldsFilter
       ValidationFilter
       AfterEventsFilter
+      DataUpdatesFilter
       "
 
   test "create", ->
@@ -71,6 +72,7 @@ module.exports = suite: createDatabaseFilters: ->
       LinkFieldsFilter
       UserOwnedFilter
       AfterEventsFilter
+      DataUpdatesFilter
       "
 
   test "userOwned and another field", ->
@@ -86,6 +88,7 @@ module.exports = suite: createDatabaseFilters: ->
       UserOwnedFilter
       ValidationFilter
       AfterEventsFilter
+      DataUpdatesFilter
       "
 
     assert.eq Object.keys(myPipeline.fields), w "

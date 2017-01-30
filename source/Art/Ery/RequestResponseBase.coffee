@@ -32,6 +32,18 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       "#{@class.namespacePath}":
         toInspectedObjects objectWithDefinedValues @propsForClone
 
+  ########################
+  # ResponseProps
+  ########################
+  @getter
+    responseProps: -> @response?.props || (@request._responseProps ||= {})
+
+  @setter
+    responseProps: -> throw new Error "cannot set responseProps"
+
+  ########################
+  # Subrequest
+  ########################
   createSubRequest: (pipelineName, type, requestOptions) ->
     throw new Error "requestOptions must be an object" if requestOptions && !isPlainObject requestOptions
     pipeline = ArtEry.pipelines[pipelineName]

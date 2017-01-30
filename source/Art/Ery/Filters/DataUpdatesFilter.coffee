@@ -1,4 +1,4 @@
-{deepMerge, defineModule, log, Validator, m} = require 'art-foundation'
+{each, formattedInspect, deepMerge, merge, defineModule, log, Validator, m} = require 'art-foundation'
 Filter = require '../Filter'
 
 ###
@@ -19,15 +19,18 @@ defineModule module, class DataUpdatesFilter extends Filter
 
         {models} = Neptune.Art.Flux
         for pipelineName, dataUpdatesByKey of dataUpdates when model = models[pipelineName]
-          for key, data of dataUpdatesByKey
-            log "#{model.name}.updateFluxStore": {key, data}
-            model.updateFluxStore key, {data}
+          each dataUpdatesByKey, (data, key) ->
+            model.updateFluxStore key, (oldFluxRecord) ->
+              newFluxRecord = merge oldFluxRecord, data: merge oldFluxRecord.data, data
+              log DataUpdatesFilter: update: {oldFluxRecord, newFluxRecord}
+
+              newFluxRecord
 
     else
       {key, type} = response
       if key && (type == 'create' || type == 'update')
-        {data, pipelineName, rootRequest} = response
-        rootRequest.responseProps = deepMerge rootRequest.responseProps,
-          dataUpdates: "#{pipelineName}": "#{key}": response.data
+        {data, pipelineName, rootRequest: {responseProps}} = response
+        responseProps.dataUpdates = deepMerge responseProps.dataUpdates,
+          "#{pipelineName}": "#{key}": response.data
 
     response

@@ -234,7 +234,7 @@ module.exports = suite:
 
     test "responseProps doesn't get passed to remote", ->
       request = newRequest()
-      request.responseProps = foo: "bar"
+      request.responseProps.foo = "bar"
       assert.eq
         method: "get"
         url:    "/api/pipeline"
@@ -244,22 +244,23 @@ module.exports = suite:
   responseProps: ->
     test "basic", ->
       request = newRequest()
-      request.responseProps = foo: "bar"
+      request.responseProps.foo = "bar"
       request.success()
       .then (response) ->
         assert.eq response.props, foo: "bar"
 
     test "auto merges with response's props", ->
       request = newRequest()
-      request.responseProps = foo: "bar", whereFrom: "responseProps"
+      request.responseProps.foo = "bar"
+      request.responseProps.whereFrom = "responseProps"
       request.success props: far: "out", whereFrom: "response init"
       .then (response) ->
         assert.eq response.props, foo: "bar", far: "out", whereFrom: "response init"
 
     test "with deepMerge - the common usecase", ->
       request = newRequest()
-      request.responseProps = foo: bar: 123
-      request.responseProps = deepMerge request.responseProps, foo: baz: 789
+      request.responseProps.foo = bar: 123
+      request.responseProps.foo = deepMerge request.responseProps.foo, baz: 789
       request.success()
       .then (response) ->
         assert.eq response.props, foo: bar: 123, baz: 789

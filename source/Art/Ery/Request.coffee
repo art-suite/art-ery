@@ -63,16 +63,14 @@ module.exports = class Request extends require './RequestResponseBase'
     @_subrequestCount = 0
     @_requestCache = null
 
-    @_resonseProps = null
+    @_responseProps = null
 
   @property "type pipeline session originatedOnServer rootRequest parentRequest props data key"
 
-  @getter "responseProps",
+  @getter
     key:           -> @_props.key
     data:          -> @_props.data
     requestOptions: -> throw new Error "DEPRICATED: use props"
-
-  @setter "responseProps"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
 
