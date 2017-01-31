@@ -70,8 +70,6 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
   dataWithoutKeyFields: (data) ->
     data && object data, when: (v, k) => not(k in @keyFields)
 
-  dataHasEqualKeys: (data1, data2) -> @toKeyString(data1) == @toKeyString(data2)
-
   validateKey: (key) ->
     {keyFields} = @
     each keyFields, (field) => unless present key[field]

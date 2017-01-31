@@ -89,14 +89,14 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
     unless previousQueryData?.length > 0
       return if wasDeleted then [] else [updatedRecordData]
 
-    for currentRecordData, i in previousQueryData
-      if @recordsModel.dataHasEqualKeys currentRecordData, updatedRecordData
-        return if wasDeleted
-          arrayWithout previousQueryData, i
-        else if propsEq currentRecordData, updatedRecordData
-          null
-        else
-          arrayWithElementReplaced previousQueryData, updatedRecordData, i
+    updatedRecordDataKey = @recordsModel.toKeyString updatedRecordData
+    for currentRecordData, i in previousQueryData when updatedRecordDataKey == @recordsModel.toKeyString currentRecordData
+      return if wasDeleted
+        arrayWithout previousQueryData, i
+      else if propsEq currentRecordData, updatedRecordData
+        null
+      else
+        arrayWithElementReplaced previousQueryData, updatedRecordData, i
 
     # updatedRecordData wasn't in previousQueryData
     if wasDeleted
@@ -127,5 +127,5 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   getQueryResultsFromFluxStoreGivenExampleRecord: (exampleRecord) ->
     return unless exampleRecord
     queryKey = @queryKeyFromRecord? exampleRecord
-    throw new Error "ArtEryQueryFluxModel #{@getName()} localUpdate: invalid queryKey generated #{formattedInspect {queryKey,updatedRecordData}}" unless isString queryKey
+    throw new Error "ArtEryQueryFluxModel #{@getName()} localUpdate: invalid queryKey generated #{formattedInspect {queryKey,exampleRecord}}" unless isString queryKey
     {queryKey, records: @fluxStoreGet(queryKey)?.data}

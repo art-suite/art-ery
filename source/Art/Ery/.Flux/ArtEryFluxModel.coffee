@@ -33,8 +33,10 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
 
   # OUT: singleton for new AnonymousArtErtFluxModel class
   createModel = (name, pipeline, aliases) ->
+
     createWithPostCreate class AnonymousArtErtFluxModel extends ArtEryFluxModel
       @_name: upperCamelCase name
+      @keyFields pipeline.keyFields if pipeline.keyFields
       @pipeline pipeline
       @aliases aliases if aliases
 
@@ -107,11 +109,12 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
   # DataUpdatesFilter callbacks
   ################################################
   dataUpdated: (key, data) ->
-    @updateFluxStore key, (oldFluxRecord) -> merge oldFluxRecord, data: oldFluxRecord.data, data
+    @updateFluxStore key, (oldFluxRecord) -> merge oldFluxRecord, data: merge oldFluxRecord.data, data
     @_updateQueries data
 
   dataDeleted: (key, data) ->
-    @updateFluxStore key, -> status: missing
+    @updateFluxStore key, status: missing
+    @_updateQueries data, true
 
   ########################
   # Pipeline API Overrides
@@ -242,6 +245,7 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
     updateSerializer
 
   _updateQueries: (updatedRecord, wasDeleted = false) ->
-    each @_queryModels, (queryModel) ->
+    each @_queryModels, (queryModel) =>
+      log _updateQueries: {model: @, queryModel, updatedRecord, wasDeleted}
       queryModel.localUpdate updatedRecord, wasDeleted
     null
