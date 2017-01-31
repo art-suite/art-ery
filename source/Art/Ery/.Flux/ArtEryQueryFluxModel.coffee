@@ -76,7 +76,7 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   ###
   OVERRIDE
   override for custom merge
-  This implementation is a streight-up merge using @recordsModel.keysEqual
+  This implementation is a streight-up merge using @recordsModel.dataHasEqualKeys
 
   IN:
     previousQueryData: array of records or null
@@ -90,7 +90,7 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
       return if wasDeleted then [] else [updatedRecordData]
 
     for currentRecordData, i in previousQueryData
-      if @recordsModel.keysEqual currentRecordData, updatedRecordData
+      if @recordsModel.dataHasEqualKeys currentRecordData, updatedRecordData
         return if wasDeleted
           arrayWithout previousQueryData, i
         else if propsEq currentRecordData, updatedRecordData

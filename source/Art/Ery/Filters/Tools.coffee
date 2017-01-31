@@ -47,10 +47,8 @@ defineModule module, class Tools
       else
         otherFields[k] = v
 
-    log
-
     [
-      new UniqueIdFilter uniqueIdProps unless present(PipelineClass?._primaryKey) && PipelineClass._primaryKey != "id"
+      new UniqueIdFilter uniqueIdProps unless present(PipelineClass?._keyFieldsString) && PipelineClass._keyFieldsString != "id"
       new TimestampFilter
       new LinkFieldsFilter fields: linkFields if hasProperties linkFields
       new UserOwnedFilter if userOwned
