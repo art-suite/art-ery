@@ -1,4 +1,4 @@
-{defineModule, present, isPlainArray, isString, isPlainObject, formattedInspect, array, object, each} = require 'art-foundation'
+{defineModule, log, present, isPlainArray, isString, isPlainObject, formattedInspect, array, object, each} = require 'art-foundation'
 
 ###
 @primaryKey and @keyFields are synonymous
@@ -55,7 +55,8 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
     if isString a
       a
     else
-      @validateKey array @keyFields, (field) -> a[field]
+      @validateKey a
+      array @keyFields, (field) -> a[field]
       .join "/"
 
   toKeyObject: (a) ->
@@ -69,10 +70,12 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
   dataWithoutKeyFields: (data) ->
     data && object data, when: (v, k) => not(k in @keyFields)
 
+  dataHasEqualKeys: (data1, data2) -> @toKeyString(data1) == @toKeyString(data2)
+
   validateKey: (key) ->
     {keyFields} = @
-    each keyFields, (field) -> unless present key[field]
-      throw new Error "#{@class.getName()} invalid key: #{formattedInspect {keyFields, key, missing: field}}"
+    each keyFields, (field) => unless present key[field]
+      throw new Error "#{@class.getName()} missing key field(s): #{formattedInspect {missing: field, keyFields, key}}"
     key
 
   #################################
