@@ -20,19 +20,19 @@ defineModule module, class DataUpdatesFilter extends Filter
       for pipelineName, dataUpdatesByKey of dataUpdates when isFunction (model = models[pipelineName])?.dataUpdated
         each dataUpdatesByKey, (data, key) -> model.dataUpdated key, data
 
-      for pipelineName, dataUpdatesByKey of dataDeletes when isFunction (model = models[pipelineName])?.dataDeleted
-        each dataUpdatesByKey, (data, key) -> model.dataDeleted key, data
+      for pipelineName, dataDeletesByKey of dataDeletes when isFunction (model = models[pipelineName])?.dataDeleted
+        each dataDeletesByKey, (data, key) -> model.dataDeleted key, data
 
     if !response.isRootResponse
       {key, type} = response
-      key ?
       field = switch type
         when "create", "update" then "dataUpdates"
         when "delete" then "dataDeletes"
 
       if key && field
         {data, pipelineName, rootRequest: {responseProps}} = response
+
         responseProps[field] = deepMerge responseProps[field],
-          "#{pipelineName}": "#{key}": response.data
+          "#{pipelineName}": "#{key}": response.data || true
 
     response

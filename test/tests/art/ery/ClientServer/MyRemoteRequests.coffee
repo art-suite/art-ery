@@ -100,13 +100,15 @@ module.exports = suite:
         pipelines.myRemote.subupdates
           returnResponseObject: true
           data:
-            postId: "post123"
-            commentId: "comment123"
-            name: "alice"
+            postId:     "post123"
+            commentId:  "comment123"
+            userId:     "user123"
+            name:       "alice"
         .then ({props}) ->
           assert.eq
+            dataDeletes: myRemote: comment123: true
             dataUpdates:
               myRemote:
-                post123:    name: "alice", updatedAt: 123456789, createdAt: 123456789
-                comment123: name: "alice", updatedAt: 123456789
+                post123:  name: "alice", updatedAt: 123456789, createdAt: 123456789
+                user123:  name: "alice", updatedAt: 123456789
             props

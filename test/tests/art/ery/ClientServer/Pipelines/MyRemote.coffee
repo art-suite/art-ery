@@ -29,13 +29,15 @@ defineModule module, class MyRemote extends Pipeline
 
     create: ({data}) -> data
     update: ({data}) -> data
+    delete: (request) -> request.success()
 
     subupdates: (request) ->
-      {postId, commentId, name} = request.data
+      {postId, commentId, userId, name} = request.data
 
       Promise.all([
-        request.subrequest "myRemote", "create", key: postId,     data: {name}
-        request.subrequest "myRemote", "update", key: commentId,  data: {name}
+        postId    && request.subrequest "myRemote", "create", key: postId,     data: {name}
+        userId    && request.subrequest "myRemote", "update", key: userId,     data: {name}
+        commentId && request.subrequest "myRemote", "delete", key: commentId
       ]).then -> request.success()
 
     hello: ({session}) -> "Hello, #{session.username}!"
