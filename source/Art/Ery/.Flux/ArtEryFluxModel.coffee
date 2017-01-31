@@ -246,6 +246,5 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
 
   _updateQueries: (updatedRecord, wasDeleted = false) ->
     each @_queryModels, (queryModel) =>
-      log _updateQueries: {model: @, queryModel, updatedRecord, wasDeleted}
       queryModel.localUpdate updatedRecord, wasDeleted
     null
