@@ -1,4 +1,5 @@
-{log, formattedInspect, merge, deepMerge} = require 'art-foundation'
+{log, CommunicationStatus, formattedInspect, merge, deepMerge} = require 'art-foundation'
+{clientFailure} = CommunicationStatus
 {Request, Pipeline} = Neptune.Art.Ery
 
 newRequest = (options) ->
@@ -264,3 +265,18 @@ module.exports = suite:
       request.success()
       .then (response) ->
         assert.eq response.props, foo: bar: 123, baz: 789
+
+  require: ->
+    test "require failure returns rejected promise", ->
+      request = newRequest()
+      assert.rejects request.require false, "abracadabra"
+      .then (rejectsWith) ->
+        {status, data} = rejectsWith.info.response
+        assert.eq status, clientFailure
+        assert.ok data.message.match /abracadabra/
+
+    test "require success returns request", ->
+      request = newRequest()
+      request.require true, "abracadabra"
+      .then (resolvesWith) ->
+        assert.eq request, resolvesWith

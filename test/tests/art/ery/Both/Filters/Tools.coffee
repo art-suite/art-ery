@@ -1,6 +1,8 @@
 {array, log, createWithPostCreate, w, isString, Validator, w} = require 'art-foundation'
-{createDatabaseFilters} = Neptune.Art.Ery.Filters
+{createDatabaseFilters, KeyFieldsMixin} = Neptune.Art.Ery
 SimplePipeline = require '../SimplePipeline'
+
+SimplePipelineWithKeys = KeyFieldsMixin SimplePipeline
 
 module.exports = suite: createDatabaseFilters: ->
   setup ->
@@ -11,7 +13,7 @@ module.exports = suite: createDatabaseFilters: ->
     Neptune.Art.Ery.config.location = "client"
 
   test "fields are set correctly", ->
-    {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipeline
+    {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
       @filter createDatabaseFilters
         user:   "required link"
         foo:    link: true, required: true
@@ -38,7 +40,7 @@ module.exports = suite: createDatabaseFilters: ->
       "
 
   test "create", ->
-    createWithPostCreate class MyPipeline extends SimplePipeline
+    createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
       @filter createDatabaseFilters
         user: required: link: "user"
         message: "present trimmedString"
@@ -55,7 +57,7 @@ module.exports = suite: createDatabaseFilters: ->
       assert.match data.id, /^[-_a-zA-Z0-9\/\:]{12}$/
 
   test "userOwned only field", ->
-    {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipeline
+    {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
       @filter createDatabaseFilters
         userOwned: true
 
@@ -76,7 +78,7 @@ module.exports = suite: createDatabaseFilters: ->
       "
 
   test "userOwned and another field", ->
-    {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipeline
+    {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
       @addDatabaseFilters
         userOwned: true
         myField: "strings"
