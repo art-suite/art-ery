@@ -6,6 +6,14 @@ A) Populate rootRequest.dataUpdates
 B) if Neptune.Art.Flux is defined, and this is the rootRequest/response
    Perform 'local updates'
 ###
+###
+TODO:
+  Eventually we will want a way to say that some record updates should not be returned client-side.
+  First pass
+    - data has already gone through the after-pipeline, so any after-filters can removed fields
+      the current user can't see.
+    - if data is empty, then don't added it to updates. Nothing to add anyway.
+###
 defineModule module, class DataUpdatesFilter extends Filter
 
   # for subrequests, this will still be on the server
@@ -20,8 +28,7 @@ defineModule module, class DataUpdatesFilter extends Filter
 
     if field
       {data, pipelineName} = response
-      key ||= response.pipeline.toKeyString data
-      if key
+      if key ||= response.pipeline.toKeyString response.request.data
         fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": response.data || true
       else
         console.warn noKey: {pipelineName, type, key, data}
