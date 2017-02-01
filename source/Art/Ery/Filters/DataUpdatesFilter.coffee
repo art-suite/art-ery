@@ -1,4 +1,4 @@
-{each, formattedInspect, deepMerge, merge, defineModule, log, Validator, m, isFunction} = require 'art-foundation'
+{each, formattedInspect, deepMerge, merge, defineModule, log, Validator, m, isFunction, objectHasKeys} = require 'art-foundation'
 Filter = require '../Filter'
 
 ###
@@ -11,8 +11,8 @@ TODO:
   Eventually we will want a way to say that some record updates should not be returned client-side.
   First pass
     - data has already gone through the after-pipeline, so any after-filters can removed fields
-      the current user can't see.
-    - if data is empty, then don't added it to updates. Nothing to add anyway.
+      the current user can't see. TODO: create privacy filters
+    - if data is empty, then don't added it to updates. Nothing to add anyway. DONE
 ###
 defineModule module, class DataUpdatesFilter extends Filter
 
@@ -28,10 +28,8 @@ defineModule module, class DataUpdatesFilter extends Filter
 
     if field
       {data, pipelineName} = response
-      if key ||= response.pipeline.toKeyString response.request.data
-        fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": response.data || true
-      else
-        console.warn noKey: {pipelineName, type, key, data}
+      if data && objectHasKeys(data) && key ||= response.pipeline.toKeyString response.request.data
+        fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": data
     fields
 
   @after all: (response) ->
