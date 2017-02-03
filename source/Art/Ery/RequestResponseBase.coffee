@@ -49,13 +49,12 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     pipeline = ArtEry.pipelines[pipelineName]
     throw new Error "Pipeline not registered: #{formattedInspect pipelineName}" unless pipeline
 
-    new ArtEry.Request merge requestOptions, {
+    new ArtEry.Request merge {originatedOnServer: true}, requestOptions, {
       type
       pipeline
       @session
       parentRequest: @request
       @rootRequest
-      originatedOnServer: true
     }
 
   subrequest: (pipelineName, type, requestOptions) ->
@@ -102,7 +101,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   ###
   withData: (data) ->
     Promise.resolve(data).then (data) =>
-      new @class merge @propsForClone, props: merge @_props, {data}
+      new @class merge @propsForClone, {data}
 
   # withKey: (newKey) ->
   #   Promise.resolve(newKey).then (key) =>
