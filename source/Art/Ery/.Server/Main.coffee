@@ -117,18 +117,14 @@ defineModule module, ->
     artEryPipelineApiHandler: (request, requestData) ->
       if found = Main.findPipelineForRequest request
         {pipeline, type, key} = found
+        processRequest = (session) ->
+          pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
+          .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+
         verifySession requestData.session
-        .then (session) ->
-          pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
-
-          .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
-
+        .then processRequest
         .catch ->
-          session = {}
-          pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
-
-          .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
-
+          processRequest {}
           .then (plainObjectsResponseWithSignedSession) ->
             merge plainObjectsResponseWithSignedSession, replaceSession: true
 
