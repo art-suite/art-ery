@@ -2,7 +2,7 @@
 Filter = require '../Filter'
 
 defineModule module, class ValidationFilter extends Filter
-  @location: "both"
+  @location "both"
 
   constructor: (options) ->
     super

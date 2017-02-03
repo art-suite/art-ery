@@ -43,7 +43,8 @@ SBD: Just realized that location == "client" still means "server" for server-sid
 ###
 
 defineModule module, class Filter extends require './ArtEryBaseObject'
-  @location: "server" # 'server', 'client' or 'both'
+  @_location: "server" # 'server', 'client' or 'both'
+  @location: (@_location) ->
 
   ################
   # class inheritable props
@@ -103,7 +104,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     super
     {@serverSideOnly, @location, @clientSideOnly, @name, fields} = options
     @name ||= @class.getName()
-    @_location ||= @class.location || "server"
+    @_location ||= @class._location || "server"
     @shouldFilter()
     @extendFields fields if fields
     @after options.after

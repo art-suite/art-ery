@@ -106,7 +106,7 @@ module.exports = suite:
             name:       "alice"
         .then ({props}) ->
           assert.eq
-            dataDeletes: myRemote: comment123: true
+            dataDeletes: myRemote: comment123: {}
             dataUpdates:
               myRemote:
                 post123:  name: "alice", updatedAt: 123456789, createdAt: 123456789

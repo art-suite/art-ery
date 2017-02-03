@@ -23,6 +23,7 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
   defineModule
   createWithPostCreate
   inspect
+  compactFlatten
 } = Neptune.Art.Foundation
 
 {missing, failure, success, pending} = CommunicationStatus
@@ -32,9 +33,14 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
   @abstractClass()
 
   # OUT: singleton for new AnonymousArtErtFluxModel class
-  createModel = (name, pipeline, aliases) ->
+  @createModel: (name, pipeline, aliases) ->
+    BaseClass = ArtEryFluxModel
 
-    createWithPostCreate class AnonymousArtErtFluxModel extends ArtEryFluxModel
+    # apply mixins
+    for customMixin in compactFlatten pipeline.getFluxModelMixins()
+      BaseClass = customMixin BaseClass
+
+    createWithPostCreate class AnonymousArtErtFluxModel extends BaseClass
       @_name: upperCamelCase name
       @keyFields pipeline.keyFields if pipeline.keyFields
       @pipeline pipeline
@@ -48,9 +54,9 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
         # which will in turn create all the model aliases.
         # It's important that all the model aliases are the same model-instance object.
         name = pipeline.getName()
-        createModel name, pipeline, aliases unless models[name]
+        @createModel name, pipeline, aliases unless models[name]
       else
-        createModel name, pipeline
+        @createModel name, pipeline
 
   @pipeline: (@_pipeline) -> @_pipeline
   @getter "pipeline"

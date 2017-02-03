@@ -3,7 +3,6 @@ Filter = require '../Filter'
 {normalizeFieldProps} = Validator
 
 defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
-  @location: "server"
 
   constructor: (options) ->
 

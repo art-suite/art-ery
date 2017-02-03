@@ -2,7 +2,6 @@
 Filter = require '../Filter'
 
 defineModule module, class UserOwnedFilter extends Filter
-  @location: "server"
 
   @isOwner: isOwner = (request, data) ->
     {userId} = request.session

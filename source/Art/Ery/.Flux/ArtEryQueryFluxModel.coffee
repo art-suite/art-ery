@@ -65,7 +65,7 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   IN: single record
   OUT: string key for the query results that should contain this record
   ###
-  queryKeyFromRecord: (record) -> ""
+  toKeyString: (record) -> ""
 
   ###
   OVERRIDE
@@ -113,9 +113,9 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
 
   This implementation assumes there is only one possible result-set for a given query
   any particular record will belong to, and it assumes the queryKey
-  can be computed via @queryKeyFromRecord.
+  can be computed via @toKeyString.
 
-  NOTE: @queryKeyFromRecord must be implemented!
+  NOTE: @toKeyString must be implemented!
   ###
   localUpdate: (updatedRecordData, wasDeleted = false) ->
     if (results = @getQueryResultsFromFluxStoreGivenExampleRecord updatedRecordData) && results.records
@@ -126,6 +126,6 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
 
   getQueryResultsFromFluxStoreGivenExampleRecord: (exampleRecord) ->
     return unless exampleRecord
-    queryKey = @queryKeyFromRecord? exampleRecord
+    queryKey = @toKeyString? exampleRecord
     throw new Error "ArtEryQueryFluxModel #{@getName()} localUpdate: invalid queryKey generated #{formattedInspect {queryKey,exampleRecord}}" unless isString queryKey
     {queryKey, records: @fluxStoreGet(queryKey)?.data}

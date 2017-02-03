@@ -3,6 +3,6 @@ module.exports = [
   require './Tools'
 
   # for testing
-  _reset: ->
+  _resetFilters: ->
     AfterEventsFilter._reset()
 ]

@@ -4,7 +4,6 @@ require 'colors'
 {
   BaseObject
   select, objectWithout, object, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber
-  ConfigRegistry
   deepMerge
 } = require 'art-foundation'
 {success} = CommunicationStatus

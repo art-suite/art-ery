@@ -12,5 +12,5 @@ module.exports = [
   # for testing
   _reset: ->
     PipelineRegistry._reset()
-    Filters._reset()
+    Filters._resetFilters()
 ]

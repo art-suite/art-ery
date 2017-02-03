@@ -18,18 +18,20 @@ defineModule module, class DataUpdatesFilter extends Filter
 
   # for subrequests, this will still be on the server
   # for rootRequest, this will actually run on the app-client - which is where we need to do the Flux updates
-  @location: "both"
+  @location "both"
 
   getUpdatedUpdates = (response, fields)->
-    {key, type} = response
+    {key, type, data} = response
     field = switch type
       when "create", "update" then "dataUpdates"
       when "delete" then "dataDeletes"
 
-    if field
-      {data, pipelineName} = response
-      if data && objectHasKeys(data) && key ||= response.pipeline.toKeyString response.request.data
-        fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": data
+    if field && (data || key)
+      {pipelineName} = response
+      data ||= response.pipeline.toKeyObject?(key) || {}
+      key ||= response.pipeline.toKeyString response.request.data
+      fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": data
+
     fields
 
   @after all: (response) ->

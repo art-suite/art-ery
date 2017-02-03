@@ -30,7 +30,7 @@
     "nodeTest": "nn -s; mocha -u tdd --compilers coffee:coffee-script/register",
     "start": "nn -s; webpack-dev-server --hot --inline --progress",
     "test": "nn -s; webpack-dev-server -d --progress",
-    "testServer": "artConfig='{\"verbose\":true,\"Art.Ery.verbose\":true}' ./art-ery-server -r ./test/tests/Art/Ery/ClientServer/Pipelines -s ./test/public/"
+    "testServer": "coffee ./TestServer.coffee"
   },
   "version": "1.39.4"
 }

@@ -34,6 +34,7 @@ defineModule module, class MyRemote extends Pipeline
     subupdates: (request) ->
       {postId, commentId, userId, name} = request.data
 
+      log "SUBUPDATES AWAY!"
       Promise.all([
         postId    && request.subrequest "myRemote", "create", key: postId,     data: {name}
         userId    && request.subrequest "myRemote", "update", key: userId,     data: {name}
