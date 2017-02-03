@@ -135,7 +135,6 @@ defineModule module, class PromiseHttp extends BaseObject
         @_processRequestWithHandlers request, requestData
 
         .then (plainResponse) =>
-          log {plainResponse}
           if plainResponse
             {headers, data, statusCode = 200} = plainResponse
 

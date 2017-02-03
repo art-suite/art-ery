@@ -462,8 +462,13 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       @_processResponseSession response
       response.toPromise options
 
-  _processResponseSession: (response) ->
-    @session.data = response.session if response.session
+  _processResponseSession: ({session, replaceSession}) ->
+    if session || replaceSession
+      session ||= {}
+      @session.data = if replaceSession
+        session
+      else
+        merge @session.data, session
 
   @_defineClientRequestMethod: (requestType) ->
     @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()

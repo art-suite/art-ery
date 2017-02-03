@@ -31,7 +31,7 @@ defineModule module, class Auth extends Pipeline
       if username = isPresentString request.session.username
         {username}
       else
-        log "NOT LOGGED IN"
+        # not logged in
         request.success()
 
     hello: (request) ->

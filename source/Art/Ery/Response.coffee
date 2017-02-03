@@ -46,6 +46,17 @@ IN:
   handledBy:
     Available for inspecting what code actually handled the request.
     Otherwise ignored by Response
+
+  replaceSession: false
+    If true, then the current session will be replace instead of merged
+    with the new one. If no new session is provided, the old session
+    will be reset to empty.
+
+    NOTE: Pipeline is responsible for updating the Client session
+      from the response session returned after a request.
+
+      Pipeline checks for @replaceSession to implement the above
+      semantics.
 ###
 
 
@@ -53,7 +64,7 @@ module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.preCreateSync options, context: "Art.Ery.Response options", logErrors: true
-    {@request, @status, @props = {}, @session, @remoteRequest, @remoteResponse, @handledBy} = options
+    {@request, @status, @props = {}, @session, @remoteRequest, @remoteResponse, @handledBy, @replaceSession} = options
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
@@ -61,7 +72,7 @@ module.exports = class Response extends require './RequestResponseBase'
 
     @_props.data = options.data if options.data
 
-    @session ||= @request.session
+    @session = merge @request.session, @session unless @replaceSession
 
   isResponse:     true
   toString: -> "ArtEry.Response(#{@type}: #{@status}): #{@message}"
@@ -72,7 +83,7 @@ module.exports = class Response extends require './RequestResponseBase'
     @handledBy = _handledBy
     @
 
-  @property "request status props session remoteResponse remoteRequest handledBy"
+  @property "request status props session replaceSession remoteResponse remoteRequest handledBy"
   @getter
     data:               -> @_props.data
 
@@ -117,6 +128,10 @@ module.exports = class Response extends require './RequestResponseBase'
     type:               -> @request.type
     originatedOnServer: -> @request.originatedOnServer
     subrequestCount:    -> @request.subrequestCount
+
+  withMergedSession: (session) ->
+    Promise.resolve(session).then (session) =>
+      new @class merge @propsForClone, session: merge @session, session
 
   ###
   IN: options:

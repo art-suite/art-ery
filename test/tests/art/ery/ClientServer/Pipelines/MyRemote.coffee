@@ -54,3 +54,6 @@ defineModule module, class MyRemote extends Pipeline
     simulatePropsOutput: (request) -> request.success props: myExtras: true
 
     handledByFilterRequest: ->
+
+    setSessionA: (request) -> request.success session: sessionA: true
+    setSessionB: (request) -> request.success session: sessionB: true

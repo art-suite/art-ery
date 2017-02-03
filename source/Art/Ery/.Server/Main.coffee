@@ -2,6 +2,7 @@ throng  = require 'throng'
 require 'colors'
 
 {
+  eq
   BaseObject
   select, objectWithout, object, objectKeyCount, log, defineModule, merge, CommunicationStatus, isNumber
   deepMerge
@@ -66,6 +67,16 @@ defineModule module, ->
 
       null
 
+    iatAgeInDays = (iat) -> (Date.now() / 1000 - iat) / (60 * 60 * 24)
+
+    shouldReturnNewSignedSession: shouldReturnNewSignedSession = (oldSession, newSession) ->
+      {iat, exp} = oldSession if oldSession
+      newSession && (             # we have a new session AND
+        !iat ||                     # the last session wasn't signed
+        iatAgeInDays(iat) > 1 ||    # OR the session is more than 1 day old
+        !eq oldSession, newSession  # OR the session changed
+      )
+
     ###
     NOTE: sessions expire after 30 days of inactivity; expiration is renewed every request.
       TODO:
@@ -76,23 +87,25 @@ defineModule module, ->
       *) Use an ArtEry filter to do this. I'll probably write one and include it in ArtEry.Filters soon.
         BUT it won't be tied to a specific backend; you'll still have to do that part yourself.
     ###
-    signSession: signSession = (requestData, responseData) ->
-      {session} = responseData
-      if session
+    signSession: signSession = (oldSession, responseData) ->
+
+      if shouldReturnNewSignedSession oldSession, newSession = responseData.session || oldSession
         PromiseJsonWebToken.sign(
-          objectWithout session || requestData.session || {}, "exp"
+          objectWithout newSession, "exp", "iat"
           privateSessionKey
           expiresIn: "30 days"
         )
-        .then (signature) -> merge responseData, session: merge session, {signature}
+        .then (signature) -> merge responseData, session: merge newSession, {signature}
       else
-        responseData
+        objectWithout responseData, "session"
 
     ###
     IN: plainObjectsRequest:
       session:         # encrypted session string
       query: session:  # encrypted session string
-    OUT: (promise) verified session or {} if not valid
+    OUT:
+      promise.then (verifiedSession) ->
+      promise.catch -> # session was invalid
     ###
     verifySession: verifySession = (session) ->
       unless sessionSignature = session
@@ -100,19 +113,24 @@ defineModule module, ->
       else
         PromiseJsonWebToken.verify sessionSignature, privateSessionKey
         .then (session) -> session
-        .catch (e)->
-          log.error "session failed validation"
-          {}
 
     artEryPipelineApiHandler: (request, requestData) ->
       if found = Main.findPipelineForRequest request
+        {pipeline, type, key} = found
         verifySession requestData.session
         .then (session) ->
-          {pipeline, type, key} = found
           pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
 
-          .then ({plainObjectsResponse}) ->
-            signSession requestData, plainObjectsResponse
+          .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+
+        .catch ->
+          session = {}
+          pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
+
+          .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+
+          .then (plainObjectsResponseWithSignedSession) ->
+            merge plainObjectsResponseWithSignedSession, replaceSession: true
 
     getArtEryPipelineApiInfo: ->
       {server, port} = @
@@ -123,7 +141,6 @@ defineModule module, ->
         object pipelines, (pipeline) -> pipeline.getApiReport server: server
 
     allowAllCorsPreflightHandler: ({method, headers}) =>
-      log {method, headers}
       method == "OPTIONS" &&
         status: "success"
         headers:

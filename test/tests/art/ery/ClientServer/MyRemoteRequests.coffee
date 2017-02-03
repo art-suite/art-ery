@@ -112,3 +112,26 @@ module.exports = suite:
                 post123:  name: "alice", updatedAt: 123456789, createdAt: 123456789
                 user123:  name: "alice", updatedAt: 123456789
             props
+
+    sessions: ->
+      setup -> session.reset()
+      test "setSessionA", ->
+        pipelines.myRemote.setSessionA()
+        .then ->
+          assert.eq session.data.sessionA, true
+
+      test "sequencial setSessionA and setSessionB don't clobber each other", ->
+        pipelines.myRemote.setSessionA()
+        .then -> pipelines.myRemote.setSessionB()
+        .then ->
+          assert.eq session.data.sessionA, true
+          assert.eq session.data.sessionB, true
+
+      test "simultanious setSessionA and setSessionB don't clobber each other", ->
+        Promise.all([
+          pipelines.myRemote.setSessionA()
+          pipelines.myRemote.setSessionB()
+        ])
+        .then ->
+          assert.eq session.data.sessionA, true
+          assert.eq session.data.sessionB, true
