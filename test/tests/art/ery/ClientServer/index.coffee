@@ -4,7 +4,10 @@
 module.exports = require './namespace'
 .addModules
   AuthRequests:           require './AuthRequests'          
+  ClientFailures:         require './ClientFailures'        
+  DataUpdatesFilter:      require './DataUpdatesFilter'     
   FilterLocationRequests: require './FilterLocationRequests'
   MyRemoteRequests:       require './MyRemoteRequests'      
+  Sessions:               require './Sessions'              
   StaticAssets:           require './StaticAssets'          
 require './Pipelines'

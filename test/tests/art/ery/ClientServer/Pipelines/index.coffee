@@ -3,6 +3,8 @@
 
 module.exports = require './namespace'
 .addModules
-  Auth:           require './Auth'          
-  FilterLocation: require './FilterLocation'
-  MyRemote:       require './MyRemote'      
+  Auth:                      require './Auth'                     
+  ClientFailures:            require './ClientFailures'           
+  DataUpdatesFilterPipeline: require './DataUpdatesFilterPipeline'
+  FilterLocation:            require './FilterLocation'           
+  MyRemote:                  require './MyRemote'                 

@@ -1,7 +1,9 @@
 require 'art-flux/web_worker'
 require '../'
-require '../Filters'
-require '../Flux'
+{ArtEryFluxModel} = require '../Flux'
 
 require "art-foundation/testing"
-.init defineTests: -> require './tests'
+.init defineTests: ->
+  tests = require './tests'
+  ArtEryFluxModel.defineModelsForAllPipelines()
+  tests

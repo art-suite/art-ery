@@ -7,6 +7,7 @@
   Promise
   ErrorWithInfo
   object
+  isFunction
   objectWithDefinedValues
 } = require 'art-foundation'
 ArtEry = require './namespace'
@@ -95,6 +96,60 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       else throw error
 
 
+  ##############################
+  # requirement helpers
+  ##############################
+  ###
+  IN:
+    test: booleanish
+    message: string (optional)
+  OUT:
+    Success: promise.then (request) ->
+    Failure: promise.catch (error) ->
+      error.info.response # failing response
+      error.info.response.data.message.match message # if message res provided
+
+  Success if test is true
+  ###
+  require: (test, message) ->
+    if test
+      Promise.resolve @
+    else
+      message = message() if isFunction message
+      @clientFailure data: message: "#{@requestPipelineAndType}: requirement: #{message || ""}"
+      .then (response) -> response.toPromise()
+
+  # returns rejecting promise if test is true
+  # see @require
+  rejectIf: (test, message) -> @require !test, message
+
+  ###
+  Success if @originatedOnServer is true
+  OUT: see require
+  ###
+  requireServerOrigin: (message) ->
+    @requireServerOriginOr true, message
+
+  ###
+  Success if either testResult or @originatedOnServer are true.
+  OUT: see require
+  ###
+  requireServerOriginOr: (testResult, message) ->
+    @require testResult || @originatedOnServer, ->
+      message = "to #{message}" unless message.match /\s*to\s/
+      "originatedOnServer required #{message || ''}"
+
+  ###
+  Success if either NOT testResult or @originatedOnServer are true.
+  OUT: see require
+
+  EXAMPLE: request.requireServerOriginIf createOk, "to use createOk"
+  ###
+  requireServerOriginIf: (testResult, message) -> @requireServerOriginOr !testResult, message
+
+  ##################################
+  # GENERATE NEW RESPONSES/REQUESTS
+  ##################################
   ###
   IN: data can be a plainObject or a promise returning a plainObject
   OUT: promise.then (newRequestWithNewData) ->
@@ -116,6 +171,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       new @class merge @propsForClone, props: merge @_props, data: merge @data, data
 
   ###
+  next is used right after a filter or a handler.
+  It's job is to convert the results into a request or response object.
+
   IN:
     null/undefined OR
     JSON-compabile data-type OR
@@ -144,6 +202,13 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         log.error invalidXYZ: data
         throw new Error "invalid response data passed to RequestResponseBaseNext"
         # TODO: should return an inspected version of Data IFF the server is in debug-mode
+
+    # send response-errors back through the 'resolved' promise path
+    # We allow them to be thrown in order to skip parts of code, but they should be returned normally
+    , (error) =>
+      if error.info?.response?.isResponse
+        error.info.response
+      else throw error
 
   success:        (responseProps) -> @_toResponse success, responseProps
   missing:        (responseProps) -> @_toResponse missing, responseProps

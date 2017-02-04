@@ -86,6 +86,7 @@ module.exports = class Response extends require './RequestResponseBase'
   @property "request status props session replaceSession remoteResponse remoteRequest handledBy"
   @getter
     data:               -> @_props.data
+    responseData:       -> @_props.data
 
     beforeFilterLog:    -> @request.filterLog || []
     afterFilterLog:     -> @filterLog || []
@@ -119,6 +120,7 @@ module.exports = class Response extends require './RequestResponseBase'
 
   # Request pass-throughs
   @getter
+    requestData:        -> @request.requestData
     isRootResponse:     -> @request.isRootRequest
     key:                -> @request.key
     requestCache:       -> @request.rootRequest

@@ -145,16 +145,10 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
   ###
   _processFilter: (requestOrResponse, filterFunction) ->
 
-    Promise.then =>
+    requestOrResponse.next Promise.then =>
       if filterFunction
         requestOrResponse.addFilterLog @
         filterFunction.call @, requestOrResponse
       else
         # pass-through if no filter
         requestOrResponse
-    .then (result) =>
-      requestOrResponse.next result
-    # .catch (error) =>
-    #   {message, info} = error
-    #   # log _processFilter_failure: toPlainObjects {message, info}
-    #   requestOrResponse.failure data: toPlainObjects {message, info}

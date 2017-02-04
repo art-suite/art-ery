@@ -68,62 +68,12 @@ module.exports = class Request extends require './RequestResponseBase'
   @property "type pipeline session originatedOnServer rootRequest parentRequest props data key"
 
   @getter
-    key:           -> @_props.key
-    data:          -> @_props.data
+    key:            -> @_props.key
+    data:           -> @_props.data
+    requestData:    -> @_props.data
     requestOptions: -> throw new Error "DEPRICATED: use props"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"
-
-  ##############################
-  # requirement helpers
-  ##############################
-  ###
-  IN:
-    test: booleanish
-    message: string (optional)
-  OUT:
-    Success: promise.then (request) ->
-    Failure: promise.catch (error) ->
-      error.info.response # failing response
-      error.info.response.data.message.match message # if message res provided
-
-  Success if test is true
-  ###
-  require: (test, message) ->
-    if test
-      Promise.resolve @
-    else
-      message = message() if isFunction message
-      @clientFailure data: message: "#{@requestPipelineAndType}: requirement: #{message || ""}"
-      .then (response) -> response.toPromise()
-
-  # returns rejecting promise if test is true
-  # see @require
-  rejectIf: (test, message) -> @require !test, message
-
-  ###
-  Success if @originatedOnServer is true
-  OUT: see require
-  ###
-  requireServerOrigin: (message) ->
-    @requireServerOriginOr true, message
-
-  ###
-  Success if either testResult or @originatedOnServer are true.
-  OUT: see require
-  ###
-  requireServerOriginOr: (testResult, message) ->
-    @require testResult || @originatedOnServer, ->
-      message = "to #{message}" unless message.match /\s*to\s/
-      "originatedOnServer required #{message || ''}"
-
-  ###
-  Success if either NOT testResult or @originatedOnServer are true.
-  OUT: see require
-
-  EXAMPLE: request.requireServerOriginIf createOk, "to use createOk"
-  ###
-  requireServerOriginIf: (testResult, message) -> @requireServerOriginOr !testResult, message
 
   ##############################
   # MISC

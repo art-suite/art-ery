@@ -21,16 +21,20 @@ defineModule module, class DataUpdatesFilter extends Filter
   @location "both"
 
   getUpdatedUpdates = (response, fields)->
-    {key, type, data} = response
-    field = switch type
-      when "create", "update" then "dataUpdates"
-      when "delete" then "dataDeletes"
+    {key, type, responseData} = response
+    field = if response.isRootResponse && type == "get"
+      "dataUpdates"
+    else
+      switch type
+        when "create", "update" then "dataUpdates"
+        when "delete" then "dataDeletes"
 
-    if field && (data || key)
+    if field && (responseData || key)
       {pipelineName} = response
-      data ||= response.pipeline.toKeyObject?(key) || {}
-      key ||= response.pipeline.toKeyString response.request.data
-      fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": data
+      log getUpdatedUpdates: {field, key, responseData}
+      responseData ||= response.pipeline.toKeyObject?(key || responseData) || {}
+      key ||= response.pipeline.toKeyString responseData
+      fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": responseData
 
     fields
 

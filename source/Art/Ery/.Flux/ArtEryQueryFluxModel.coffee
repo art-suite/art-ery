@@ -92,10 +92,14 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
     updatedRecordDataKey = @recordsModel.toKeyString updatedRecordData
     for currentRecordData, i in previousQueryData when updatedRecordDataKey == @recordsModel.toKeyString currentRecordData
       return if wasDeleted
+        # deleted >> remove from query
         arrayWithout previousQueryData, i
       else if propsEq currentRecordData, updatedRecordData
+        # no change >> no update
+        log "saved 1 fluxStore update due to no-change check! (model: #{@name}, record-key: #{updatedRecordDataKey})"
         null
       else
+        # change >> replace with newest version
         arrayWithElementReplaced previousQueryData, updatedRecordData, i
 
     # updatedRecordData wasn't in previousQueryData

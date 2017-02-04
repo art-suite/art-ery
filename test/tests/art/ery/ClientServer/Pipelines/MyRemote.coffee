@@ -22,24 +22,12 @@ defineModule module, class MyRemote extends Pipeline
       else
         response
 
-  @filter DataUpdatesFilter
+  @filter
+    before: filterClientFailure: (request) ->
+      request.require false, "filter allways fails"
 
   @handlers
     get: ({key, data}) -> "#{data?.greeting || 'Hello'} #{key || 'World'}!"
-
-    create: ({data}) -> data
-    update: ({data}) -> data
-    delete: (request) -> request.success()
-
-    subupdates: (request) ->
-      {postId, commentId, userId, name} = request.data
-
-      log "SUBUPDATES AWAY!"
-      Promise.all([
-        postId    && request.subrequest "myRemote", "create", key: postId,     data: {name}
-        userId    && request.subrequest "myRemote", "update", key: userId,     data: {name}
-        commentId && request.subrequest "myRemote", "delete", key: commentId
-      ]).then -> request.success()
 
     hello: ({session}) -> "Hello, #{session.username}!"
 
@@ -57,3 +45,5 @@ defineModule module, class MyRemote extends Pipeline
 
     setSessionA: (request) -> request.success session: sessionA: true
     setSessionB: (request) -> request.success session: sessionB: true
+
+    handlerClientFailure: (request) -> request.require false, "handler allways fails"

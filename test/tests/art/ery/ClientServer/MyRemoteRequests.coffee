@@ -26,11 +26,20 @@ module.exports = suite:
 
   remote:
     basic: ->
-      test "heartbeat", ->
+      test "/api", ->
+        RestClient.get "http://localhost:8085/api"
+        .then (v) ->
+          assert.isString v
+          assert.match v, "Art.Ery.pipeline.json.rest.api"
+        .catch (e) ->
+          log.error "START THE TEST SERVER: npm run testServer"
+          throw e
+
+      test "static index.html", ->
         RestClient.get "http://localhost:8085"
         .then (v) ->
           assert.isString v
-          assert.match v, /Art.Ery.pipeline/
+          assert.match v, "a href"
         .catch (e) ->
           log.error "START THE TEST SERVER: npm run testServer"
           throw e
@@ -76,62 +85,3 @@ module.exports = suite:
         .then ({props}) ->
           assert.eq props, myExtras: true
 
-    dataUpdates: ->
-      test "update request", ->
-        pipelines.myRemote.update returnResponseObject: true, key: "foo", data: name: "alice"
-        .then ({props}) ->
-          assert.eq
-            data:
-              name: "alice"
-              updatedAt: 123456789
-            props
-
-      test "create request", ->
-        pipelines.myRemote.create returnResponseObject: true, key: "foo", data: name: "alice"
-        .then ({props}) ->
-          assert.eq
-            data:
-              name: "alice"
-              createdAt: 123456789
-              updatedAt: 123456789
-            props
-
-      test "subupdates", ->
-        pipelines.myRemote.subupdates
-          returnResponseObject: true
-          data:
-            postId:     "post123"
-            commentId:  "comment123"
-            userId:     "user123"
-            name:       "alice"
-        .then ({props}) ->
-          assert.eq
-            dataDeletes: myRemote: comment123: {}
-            dataUpdates:
-              myRemote:
-                post123:  name: "alice", updatedAt: 123456789, createdAt: 123456789
-                user123:  name: "alice", updatedAt: 123456789
-            props
-
-    sessions: ->
-      setup -> session.reset()
-      test "setSessionA", ->
-        pipelines.myRemote.setSessionA()
-        .then ->
-          assert.eq session.data.sessionA, true
-
-      test "sequencial setSessionA and setSessionB don't clobber each other", ->
-        pipelines.myRemote.setSessionA()
-        .then -> pipelines.myRemote.setSessionB()
-        .then ->
-          assert.eq session.data.sessionA, true
-          assert.eq session.data.sessionB, true
-
-      test "simultanious setSessionA and setSessionB don't clobber each other", ->
-        Promise.all([
-          pipelines.myRemote.setSessionA()
-          pipelines.myRemote.setSessionB()
-        ])
-        .then ->
-          assert.eq session.data.sessionA, true
-          assert.eq session.data.sessionB, true

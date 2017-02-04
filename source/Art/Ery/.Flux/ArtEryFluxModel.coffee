@@ -34,17 +34,19 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
 
   # OUT: singleton for new AnonymousArtErtFluxModel class
   @createModel: (name, pipeline, aliases) ->
-    BaseClass = ArtEryFluxModel
+    createWithPostCreate class AnonymousArtErtFluxModel extends @applyMixins pipeline, ArtEryFluxModel
+      @_name: upperCamelCase name
+      @keyFields pipeline.keyFields if pipeline.keyFields
+      @pipeline pipeline
+      @aliases aliases if aliases
+
+  @applyMixins: (pipeline, BaseClass) ->
 
     # apply mixins
     for customMixin in compactFlatten pipeline.getFluxModelMixins()
       BaseClass = customMixin BaseClass
 
-    createWithPostCreate class AnonymousArtErtFluxModel extends BaseClass
-      @_name: upperCamelCase name
-      @keyFields pipeline.keyFields if pipeline.keyFields
-      @pipeline pipeline
-      @aliases aliases if aliases
+    BaseClass
 
   @defineModelsForAllPipelines: ->
     for name, pipeline of ArtEry.pipelines
@@ -96,7 +98,7 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
     options = query: options if isFunction options
     throw new Error "query required" unless isFunction options.query
 
-    @_queryModels[modelName] = new class ArtEryQueryFluxModelChild extends ArtEryQueryFluxModel
+    @_queryModels[modelName] = new class ArtEryQueryFluxModelChild extends @class.applyMixins @_pipeline, ArtEryQueryFluxModel
       @_name: upperCamelCase modelName
 
       @::[k] = v for k, v of options
