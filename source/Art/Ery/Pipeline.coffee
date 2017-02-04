@@ -69,6 +69,27 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     handlers: {}
     clientApiMethodList: []
     fields: {}
+    fluxModelMixins: []
+
+  ###
+  @fluxModelMixin adds a mixin to fluxModelMixins
+
+  When createing FluxModels for this pipeline (via ArtEryFluxModel.createModel for example),
+  both the records model and each query-model will get these mixins.
+
+  Example:
+    class MyPipeline extends Pipeline
+      @fluxModelMixin FluxModelMixinA
+      @fluxModelMixin FluxModelMixinB
+
+    # this action
+    ArtEryFluxModel.defineModelsForAllPipelines()
+
+    # defines this model:
+    class MyPipeline extends FluxModelMixinB FluxModelMixinA ArtEryFluxModel
+  ###
+  @fluxModelMixin: (mixin) -> @extendFluxModelMixins mixin
+
 
   ###
   define a single filter OR an array of filters to define.
@@ -246,40 +267,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     query: (queryKey, pipeline) -> array of plain objects
   ###
   getAutoDefinedQueries: -> {}
-
-
-  ###############################
-  # OVERRIDABLES
-  ###############################
-
-  ###
-  Override this to return one or more mixins to extend ArtEryFluxModel.
-  Used by ArtEryFluxModel.createModel().
-
-  OUT: Array of Mixins
-    The FluxModel base-class that should be used
-    when autp-generating the FluxModel for this pipeline.
-    NOTE: nested arrays are supported
-
-  Example: Add MyCustomMixin and any mixins defined by parents:
-
-    getFluxModelMixins: ->
-      [
-        super
-        (superClass) -> class MyCustomMixin extends superClass
-          ...
-      ]
-
-  NOTE: Mixins are applied in order. The first one listed
-    is applied first to the BaseClass. This means the first
-    mixin gets lowest and the last mixin gets highest priority
-    for overrides.
-
-    Example:
-      If we return:                 [MixinA, MixinB, MixinC]
-      then the base class becomes:  MixinC MixinB MixinA ArtErtFluxModel
-  ###
-  getFluxModelMixins: -> []
 
   ###############################
   # Development Reports
