@@ -1,9 +1,16 @@
-{isString, defineModule, array, randomString, merge, log} = require 'art-foundation'
+{isString, defineModule, array, randomString, merge, log, formattedInspect} = require 'art-foundation'
 {Pipeline, KeyFieldsMixin, DataUpdatesFilter} = require 'art-ery'
 
 defineModule module, class DataUpdatesFilterPipeline extends KeyFieldsMixin Pipeline
 
   @remoteServer "http://localhost:8085"
+
+  fluxLog = []
+  @fluxModelMixin (superClass) ->
+    class DataUpdatesFilterFluxModelMixin extends superClass
+      dataUpdated: (key, data) -> fluxLog.push(dataUpdated: {model: @name, key, data});log dataUpdated: {key, data}
+      dataCreated: (key, data) -> fluxLog.push(dataCreated: {model: @name, key, data});log dataCreated: {key, data}
+      dataDeleted: (key, data) -> fluxLog.push(dataDeleted: {model: @name, key, data});log dataDeleted: {key, data}
 
   @filter DataUpdatesFilter
 
@@ -14,6 +21,14 @@ defineModule module, class DataUpdatesFilterPipeline extends KeyFieldsMixin Pipe
 
       update: (request) ->
         request.withMergedData updatedAt: 321
+
+  @filter
+    location: "client"
+    before: reset: (request) ->
+      fluxLog = []
+      request
+
+  @getter fluxLog: -> fluxLog
 
   constructor: ->
     super
