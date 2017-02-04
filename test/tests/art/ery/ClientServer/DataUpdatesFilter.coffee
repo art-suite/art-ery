@@ -4,16 +4,15 @@
 {clientFailure, missing, serverFailure} = CommunicationStatus
 
 preexistingKey = "abc123"
-testSetup = ->
+testSetup = (initialRecords) ->
   pipelines.dataUpdatesFilterPipeline.reset
-    data:
-      "#{preexistingKey}": name: "initialAlice"
+    data: initialRecords || "#{preexistingKey}": name: "initialAlice"
   .then ->
     assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, []
 
 module.exports = suite:
   subrequests: ->
-    setup testSetup
+    setup -> testSetup()
 
     test "sub-create sets dataUpdates", ->
       pipelines.dataUpdatesFilterPipeline.subrequestTest
@@ -80,7 +79,7 @@ module.exports = suite:
 
   "flux updates":
     "basic requests": ->
-      setup testSetup
+      setup -> testSetup()
 
       test "get", ->
         pipelines.dataUpdatesFilterPipeline.get
@@ -132,8 +131,8 @@ module.exports = suite:
 
           ]
 
-    "subrequests": ->
-      setup testSetup
+    subrequests: ->
+      setup -> testSetup()
 
       test "get", ->
         pipelines.dataUpdatesFilterPipeline.subrequestTest
@@ -186,4 +185,94 @@ module.exports = suite:
               key:   id
               data:  name: "bill", createdAt: 123, updatedAt: 123, id: id
 
+          ]
+
+    "query updates": ->
+
+      test "create", ->
+        testSetup()
+        .then ->
+          pipelines.dataUpdatesFilterPipeline.create
+            data: name: "bill", email: "bill@imikimi.com"
+
+        .then ({id}) ->
+          assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, [
+            dataUpdated:
+              model: "dataUpdatesFilterPipeline"
+              key:   id
+              data:
+                name:      "bill"
+                email:     "bill@imikimi.com"
+                createdAt: 123
+                updatedAt: 123
+                id:        id
+
+            {dataUpdated:
+              model: "userByEmail"
+              key:   "bill@imikimi.com"
+              data:
+                name:      "bill"
+                email:     "bill@imikimi.com"
+                createdAt: 123
+                updatedAt: 123
+                id:        id
+            }
+          ]
+
+      test "get", ->
+        testSetup "#{preexistingKey}": name: "alice", email: email = "alice@imikimi.com"
+        .then ->
+
+          pipelines.dataUpdatesFilterPipeline.get key: preexistingKey
+
+        .then ({id}) ->
+          assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, [
+            dataUpdated:
+              model: "dataUpdatesFilterPipeline"
+              key:   "abc123"
+              data:  name: "alice", email: "alice@imikimi.com"
+
+            {dataUpdated:
+              model: "userByEmail"
+              key:   "alice@imikimi.com"
+              data:  name: "alice", email: "alice@imikimi.com"
+            }
+          ]
+
+      test "delete", ->
+        testSetup "#{preexistingKey}": name: "alice", email: email = "alice@imikimi.com"
+        .then ->
+          pipelines.dataUpdatesFilterPipeline.delete key: preexistingKey
+
+        .then ({id}) ->
+          assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, [
+            dataDeleted:
+              model: "dataUpdatesFilterPipeline"
+              key:   "abc123"
+              data:  name: "alice", email: "alice@imikimi.com"
+
+            {dataDeleted:
+              model: "userByEmail"
+              key:   "alice@imikimi.com"
+              data:  name: "alice", email: "alice@imikimi.com"
+            }
+          ]
+
+      test "update", ->
+        testSetup "#{preexistingKey}": name: "alice", email: "alice@imikimi.com"
+        .then ->
+          pipelines.dataUpdatesFilterPipeline.update key: preexistingKey, data: email: "alicesNewEmail@imikimi.com"
+
+        .then ({id}) ->
+          assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, [
+            dataUpdated:
+              model: "dataUpdatesFilterPipeline"
+              key:   "abc123"
+              data:  name: "alice", email: "alicesNewEmail@imikimi.com", updatedAt: 321
+
+            {dataUpdated:
+              model: "userByEmail"
+              key:   "alicesNewEmail@imikimi.com"
+              data:  name: "alice", email: "alicesNewEmail@imikimi.com", updatedAt: 321
+            }
           ]

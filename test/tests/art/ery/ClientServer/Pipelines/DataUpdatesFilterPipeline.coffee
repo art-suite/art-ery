@@ -8,9 +8,8 @@ defineModule module, class DataUpdatesFilterPipeline extends KeyFieldsMixin Pipe
   fluxLog = []
   @fluxModelMixin (superClass) ->
     class DataUpdatesFilterFluxModelMixin extends superClass
-      dataUpdated: (key, data) -> fluxLog.push(dataUpdated: {model: @name, key, data});log dataUpdated: {key, data}
-      dataCreated: (key, data) -> fluxLog.push(dataCreated: {model: @name, key, data});log dataCreated: {key, data}
-      dataDeleted: (key, data) -> fluxLog.push(dataDeleted: {model: @name, key, data});log dataDeleted: {key, data}
+      dataUpdated: (key, data) -> fluxLog.push(dataUpdated: {model: @name, key, data});super
+      dataDeleted: (key, data) -> fluxLog.push(dataDeleted: {model: @name, key, data});super
 
   @filter DataUpdatesFilter
 
@@ -34,10 +33,10 @@ defineModule module, class DataUpdatesFilterPipeline extends KeyFieldsMixin Pipe
     super
     @db = {}
 
-  # @query
-  #   pusherTestsByNoodleId:
-  #     query: ({key}) -> array @db, when: (v, k) -> v.noodleId == key
-  #     toKeyString: ({noodleId}) -> noodleId
+  @query
+    userByEmail:
+      query: ({key}) -> array @db, when: (v, k) -> v.email == key
+      dataToKeyString: ({email}) -> email
 
   @handlers
     reset: ({data}) ->

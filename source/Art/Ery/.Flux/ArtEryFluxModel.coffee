@@ -116,79 +116,45 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
   ################################################
   # DataUpdatesFilter callbacks
   ################################################
-  dataUpdated: (key, data) ->
+  ###
+  TODO: What if the field that changes effects @dataToKeyString???
+    Basically, then TWO query results for one query-model need updated - the old version gets a "delete"
+    The new version gets the normal update.
+
+    We -could- do a fluxStore.get and see if we have a local copy of the single record before we
+    replace it. However, we often won't. However again, we may not NEED this often.
+
+    Basically, the question becomes how do we get the old data - if we need it and it actually matters.
+
+    The ArtEry Pipeline knows its queries - and in theory could know the fields which effect queries.
+    DataUpdatesFilter could detect all this before: update. If it detects it, it could GET the old
+    record, and then set responseProps.oldData: oldData. Then, DataUpdatesFilter could pass
+    oldData into dataUpdated. DONE.
+
+    OK - I added the oldData input, and I attempt to get it from the fluxStore if it isn't set.
+    I think the code is right for handling the case where we need to update to queries.
+
+    TODO: We need to do the Server-Side "fetch the old data if queries-keys will change" outline above.
+    TODO: DataUpdatesFilter needs change the protocol to return oldData, too, if needed - there may be more than one oldData per request.
+    TODO: DataUpdatesFilter needs to pass in: response.props.oldData[key]
+  ###
+  dataUpdated: (key, data, oldData) ->
+    oldData ||= @fluxStoreGet(key)?.data
+
     @updateFluxStore key, (oldFluxRecord) -> merge oldFluxRecord, data: merge oldFluxRecord.data, data
-    @_updateQueries data
+
+    each @_queryModels, (queryModel) =>
+      oldQueryKey = oldData && queryModel.dataToKeyString oldData
+      queryKey    = queryModel.dataToKeyString data
+      queryModel.dataDeleted oldQueryKey, oldData if oldQueryKey && oldQueryKey != queryKey
+      queryModel.dataUpdated queryKey, data       if queryKey
 
   dataDeleted: (key, data) ->
     @updateFluxStore key, status: missing
-    @_updateQueries data, true
 
-  ########################
-  # Pipeline API Overrides
-  ########################
-
-  # Let's try w/o this. The new dataUpdated / dataDeleted system
-  # will update things on reply. It's not quite as fast, but its
-  # a lot easier to understand.
-  # NOTE: the goal of this code was to update locally BEFORE sending a remote create/update
-  # However, a lot of updates happen server-side in response to other calls than just 'create' and 'update'
-  #
-  # # NOTE - loadData won't be used if this is uncommented
-  # load: (key) ->
-  #   throw new Error "invalid key: #{inspect key}" unless isString key
-  #   @_getUpdateSerializer key
-  #   .updateFluxStore => @_pipeline.get key: key, props: include: "auto"
-  #   false
-  #
-  # create: (data) ->
-  #   @_pipeline.create data: data
-  #   .then (data) =>
-  #     @updateFluxStore @toKeyString(data),
-  #       status: success
-  #       data: data
-  #     data
-
-  # update: (key, updatedFields) ->
-  #   throw new Error "invalid key: #{inspect key}" unless isString key
-
-  #   ###
-  #   creating a Promise here because we have two promise paths
-  #   path 1: the caller of this update wants to know when this specific update
-  #     succeeds or fails.
-  #   path 2: the updateSerializer must continue whether or not
-  #   ###
-  #   new Promise (resolve, reject) =>
-  #     @_getUpdateSerializer key
-  #     # TODO: updateSerializer.updateFluxStore should optimisitically update the store
-  #     # new signature might look like this:
-  #     #   .updateFluxStore updatedFields, (accumulatedSuccessfulUpdatesToData) =>
-  #     .updateFluxStore (accumulatedSuccessfulUpdatesToData) =>
-  #       ###
-  #       NOTE if this update fails:
-
-  #         The FluxStore record gets rolled back to the version just before this
-  #         update was called. All pending updates after this one will be 'lost'
-  #         in the fluxStore UNTIL, and if, those pending updates succeed. As they
-  #         succeed, the fluxStore will be updated.
-
-  #         So, technically, it isn't the MOST accurate representation if a
-  #         previous update failed, but it will be resolved to the most accurate
-  #         representation once all updates have completed or failed.
-  #       ###
-  #       ret = @_pipeline.update key: key, data: updatedFields
-  #       .then -> merge accumulatedSuccessfulUpdatesToData, updatedFields
-  #       ret.then resolve, reject
-  #       ret
-
-  #       ###
-  #       NOTE: this could be done more cleanly with tapThen (see Art.Foundation.Promise)
-
-  #       @_pipeline.update key, updatedFields
-  #       .then -> merge accumulatedSuccessfulUpdatesToData, updatedFields
-  #       .tapThen resolve, reject
-
-  #       ###
+    each @_queryModels, (queryModel) =>
+      queryKey = queryModel.dataToKeyString data
+      queryKey && queryModel.dataDeleted queryKey, data
 
   ##########################
   # PRIVATE
@@ -208,51 +174,3 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
     for k, v of @_pipeline when !@[k] && !abstractPrototype[k] && isFunction v
       @[k] = fastBind v, @_pipeline
 
-  ###
-  Purpose:
-    Allows multiple in-flight updates to update the flux-store with every success or failure
-    to the current-best-known state of the remote record.
-  Usage:
-    updateSerializer = @_getUpdateSerializer key
-    updateSerializer.updateFluxStore (accumulatedSuccessfulUpdatesToData) =>
-      return updated data
-    Effects:
-      - after the returned, updated data is resolved, @updateFluxStore is called
-      - calls to updateFluxStore are serialized:
-        - each is executed and fluxStore is updated before the next
-
-  Internal Notes:
-    - auto vivifies
-    When allDone:
-    - removed from @_updateSerializers
-  ###
-  _getUpdateSerializer: (key) ->
-    unless updateSerializer = @_updateSerializers[key]
-      updateSerializer = new Promise.Serializer
-       #prime the serializer with the current fluxRecord.data
-      updateSerializer.then => @fluxStoreGet(key)?.data
-      updateSerializer.updateFluxStore = (updateFunction) =>
-        updateSerializer.then (data) =>
-          Promise.then -> updateFunction data
-          .then (data) ->
-            status: success, data: data
-          .catch (e) ->
-            if data
-              # on error, roll back flux-Store to the last known-good data
-              status: success, data: data
-            else
-              status: e.info?.response?.status || failure
-              data: e.info
-          .then (fluxRecord) =>
-            @updateFluxStore key, fluxRecord
-            data
-        updateSerializer
-
-    updateSerializer.allDonePromise().then (accumulatedSuccessfulUpdatesToData) =>
-      delete @_updateSerializers[key]
-    updateSerializer
-
-  _updateQueries: (updatedRecord, wasDeleted = false) ->
-    each @_queryModels, (queryModel) =>
-      queryModel.localUpdate updatedRecord, wasDeleted
-    null

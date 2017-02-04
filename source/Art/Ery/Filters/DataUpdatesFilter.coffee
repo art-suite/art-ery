@@ -31,7 +31,6 @@ defineModule module, class DataUpdatesFilter extends Filter
 
     if field && (responseData || key)
       {pipelineName} = response
-      log getUpdatedUpdates: {field, key, responseData}
       responseData ||= response.pipeline.toKeyObject?(key || responseData) || {}
       key ||= response.pipeline.toKeyString responseData
       fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": responseData

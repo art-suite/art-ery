@@ -32,6 +32,14 @@ PipelineRegistry = require './PipelineRegistry'
 
 {success, missing, failure} = CommunicationStatus
 
+###
+TODO:
+  Factor out all flux-related stuff into:
+  class FluxReadyPipeline extends Pipeline
+
+  DONT put it in Flux/
+    WHY? Server-side, we won't include Flux/
+###
 defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   @register: ->

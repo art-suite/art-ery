@@ -42,8 +42,10 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   @setter "recordsModel pipeline"
   @getter "recordsModel pipeline"
 
+  #########################
+  # OVERRIDEABLES
+  #########################
   ###
-  OVERRIDE
   IN: will be the key (returned from fromFluxKey)
   OUT: array of singleModel records
     OR promise.then (arrayOfRecords) ->
@@ -61,20 +63,11 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   query: (key) -> []
 
   ###
-  OVERRIDE
-  IN: single record
-  OUT: string key for the query results that should contain this record
-  ###
-  toKeyString: (record) -> ""
-
-  ###
-  OVERRIDE
   override for to sort records when updating local query data in response to local record changes
   ###
   localSort: (queryData) -> queryData
 
   ###
-  OVERRIDE
   override for custom merge
   This implementation is a streight-up merge using @recordsModel.dataHasEqualKeys
 
@@ -108,28 +101,20 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
     else
       arrayWith previousQueryData, updatedRecordData
 
+  localMergeGivenQueryKey: (queryKey, singleRecordData) ->
+    queryKey && @localMerge @fluxStoreGet(queryKey)?.data, singleRecordData
+
+  ###############################
+  # FluxModel overrides
+  ###############################
   ###
-  ArtEryFluxModel calls localUpdate on all its queries whenever
-  a fluxStore entry is created or updated for the ArtEryFluxModel.
-
-  OVERRIDABLE
-  Can override for custom behavior!
-
-  This implementation assumes there is only one possible result-set for a given query
-  any particular record will belong to, and it assumes the queryKey
-  can be computed via @toKeyString.
-
-  NOTE: @toKeyString must be implemented!
+  ArtEryFluxModel calls dataUpdated and dataDeleted from its
+  dataUpdated and dataDeleted functions, respectively.
   ###
-  localUpdate: (updatedRecordData, wasDeleted = false) ->
-    if (results = @getQueryResultsFromFluxStoreGivenExampleRecord updatedRecordData) && results.records
-      {records, queryKey} = results
+  dataUpdated: (queryKey, singleRecordData) ->
+    if mergeResult = @localMergeGivenQueryKey queryKey, singleRecordData
+      @updateFluxStore queryKey, data: @localSort mergeResult
 
-      if mergeResult = @localMerge records, updatedRecordData, wasDeleted
-        @updateFluxStore queryKey, data: @localSort mergeResult
-
-  getQueryResultsFromFluxStoreGivenExampleRecord: (exampleRecord) ->
-    return unless exampleRecord
-    queryKey = @toKeyString? exampleRecord
-    throw new Error "ArtEryQueryFluxModel #{@getName()} localUpdate: invalid queryKey generated #{formattedInspect {queryKey,exampleRecord}}" unless isString queryKey
-    {queryKey, records: @fluxStoreGet(queryKey)?.data}
+  dataDeleted: (queryKey, singleRecordData) ->
+    if mergeResult = @localMergeGivenQueryKey queryKey, singleRecordData, true
+      @updateFluxStore queryKey, data: @localSort mergeResult
