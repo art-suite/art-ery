@@ -5,6 +5,7 @@ Filter = require './Filter'
 Session = require './Session'
 {config} = require './Config'
 Filters = require './Filters'
+PipelineQuery = require './PipelineQuery'
 
 PipelineRegistry = require './PipelineRegistry'
 
@@ -179,7 +180,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       @subscriptions
         myQueryName: queryKey
   ###
-  @query:         @extendQueries
+  @query: (map) ->
+    @extendQueries object map, (options, queryName) -> new PipelineQuery queryName, options
 
   ###
   aliases
@@ -269,13 +271,6 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   getBeforeFiltersFor: (type, location = @location) -> filter for filter in @beforeFilters when filter.getBeforeFilter type, location
   getAfterFiltersFor:  (type, location = @location) -> filter for filter in @afterFilters  when filter.getAfterFilter  type, location
 
-  ###
-  OVERRIDE
-  OUT: queryModelName:
-    query: (queryKey, pipeline) -> array of plain objects
-  ###
-  getAutoDefinedQueries: -> {}
-
   ###############################
   # Development Reports
   ###############################
@@ -329,12 +324,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   query handler-functions: (request) -> response or any other value allowed for handlers
   ###
   @_defineQueryHandlers: ->
-    for k, v of @getQueries()
-      @extendHandlers k, if isFunction v then v else
-        v = v.query
-        unless isFunction v
-          throw new Error "query delaration must be a handler-function or have a 'query' property that is a function"
-        v
+    for k, pipelineQuery of @getQueries()
+      throw new Error "pipelineQuery not a PipelineQuery" unless pipelineQuery instanceof PipelineQuery
+      throw new Error "pipelineQuery has no query" unless isFunction pipelineQuery.query
+      @extendHandlers k, pipelineQuery.query
 
   ###
   OUT:

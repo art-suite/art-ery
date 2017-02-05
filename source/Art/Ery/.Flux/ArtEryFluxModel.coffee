@@ -24,6 +24,8 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
   createWithPostCreate
   inspect
   compactFlatten
+  object
+  isPlainObject
 } = Neptune.Art.Foundation
 
 {missing, failure, success, pending} = CommunicationStatus
@@ -70,42 +72,28 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
     super
     @_updateSerializers = {}
     @_pipeline = @class._pipeline
-    @_queryModels = {}
-    @queries @_pipeline.queries
+    @_defineQueryModels()
     @_bindPipelineMethods()
 
   ########################
   # Queries
   ########################
-  ###
-  TODO:
-  queries need to go through an ArtEry pipeline.
-  queries should be invoked with that ArtEry pipeline as @
-  every record returned should get sent through the after-pipeline
-  as-if it were a "get" request
-  ###
-  queries: (map, ignoreAlreadyDefinedWarning) ->
-    for modelName, options of map
-      @defineQuery modelName, options, ignoreAlreadyDefinedWarning
+  _defineQueryModels: ->
+    @_queryModels = object @_pipeline.queries, (pipelineQuery) =>
+      @_createQueryModel pipelineQuery
 
-  defineQuery: (modelName, options, ignoreAlreadyDefinedWarning) ->
-    if @_queryModels[modelName]
-      console.warn "query already defined! #{@getName()}: #{modelName}" unless ignoreAlreadyDefinedWarning
-      return
+  _createQueryModel: ({options, queryName}) ->
 
-    {_pipeline} = @
-    recordsModel = @
-    options = query: options if isFunction options
-    throw new Error "query required" unless isFunction options.query
+    prototypeProperties = merge options, {
+      @_pipeline
+      _recordsModel: @
+      query: (key) -> @_pipeline[queryName] key: key, props: include: "auto"
+    }
 
-    @_queryModels[modelName] = new class ArtEryQueryFluxModelChild extends @class.applyMixins @_pipeline, ArtEryQueryFluxModel
-      @_name: upperCamelCase modelName
+    new class ArtEryQueryFluxModelChild extends @class.applyMixins @_pipeline, ArtEryQueryFluxModel
+      @_name: upperCamelCase queryName
 
-      @::[k] = v for k, v of options
-      _pipeline:      _pipeline
-      _recordsModel:  recordsModel
-
-      query: (key) -> @_pipeline[modelName] key: key, props: include: "auto"
+      @::[k] = v for k, v of prototypeProperties
 
   ########################
   # FluxModel Overrides
