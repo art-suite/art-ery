@@ -1,4 +1,4 @@
-{defineModule, log, BaseObject, formattedInspect, isString, isFunction} = require 'art-foundation'
+{defineModule, isPlainObject, log, BaseObject, formattedInspect, isString, isFunction} = require 'art-foundation'
 
 defineModule module, class PipelineQuery extends BaseObject
 
