@@ -39,19 +39,25 @@ defineModule module, class DataUpdatesFilter extends Filter
 
   @after all: (response) ->
     if response.isRootResponse && response.location != "server" && Neptune.Art.Flux
-      {dataUpdates, dataDeletes} = response.props
-
-      {dataUpdates, dataDeletes} = getUpdatedUpdates response, {dataUpdates, dataDeletes}
-
-      {models} = Neptune.Art.Flux
-      for pipelineName, dataUpdatesByKey of dataUpdates when isFunction (model = models[pipelineName])?.dataUpdated
-        each dataUpdatesByKey, (data, key) ->
-          model.dataUpdated key, data
-
-      for pipelineName, dataDeletesByKey of dataDeletes when isFunction (model = models[pipelineName])?.dataDeleted
-        each dataDeletesByKey, (data, key) -> model.dataDeleted key, data
+      @applyFluxUpdates response
 
     if !response.isRootResponse
-      getUpdatedUpdates response, response.rootRequest.responseProps
+      @addUpdatesToResponse response
 
     response
+
+  applyFluxUpdates: (response) ->
+    {dataUpdates, dataDeletes} = response.props
+
+    {dataUpdates, dataDeletes} = getUpdatedUpdates response, {dataUpdates, dataDeletes}
+
+    {models} = Neptune.Art.Flux
+    for pipelineName, dataUpdatesByKey of dataUpdates when isFunction (model = models[pipelineName])?.dataUpdated
+      each dataUpdatesByKey, (data, key) ->
+        model.dataUpdated key, data
+
+    for pipelineName, dataDeletesByKey of dataDeletes when isFunction (model = models[pipelineName])?.dataDeleted
+      each dataDeletesByKey, (data, key) -> model.dataDeleted key, data
+
+  addUpdatesToResponse: (response) ->
+    getUpdatedUpdates response, response.rootRequest.responseProps
