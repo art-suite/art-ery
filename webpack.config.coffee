@@ -16,4 +16,4 @@ module.exports = (require "art-foundation/configure_webpack")
       "express":        "^4.14.0"
       compress:         "^0.99.0"
       throng:           "^4.0.0"
-      jsonwebtoken:     "^7.1.9"
+      jsonwebtoken:     "^7.2.1"
