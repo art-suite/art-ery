@@ -138,12 +138,12 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
       queryModel.dataDeleted oldQueryKey, oldData if oldQueryKey && oldQueryKey != queryKey
       queryModel.dataUpdated queryKey, data       if queryKey
 
-  dataDeleted: (key, data) ->
+  dataDeleted: (key, dataOrKey) ->
     @updateFluxStore key, status: missing
 
-    each @_queryModels, (queryModel) =>
-      queryKey = queryModel.dataToKeyString data
-      queryKey && queryModel.dataDeleted queryKey, data
+    dataOrKey && each @_queryModels, (queryModel) =>
+      queryKey = queryModel.toKeyString dataOrKey
+      queryKey && queryModel.dataDeleted queryKey, dataOrKey
 
   ##########################
   # PRIVATE
