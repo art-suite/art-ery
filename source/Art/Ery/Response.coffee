@@ -87,6 +87,7 @@ module.exports = class Response extends require './RequestResponseBase'
   @getter
     data:               -> @_props.data
     responseData:       -> @_props.data
+    responseProps:      -> @_props
 
     beforeFilterLog:    -> @request.filterLog || []
     afterFilterLog:     -> @filterLog || []
@@ -117,19 +118,6 @@ module.exports = class Response extends require './RequestResponseBase'
 
     # DEPRICATED
     # message:            -> @data?.message
-
-  # Request pass-throughs
-  @getter
-    requestData:        -> @request.requestData
-    isRootResponse:     -> @request.isRootRequest
-    key:                -> @request.key
-    requestCache:       -> @request.rootRequest
-    pipeline:           -> @request.pipeline
-    rootRequest:        -> @request.rootRequest
-    parentRequest:      -> @request.parentRequest
-    type:               -> @request.type
-    originatedOnServer: -> @request.originatedOnServer
-    subrequestCount:    -> @request.subrequestCount
 
   withMergedSession: (session) ->
     Promise.resolve(session).then (session) =>

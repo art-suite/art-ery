@@ -71,6 +71,7 @@ module.exports = class Request extends require './RequestResponseBase'
     key:            -> @_props.key
     data:           -> @_props.data
     requestData:    -> @_props.data
+    requestProps:   -> @_props
     requestOptions: -> throw new Error "DEPRICATED: use props"
 
   toString: -> "ArtEry.Request(#{@type} key: #{@key}, hasData: #{!!@data})"

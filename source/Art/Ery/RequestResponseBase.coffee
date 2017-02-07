@@ -33,6 +33,28 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       "#{@class.namespacePath}":
         toInspectedObjects objectWithDefinedValues @propsForClone
 
+    requestDataWithKey: ->
+      {key, requestData} = @request
+      if key
+        merge requestData, @request.pipeline.toKeyObject? key
+      else
+        requestData || {}
+
+  # Pass-throughs - to remove once we merge Request and Response
+  @getter
+    requestProps:       -> @request.requestProps
+    requestData:        -> @request.requestData
+    isRootResponse:     -> @request.isRootRequest
+    key:                -> @request.key
+    requestCache:       -> @request.rootRequest
+    pipeline:           -> @request.pipeline
+    rootRequest:        -> @request.rootRequest
+    parentRequest:      -> @request.parentRequest
+    type:               -> @request.type
+    originatedOnServer: -> @request.originatedOnServer
+    subrequestCount:    -> @request.subrequestCount
+
+
   ########################
   # ResponseProps
   ########################

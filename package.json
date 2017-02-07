@@ -30,7 +30,7 @@
     "build": "webpack --progress",
     "nodeTest": "nn -s; mocha -u tdd --compilers coffee:coffee-script/register",
     "start": "webpack-dev-server --hot --inline --progress",
-    "test": "webpack-dev-server -d --progress",
+    "test": "webpack-dev-server --progress",
     "testServer": "coffee ./TestServer.coffee"
   },
   "version": "1.45.1"
