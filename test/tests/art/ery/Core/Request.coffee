@@ -1,11 +1,21 @@
 {log, CommunicationStatus, formattedInspect, merge, deepMerge} = require 'art-foundation'
 {clientFailure} = CommunicationStatus
-{Request, Pipeline} = Neptune.Art.Ery
+{Request, Pipeline, KeyFieldsMixin} = Neptune.Art.Ery
 
 newRequest = (options) ->
   new Request merge
     type:   "get"
     pipeline: new Pipeline
+    session: {}
+    options
+
+class MyCompoundKeyPipe extends KeyFieldsMixin Pipeline
+  @keyFields "userId/postId"
+
+newCompoundKeyRequest = (options) ->
+  new Request merge
+    type:   "get"
+    pipeline: new MyCompoundKeyPipe
     session: {}
     options
 
@@ -280,3 +290,14 @@ module.exports = suite:
       request.require true, "abracadabra"
       .then (resolvesWith) ->
         assert.eq request, resolvesWith
+
+  compoundKeys: ->
+    request = null
+    setup ->
+      request = newCompoundKeyRequest
+        key: userId: "userAbc", postId: "postXyz"
+        data: followerCount: 123
+
+    test "key", -> assert.eq request.key, "userAbc/postXyz"
+    test "keyObject", -> assert.eq request.keyObject, userId: "userAbc", postId: "postXyz"
+    test "requestDataWithKey", -> assert.eq request.requestDataWithKey, userId: "userAbc", postId: "postXyz", followerCount: 123

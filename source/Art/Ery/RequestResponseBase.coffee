@@ -50,11 +50,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         toInspectedObjects objectWithDefinedValues @propsForClone
 
     requestDataWithKey: ->
-      {key, requestData} = @request
-      if key
-        merge requestData, @request.pipeline.toKeyObject? key
-      else
-        requestData || {}
+      merge @requestData, @keyObject
+
+    keyObject: -> @request.pipeline.toKeyObject @key
 
   # Pass-throughs - to remove once we merge Request and Response
   @getter
