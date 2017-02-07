@@ -99,7 +99,7 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
   # FluxModel Overrides
   ########################
   loadData: (key) ->
-    @_pipeline.get key: key, props: include: "auto"
+    @_pipeline.get returnNullIfMissing: true, key: key, props: include: "auto"
 
   ################################################
   # DataUpdatesFilter callbacks
