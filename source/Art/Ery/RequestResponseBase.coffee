@@ -15,6 +15,22 @@ ArtEryBaseObject = require './ArtEryBaseObject'
 {success, missing, failure, clientFailure} = CommunicationStatus
 {config} = require './Config'
 
+###
+TODO: merge reponse and request into one object
+
+TODO: Work towards the concept of "oldData" - sometimes we need to know
+ the oldData when updating. Specifically, ArtEryPusher needs to know the oldData
+ to notify clients if a record is removed from one query and added to another.
+ Without oldData, there is no way of knowing what old query it was removed from.
+ In this case, either a) the client needs to send the oldData to the server of b)
+ we need to fetch the oldData before overwriting it - OR we need to us returnValues: "allOld".
+
+ Too bad there isn't a way to return BOTH the old and new fields with DynamoDb.
+
+ Not sure if ArtEry needs any special code for "oldData." It'll probably be a convention
+ that ArtEryAws and ArtEryPusher conform to. It's just a props from ArtEry's POV.
+###
+
 defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   constructor: (options) ->
