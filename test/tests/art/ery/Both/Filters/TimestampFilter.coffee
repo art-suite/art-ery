@@ -34,4 +34,4 @@ module.exports = suite: ->
     .then ({createdAt, updatedAt}) ->
       assert.isNumber createdAt
       assert.isNumber updatedAt
-      assert.gt updatedAt, createdAt
+      assert.gte updatedAt, createdAt

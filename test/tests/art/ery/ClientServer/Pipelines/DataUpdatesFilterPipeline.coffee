@@ -1,7 +1,7 @@
 {isString, defineModule, array, randomString, merge, log, formattedInspect} = require 'art-foundation'
 {Pipeline, KeyFieldsMixin, DataUpdatesFilter} = require 'art-ery'
 
-defineModule module, class DataUpdatesFilterPipeline extends KeyFieldsMixin Pipeline
+defineModule module, class DataUpdatesFilterPipeline extends require './SimpleStore'
 
   @remoteServer "http://localhost:8085"
 
@@ -29,41 +29,12 @@ defineModule module, class DataUpdatesFilterPipeline extends KeyFieldsMixin Pipe
 
   @getter fluxLog: -> fluxLog
 
-  constructor: ->
-    super
-    @db = {}
-
   @query
     userByEmail:
       query: ({key}) -> array @db, when: (v, k) -> v.email == key
       dataToKeyString: ({email}) -> email
 
   @handlers
-    reset: ({data}) ->
-      @db = data
-      true
-
-    get: ({key}) ->
-      @db[key]
-
-    create: (request) ->
-      key = randomString().slice 0, 8
-      @db[key] = merge request.data, id: key
-
-    update: (request) ->
-      {data, key} = request
-      key ||= request.pipeline.toKeyString data
-      return null unless @db[key]
-      @db[key] = merge @db[key], data
-
-    delete: (request) ->
-      {key} = request
-      key ||= request.pipeline.toKeyString data
-      return null unless @db[key]
-      out = @db[key]
-      delete @db[key]
-      out
-
     subrequestTest: (request) ->
       {key, data, type} = request.data
       request.require isString(type), "subrequestTest needs a request-type"
