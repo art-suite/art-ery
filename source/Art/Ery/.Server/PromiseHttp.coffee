@@ -146,7 +146,7 @@ defineModule module, class PromiseHttp extends BaseObject
 
             log "#{getLogTime().replace /\:/g, '_'}: pid: #{process.pid}, status: #{statusCode}, out: #{plainResponse?.data?.length || 0}bytes, #{inspectLean logObject}"
             if @verbose
-              log
+              log PromiseHttp: verbose:
                 requestData: try
                   JSON.parse requestData
                 catch
