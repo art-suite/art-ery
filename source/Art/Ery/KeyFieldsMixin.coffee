@@ -51,13 +51,10 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
     keyFields:        -> @class._keyFields
 
   # Overrides FluxModel's implementation
-  toKeyString: (a) ->
-    if isString a
-      a
-    else
-      @validateKey a
-      array @keyFields, (field) -> a[field]
-      .join "/"
+  dataToKeyString: (a) ->
+    @validateKey a
+    array @keyFields, (field) -> a[field]
+    .join "/"
 
   toKeyObject: (a) ->
     {keyFields} = @

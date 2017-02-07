@@ -69,6 +69,15 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @addDatabaseFilters: (options) ->
     @filter Filters.createDatabaseFilters options, @
 
+  toKeyString: (key) ->
+    return key unless key?
+    if isString key
+      key
+    else if @dataToKeyString && isPlainObject key
+      @dataToKeyString key
+    else
+      throw new Error "override toKeyString or dataToKeyString for non-string-keys like: #{formattedInspect key}"
+
   ###########################
   # Declarative API
   ###########################

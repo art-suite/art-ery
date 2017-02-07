@@ -5,6 +5,7 @@ module.exports = require './namespace'
 .addModules
   AuthRequests:           require './AuthRequests'          
   ClientFailures:         require './ClientFailures'        
+  CompoundKeys:           require './CompoundKeys'          
   DataUpdatesFilter:      require './DataUpdatesFilter'     
   FilterLocationRequests: require './FilterLocationRequests'
   MyRemoteRequests:       require './MyRemoteRequests'      
