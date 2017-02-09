@@ -49,7 +49,7 @@ module.exports = class Request extends require './RequestResponseBase'
 
   constructor: (options) ->
     super
-    {@type, @pipeline, @session, @parentRequest, @originatedOnServer, @props = {}} = options
+    {@type, @pipeline, @session, @parentRequest, @originatedOnServer, @props = {}, @context = rootRequest: @} = options
 
     key = @_props.key || options.key
     options.key = @_props.key = @pipeline.toKeyString key if key?
@@ -61,14 +61,7 @@ module.exports = class Request extends require './RequestResponseBase'
     @_props.key  = options.key  if options.key?
     @_props.data = options.data if options.data?
 
-    @_rootRequest = @parentRequest?._rootRequest || @
-
-    @_subrequestCount = 0
-    @_requestCache = null
-
-    @_responseProps = null
-
-  @property "type pipeline session originatedOnServer rootRequest parentRequest props data key"
+  @property "type pipeline session originatedOnServer parentRequest props data key context"
 
   @getter
     key:            -> @_props.key
@@ -87,15 +80,13 @@ module.exports = class Request extends require './RequestResponseBase'
     shortInspect: ->
       "#{if @parentRequest then @parentRequest.shortInspect + " > " else ""}#{@pipeline.getName()}-#{@type}(#{@key || ''})"
 
-    requestCache: -> @rootRequest._requestCache ||= {}
-
     # Also implemented in Response
     beforeFilterLog:  -> @filterLog || []
     afterFilterLog:   -> []
     isSuccessful:     -> true
     notSuccessful:    -> false
     isRequest:        -> true
-    isRootRequest:    -> @_rootRequest == @
+    isRootRequest:    -> !@parentRequest
     requestPipelineAndType: -> "#{@pipeline.name}-#{@type}"
 
     propsForClone: ->
@@ -107,7 +98,7 @@ module.exports = class Request extends require './RequestResponseBase'
         @parentRequest
         @filterLog
         @originatedOnServer
-        @subrequestCount
+        @context
       }
 
     urlKeyClause: -> if present @key then "/#{@key}" else ""

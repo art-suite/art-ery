@@ -1,4 +1,4 @@
-{log, CommunicationStatus, formattedInspect, merge, deepMerge} = require 'art-foundation'
+{log, CommunicationStatus, formattedInspect, merge, deepMerge, createWithPostCreate} = require 'art-foundation'
 {clientFailure} = CommunicationStatus
 {Request, Pipeline, KeyFieldsMixin} = Neptune.Art.Ery
 
@@ -112,7 +112,6 @@ module.exports = suite:
           type:             "get"
           props:            key: "123"
           session:          {}
-          subrequestCount:  0
           request.inspectedObjects["Neptune.Art.Ery.Request"]
 
     "invalid new Request": ->
@@ -275,6 +274,31 @@ module.exports = suite:
       request.success()
       .then (response) ->
         assert.eq response.props, foo: bar: 123, baz: 789
+
+  context:
+    "is identical after": ->
+      test "request cloning", ->
+        request = newRequest()
+        {context} = request
+        request.withMergedData user: "alice"
+        .then (request) ->
+          assert.same context, request.context
+
+      test "response generation", ->
+        request = newRequest()
+        {context} = request
+        request.success()
+        .then (response) ->
+          assert.same context, response.context
+
+      test "subrequests", ->
+        createWithPostCreate class MyPipeline extends Pipeline
+          ;
+
+        request = newRequest()
+        {context} = request
+        subrequest = request.createSubRequest "myPipeline", "get"
+        assert.same context, subrequest.context
 
   require: ->
     test "require failure returns rejected promise", ->

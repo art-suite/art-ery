@@ -104,7 +104,6 @@ module.exports = class Response extends require './RequestResponseBase'
         @handledBy
         @remoteRequest
         @remoteResponse
-        @subrequestCount
       }
     propsForResponse: -> @propsForClone
 

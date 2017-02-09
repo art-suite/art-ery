@@ -9,6 +9,7 @@
   object
   isFunction
   objectWithDefinedValues
+  objectWithout
 } = require 'art-foundation'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
@@ -47,7 +48,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     pipelineName: -> @pipeline.getName()
     inspectedObjects: ->
       "#{@class.namespacePath}":
-        toInspectedObjects objectWithDefinedValues @propsForClone
+        toInspectedObjects objectWithDefinedValues objectWithout @propsForClone, "context"
 
     requestDataWithKey: ->
       merge @requestData, @keyObject
@@ -60,23 +61,25 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     requestData:        -> @request.requestData
     isRootResponse:     -> @request.isRootRequest
     key:                -> @request.key
-    requestCache:       -> @request.rootRequest
     pipeline:           -> @request.pipeline
-    rootRequest:        -> @request.rootRequest
     parentRequest:      -> @request.parentRequest
     type:               -> @request.type
     originatedOnServer: -> @request.originatedOnServer
-    subrequestCount:    -> @request.subrequestCount
-
+    context:            -> @request.context
 
   ########################
-  # ResponseProps
+  # Context Props
   ########################
   @getter
-    responseProps: -> @response?.props || (@request._responseProps ||= {})
+    responseProps:   -> @context.responseProps ||= {}
+    requestCache:    -> @context.requestCache ||= {}
+    subrequestCount: -> @context.subrequestCount ||= 0
+    rootRequest:     -> @context.rootRequest
 
   @setter
     responseProps: -> throw new Error "cannot set responseProps"
+
+  incrementSubrequestCount: -> @context.subrequestCount = (@context.subrequestCount | 0) + 1
 
   ########################
   # Subrequest
@@ -91,13 +94,13 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       pipeline
       @session
       parentRequest: @request
-      @rootRequest
+      @context
     }
 
   subrequest: (pipelineName, type, requestOptions) ->
     subrequest = @createSubRequest pipelineName, type, requestOptions
 
-    @rootRequest._subrequestCount++
+    @incrementSubrequestCount()
     promise = subrequest.pipeline._processRequest subrequest
     .then (response) => response.toPromise requestOptions
 
