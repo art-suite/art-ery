@@ -43,23 +43,22 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   addFilterLog: (filter) -> @_filterLog = arrayWith @_filterLog, "#{filter}"
 
   @getter
-    location: -> config.location
-    requestType: -> @type
-    pipelineName: -> @pipeline.getName()
+    location:           -> config.location
+    requestType:        -> @type
+    pipelineName:       -> @pipeline.getName()
+    requestDataWithKey: -> merge @requestData, @keyObject
+    keyObject:          -> @request.pipeline.toKeyObject @key
+    rootRequest:        -> @parentRequest?.rootRequest || @
+
     inspectedObjects: ->
       "#{@class.namespacePath}":
         toInspectedObjects objectWithDefinedValues objectWithout @propsForClone, "context"
-
-    requestDataWithKey: ->
-      merge @requestData, @keyObject
-
-    keyObject: -> @request.pipeline.toKeyObject @key
 
   # Pass-throughs - to remove once we merge Request and Response
   @getter
     requestProps:       -> @request.requestProps
     requestData:        -> @request.requestData
-    isRootResponse:     -> @request.isRootRequest
+    isRootRequest:      -> @request.isRootRequest
     key:                -> @request.key
     pipeline:           -> @request.pipeline
     parentRequest:      -> @request.parentRequest
@@ -71,10 +70,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   # Context Props
   ########################
   @getter
-    responseProps:   -> @context.responseProps ||= {}
-    requestCache:    -> @context.requestCache ||= {}
-    subrequestCount: -> @context.subrequestCount ||= 0
-    rootRequest:     -> @context.rootRequest
+    requestCache:      -> @context.requestCache ||= {}
+    subrequestCount:   -> @context.subrequestCount ||= 0
 
   @setter
     responseProps: -> throw new Error "cannot set responseProps"
@@ -208,6 +205,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   withMergedData: (data) ->
     Promise.resolve(data).then (data) =>
       new @class merge @propsForClone, props: merge @_props, data: merge @data, data
+
+  with: (constructorOptions) ->
+    Promise.resolve(constructorOptions).then (constructorOptions) =>
+      new @class merge @propsForClone, constructorOptions
 
   ###
   next is used right after a filter or a handler.

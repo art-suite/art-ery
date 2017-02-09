@@ -68,8 +68,6 @@ module.exports = class Response extends require './RequestResponseBase'
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
-    @request._responseProps = @props = pureMerge @request.responseProps, @props
-
     @_props.data = options.data if options.data
 
     @session = merge @request.session, @session unless @replaceSession

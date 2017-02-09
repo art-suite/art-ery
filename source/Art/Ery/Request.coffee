@@ -44,12 +44,29 @@ IN: options:
     This is why it must be a string.
     Currently there are no controls for HOW cacheable type-get is, though.
     All other requests are NOT cacheable.
+
+CONCEPTS
+
+  context:
+
+    This is the only mutable part of the request. It establishes one shared context for
+    a request, all its clones, subrequests, responses and response clones.
+
+    The primary purpose is for subrequests to coordinate their actions with the primary
+    request. Currently this is only used server-side.
+
+    There are two contexts when using a remote server: The client-side context is not
+    shared with the server-side context. A new context is created server-side when
+    responding to the request.
+
+    BUT - there is only one context if location == "both" - if we are running without
+    a remote server.
 ###
 module.exports = class Request extends require './RequestResponseBase'
 
   constructor: (options) ->
     super
-    {@type, @pipeline, @session, @parentRequest, @originatedOnServer, @props = {}, @context = rootRequest: @} = options
+    {@type, @pipeline, @session, @parentRequest, @originatedOnServer, @props = {}, @context = {}} = options
 
     key = @_props.key || options.key
     options.key = @_props.key = @pipeline.toKeyString key if key?

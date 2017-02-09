@@ -2,8 +2,8 @@
 Filter = require '../Filter'
 
 ###
-A) Populate rootRequest.dataUpdates
-B) if Neptune.Art.Flux is defined, and this is the rootRequest/response
+A) Populate context.dataUpdates
+B) if Neptune.Art.Flux is defined, and this is the root request or resposne
    Perform 'local updates'
 ###
 ###
@@ -17,12 +17,12 @@ TODO:
 defineModule module, class DataUpdatesFilter extends Filter
 
   # for subrequests, this will still be on the server
-  # for rootRequest, this will actually run on the app-client - which is where we need to do the Flux updates
+  # for root requests, there is work to do on both the client and server
   @location "both"
 
   getUpdatedUpdates = (response, fields)->
     {key, type, responseData} = response
-    field = if response.isRootResponse && type == "get"
+    field = if response.isRootRequest && type == "get"
       "dataUpdates"
     else
       switch type
@@ -38,13 +38,17 @@ defineModule module, class DataUpdatesFilter extends Filter
     fields
 
   @after all: (response) ->
-    if response.isRootResponse && response.location != "server" && Neptune.Art.Flux
-      @applyFluxUpdates response
+    if response.isRootRequest
+      @applyFluxUpdates response if response.location != "server" && Neptune.Art.Flux
 
-    if !response.isRootResponse
+      if response.location != "client"
+        {dataUpdates, dataDeletes} = response.context
+        response.with props: merge response.responseProps, {dataUpdates, dataDeletes}
+      else
+        response
+    else
       @addUpdatesToResponse response
-
-    response
+      response
 
   applyFluxUpdates: (response) ->
     {dataUpdates, dataDeletes} = response.props
@@ -60,4 +64,4 @@ defineModule module, class DataUpdatesFilter extends Filter
       each dataDeletesByKey, (data, key) -> model.dataDeleted key, data
 
   addUpdatesToResponse: (response) ->
-    getUpdatedUpdates response, response.rootRequest.responseProps
+    getUpdatedUpdates response, response.context
