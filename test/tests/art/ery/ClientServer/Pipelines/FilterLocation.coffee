@@ -9,7 +9,7 @@ defineModule module, class FilterLocation extends Pipeline
   @remoteServer "http://localhost:8085"
 
   requestWithLog = (request, name) ->
-    request.withData customLog: arrayWith request.data?.customLog, "#{name}@#{config.location}"
+    request.withData customLog: arrayWith request.data?.customLog, "#{name}@#{request.location}"
 
   @filter
     location: "client"
@@ -28,4 +28,4 @@ defineModule module, class FilterLocation extends Pipeline
 
   @handlers
     filterTest: (request) ->
-      request.success data: customLog: arrayWith request.data?.customLog, "[handler@#{config.location}]"
+      request.success data: customLog: arrayWith request.data?.customLog, "[handler@#{request.location}]"

@@ -260,9 +260,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     remoteServer: -> @class._remoteServer || config.remoteServer
 
     location: ->
-      if @remoteServer
+      if @remoteServer && config.location != "server"
+        "client"
+      else
         config.location
-      else "both"
 
     restPath: -> @_restPath ||= "/#{config.apiRoot}/#{@name}"
     restPathRegex: -> @_restPathRegex ||= ///
@@ -283,7 +284,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###############################
   # Development Reports
   ###############################
-  getRequestProcessingReport: (processingLocation = config.location) ->
+  getRequestProcessingReport: (processingLocation = @location) ->
     object @requestTypes, (type) =>
       inspectedObjectLiteral compactFlatten([
         filter.getName() for filter in @getBeforeFiltersFor type, processingLocation
@@ -379,7 +380,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       else
         request = requestOrResponse
 
-      if config.location == "client" && @remoteServer
+      if @location == "client" && @remoteServer
         request.sendRemoteRequest @remoteServer
 
       else if handler = @handlers[request.type]

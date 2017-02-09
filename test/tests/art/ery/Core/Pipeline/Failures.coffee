@@ -3,9 +3,6 @@
 
 module.exports = suite:
   afterFilterFailures: ->
-    setup -> Neptune.Art.Ery.config.location = "both"
-    teardown -> Neptune.Art.Ery.config.location = "client"
-
     test "internal error", ->
       filterLog = []
       createWithPostCreate class MyPipeline extends Pipeline

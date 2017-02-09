@@ -5,8 +5,6 @@ SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite:
   basic: ->
-    setup -> config.location = "both"
-    teardown -> config.location = "client"
 
     trimFields = (fields) ->
       object fields, (props) ->
@@ -51,8 +49,6 @@ module.exports = suite:
         assert.eq media.url. url
 
   include: ->
-    setup -> config.location = "both"
-    teardown -> config.location = "client"
 
     test "with and without include: 'auto'", ->
       createWithPostCreate class User extends SimplePipeline

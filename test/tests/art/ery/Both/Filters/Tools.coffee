@@ -5,12 +5,6 @@ SimplePipeline = require '../SimplePipeline'
 SimplePipelineWithKeys = KeyFieldsMixin SimplePipeline
 
 module.exports = suite: createDatabaseFilters: ->
-  setup ->
-    Neptune.Art.Ery.config.location = "both"
-
-
-  teardown ->
-    Neptune.Art.Ery.config.location = "client"
 
   test "fields are set correctly", ->
     {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys

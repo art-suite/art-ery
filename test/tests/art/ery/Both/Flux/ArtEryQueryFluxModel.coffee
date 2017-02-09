@@ -8,8 +8,6 @@ SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
   setup ->
-    Neptune.Art.Ery.config.location = "both"
-
     Flux._reset()
 
     createWithPostCreate class Post extends Pipeline
@@ -24,9 +22,6 @@ module.exports = suite: ->
           response.withData (merge a, message: "#{a.message} :)" for a in response.data)
 
     ArtEryFluxModel.defineModelsForAllPipelines()
-
-  teardown ->
-    Neptune.Art.Ery.config.location = "client"
 
   test "query model defined", ->
     assert.instanceOf Flux.models.postByUserId, ArtEryQueryFluxModel

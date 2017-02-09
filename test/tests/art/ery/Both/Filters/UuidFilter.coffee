@@ -3,12 +3,6 @@
 SimplePipeline = require '../SimplePipeline'
 
 module.exports = suite: ->
-  setup ->
-    Neptune.Art.Ery.config.location = "both"
-
-
-  teardown ->
-    Neptune.Art.Ery.config.location = "client"
 
   test "fields are set correctly", ->
     createWithPostCreate class MyPipeline extends SimplePipeline

@@ -6,7 +6,7 @@ defineModule module, class ArtEryConfig extends Configurable
 
     # the location ArtEry is currently running on
     # "client", "server", or "both" - 'both' is the serverless mode for development & testing
-    location: "client"
+    location: "both"
 
     apiRoot: "api"
 
