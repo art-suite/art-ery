@@ -278,18 +278,19 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     afterFilters: -> @filters
     status: -> "OK"
 
-  getBeforeFiltersFor: (type, location = @location) -> filter for filter in @beforeFilters when filter.getBeforeFilter type, location
-  getAfterFiltersFor:  (type, location = @location) -> filter for filter in @afterFilters  when filter.getAfterFilter  type, location
+  getBeforeFiltersForRequest: (request) -> filter for filter in @beforeFilters when filter.getBeforeFilterForRequest request
+  getAfterFiltersForRequest:  (request) -> filter for filter in @afterFilters  when filter.getAfterFilterForRequest request
 
   ###############################
   # Development Reports
   ###############################
-  getRequestProcessingReport: (processingLocation = @location) ->
-    object @requestTypes, (type) =>
+  getRequestProcessingReport: (location = @location) ->
+    object @requestTypes, (requestType) =>
+      request = new Request pipeline: @, type: requestType
       inspectedObjectLiteral compactFlatten([
-        filter.getName() for filter in @getBeforeFiltersFor type, processingLocation
-        if processingLocation == "client" then "[remote request]" else "[local handler]"
-        filter.getName() for filter in @getAfterFiltersFor type, processingLocation
+        filter.getName() for filter in @getBeforeFiltersForRequest request
+        if location == "client" then "[remote request]" else "[local handler]"
+        filter.getName() for filter in @getAfterFiltersForRequest request
       ]).join ' > '
 
   @getter
@@ -348,7 +349,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     promise.catch -> always means an internal failure
   ###
   _applyBeforeFilters: (request) ->
-    filters = @getBeforeFiltersFor request.type
+    filters = @getBeforeFiltersForRequest request
     filterIndex = 0
 
     applyNextFilter = (partiallyBeforeFilteredRequest) =>
@@ -402,7 +403,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   _applyAfterFilters: (response) ->
     Promise.try =>
       return response if response.notSuccessful
-      filters = @getAfterFiltersFor response.type
+      filters = @getAfterFiltersForRequest response
       filterIndex = 0
 
       applyNextFilter = (partiallyAfterFilteredReponse)->

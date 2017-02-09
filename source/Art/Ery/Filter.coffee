@@ -121,11 +121,12 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       else throw new Error "Filter #{@getName()}: invalid filter location: #{@location}"
 
   toString: -> @getName()
-  getBeforeFilter: (requestType, location = config.location) -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
-  getAfterFilter:  (requestType, location = config.location) -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
 
-  processBefore: (request) -> @_processFilter request, @getBeforeFilter request.type, request.pipeline.location
-  processAfter: (response) -> @_processFilter response, @getAfterFilter response.type, response.request.pipeline.location
+  getBeforeFilterForRequest: ({requestType, location}) -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
+  getAfterFilterForRequest:  ({requestType, location}) -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
+
+  processBefore:  (request) -> @_processFilter request, @getBeforeFilterForRequest request
+  processAfter:   (request) -> @_processFilter request, @getAfterFilterForRequest  request
 
   @getter
     inspectedObjects: ->
