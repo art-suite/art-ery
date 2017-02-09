@@ -278,8 +278,8 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     afterFilters: -> @filters
     status: -> "OK"
 
-  getBeforeFiltersForRequest: (request) -> filter for filter in @beforeFilters when filter.getBeforeFilterForRequest request
-  getAfterFiltersForRequest:  (request) -> filter for filter in @afterFilters  when filter.getAfterFilterForRequest request
+  getBeforeFilters: (request) -> filter for filter in @beforeFilters when filter.getBeforeFilter request
+  getAfterFilters:  (request) -> filter for filter in @afterFilters  when filter.getAfterFilter request
 
   ###############################
   # Development Reports
@@ -288,9 +288,9 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     object @requestTypes, (requestType) =>
       request = new Request pipeline: @, type: requestType
       inspectedObjectLiteral compactFlatten([
-        filter.getName() for filter in @getBeforeFiltersForRequest request
+        filter.getName() for filter in @getBeforeFilters request
         if location == "client" then "[remote request]" else "[local handler]"
-        filter.getName() for filter in @getAfterFiltersForRequest request
+        filter.getName() for filter in @getAfterFilters request
       ]).join ' > '
 
   @getter
@@ -349,7 +349,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     promise.catch -> always means an internal failure
   ###
   _applyBeforeFilters: (request) ->
-    filters = @getBeforeFiltersForRequest request
+    filters = @getBeforeFilters request
     filterIndex = 0
 
     applyNextFilter = (partiallyBeforeFilteredRequest) =>
@@ -403,7 +403,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   _applyAfterFilters: (response) ->
     Promise.try =>
       return response if response.notSuccessful
-      filters = @getAfterFiltersForRequest response
+      filters = @getAfterFilters response
       filterIndex = 0
 
       applyNextFilter = (partiallyAfterFilteredReponse)->
