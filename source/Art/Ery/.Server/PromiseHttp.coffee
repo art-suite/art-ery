@@ -141,6 +141,14 @@ defineModule module, class PromiseHttp extends BaseObject
 
             # TODO: I want to move this logging into the Art.Ery server, where we have more specific data
             # I also don't want to log signed sessions - it's a security risk. But, we can log the parsed sessions, which is really what we want anyway.
+            # TODO: I think we should break out all session-handling out of the ArtEryServer.Main into it's own middleware module of somesort.
+            # Last, then we could have a logging module that sits between the sessions module.
+            # Ex:   PromiseHttp > SessionsHandler > Logger > ArtEry Server
+            # TODO: I think I may want to NOT pass sessions and props on the URL for GETS
+            #   I think we'll accept GETs still, as coded, but the client will normally
+            #   do a POST with the pipelineName-get/* URL. I think that probably already works.
+            #   That way we won't be putting sessions in the URL - which is also a security risk as any
+            #   number of middleware will log it - and it's probably not even encrypted. HAH!
             logObject = "#{request.method}": request.url
             logObject.in = requestData if requestData
 
