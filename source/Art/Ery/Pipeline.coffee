@@ -295,11 +295,11 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###############################
   getRequestProcessingReport: (location = @location) ->
     object @requestTypes, (requestType) =>
-      inspectedObjectLiteral compactFlatten([
-        filter.getName() for filter in @getBeforeFilters {requestType, location}
-        if location == "client" then "[remote request]" else "[local handler]"
-        filter.getName() for filter in @getAfterFilters {requestType, location}
-      ]).join ' > '
+      compactFlatten([
+        inspectedObjectLiteral(filter.getName()) for filter in @getBeforeFilters {requestType, location}
+        inspectedObjectLiteral if location == "client" then "[remote request]" else "[local handler]"
+        inspectedObjectLiteral(filter.getName()) for filter in @getAfterFilters {requestType, location}
+      ]) #.join ' > '
 
   @getter
     pipelineReport: (processingLocation)->
