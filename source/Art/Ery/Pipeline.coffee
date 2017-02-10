@@ -282,6 +282,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   getAfterFilters:  (request) -> filter for filter in @afterFilters  when filter.getAfterFilter request
 
   createRequest: (type, options) ->
+    options = key: options if isString options
     Promise
     .resolve options.session || @session.loadedDataPromise
     .then (sessionData) =>
@@ -454,6 +455,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###
   noOptions = {}
   _processClientRequest: (type, options = noOptions) ->
+    options = key: options if isString options
     {returnResponseObject} = options
 
     @createRequest type, options
