@@ -51,17 +51,24 @@ defineModule module, class DataUpdatesFilter extends Filter
       response
 
   applyFluxUpdates: (response) ->
-    {dataUpdates, dataDeletes} = response.props
+    # if we are client-side with a remote server, they will be in responseProps
+    # ELSE they will be in context...
+    {responseProps, context} = response
+    dataUpdates = merge context.dataUpdates, responseProps.dataUpdates
+    dataDeletes = merge context.dataDeletes, responseProps.dataDeletes
 
     {dataUpdates, dataDeletes} = getUpdatedUpdates response, {dataUpdates, dataDeletes}
 
     {models} = Neptune.Art.Flux
     for pipelineName, dataUpdatesByKey of dataUpdates when isFunction (model = models[pipelineName])?.dataUpdated
       each dataUpdatesByKey, (data, key) ->
+        # log applyFluxUpdates: dataUpdated: {model, key, data}
         model.dataUpdated key, data
 
     for pipelineName, dataDeletesByKey of dataDeletes when isFunction (model = models[pipelineName])?.dataDeleted
-      each dataDeletesByKey, (data, key) -> model.dataDeleted key, data
+      each dataDeletesByKey, (data, key) ->
+        # log applyFluxUpdates: dataDeleted: {model, key, data}
+        model.dataDeleted key, data
 
   addUpdatesToResponse: (response) ->
     getUpdatedUpdates response, response.context
