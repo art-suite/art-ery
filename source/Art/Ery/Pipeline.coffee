@@ -281,16 +281,24 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   getBeforeFilters: (request) -> filter for filter in @beforeFilters when filter.getBeforeFilter request
   getAfterFilters:  (request) -> filter for filter in @afterFilters  when filter.getAfterFilter request
 
+  createRequest: (type, options) ->
+    Promise
+    .resolve options.session || @session.loadedDataPromise
+    .then (sessionData) =>
+      new Request merge options,
+        type:     type
+        pipeline: @
+        session:  sessionData
+
   ###############################
   # Development Reports
   ###############################
   getRequestProcessingReport: (location = @location) ->
     object @requestTypes, (requestType) =>
-      request = new Request pipeline: @, type: requestType
       inspectedObjectLiteral compactFlatten([
-        filter.getName() for filter in @getBeforeFilters request
+        filter.getName() for filter in @getBeforeFilters {requestType, location}
         if location == "client" then "[remote request]" else "[local handler]"
-        filter.getName() for filter in @getAfterFilters request
+        filter.getName() for filter in @getAfterFilters {requestType, location}
       ]).join ' > '
 
   @getter
@@ -447,15 +455,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   noOptions = {}
   _processClientRequest: (type, options = noOptions) ->
     {returnResponseObject} = options
-    options = key: options if isString options
 
-    Promise
-    .resolve options.session || @session.loadedDataPromise
-    .then (sessionData) =>
-      @_processRequest new Request merge options,
-        type:     type
-        pipeline: @
-        session:  sessionData
+    @createRequest type, options
+    .then (request) =>
+      @_processRequest request
 
     .then (response) =>
       @_processResponseSession response

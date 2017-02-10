@@ -19,6 +19,10 @@ module.exports = suite: ->
         "serverFilter@server"
         "bothFilter@server"
         "[handler@server]"
+        "bothFilter@server"
+        "serverFilter@server"
+        "clientFilter@client"
+        "bothFilter@client"
       ]
 
   test "both location", ->
@@ -34,4 +38,7 @@ module.exports = suite: ->
         "bothFilter@both"
         "clientFilter@both"
         "[handler@both]"
+        "clientFilter@both"
+        "bothFilter@both"
+        "serverFilter@both"
       ]

@@ -35,7 +35,7 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
     test "create -> get string", ->
       simplePipeline = new SimplePipeline
       simplePipeline.create data: foo: "bar"
-      .then ({id}) -> simplePipeline.get id
+      .then ({id}) -> simplePipeline.get key: id
       .then (data) -> assert.eq data, foo: "bar", id: "0"
 
     test "create -> get key: string", ->

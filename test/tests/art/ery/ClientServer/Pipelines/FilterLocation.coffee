@@ -15,16 +15,19 @@ defineModule module, class FilterLocation extends Pipeline
     location: "client"
     name: "clientFilter"
     before: filterTest: (request) -> requestWithLog request, @name
+    after:  filterTest: (request) -> requestWithLog request, @name
 
   @filter
     location: "both"
     name: "bothFilter"
     before: filterTest: (request) -> requestWithLog request, @name
+    after:  filterTest: (request) -> requestWithLog request, @name
 
   @filter
     location: "server"
     name: "serverFilter"
     before: filterTest: (request) -> requestWithLog request, @name
+    after:  filterTest: (request) -> requestWithLog request, @name
 
   @handlers
     filterTest: (request) ->
