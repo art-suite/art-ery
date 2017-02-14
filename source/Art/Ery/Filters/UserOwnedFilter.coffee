@@ -34,7 +34,7 @@ defineModule module, class UserOwnedFilter extends Filter
           request
         else
           # TODO the new ArtEryAws lets us do this check during update: conditionExpression: userId: request.session.userId
-          request.pipeline.get key: key
+          request.cachedGet request.pipelineName, key
           .then (currentRecord) ->
             request.requireServerOriginOr isOwner(request, currentRecord), "to update a record you do not own #{ownershipInfo request}"
 
