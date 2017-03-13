@@ -3,8 +3,9 @@ Request = require './Request'
 Response = require './Response'
 {config} = require './Config'
 
-{toPlainObjects, toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
+{toPlainObjects, Validator, toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
 {success, failure} = CommunicationStatus
+{normalizeFields} = Validator
 
 ###
 TODO
@@ -106,7 +107,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     @name ||= @class.getName()
     @_location ||= @class._location || "server"
     @shouldFilter()
-    @extendFields fields if fields
+    @extendFields normalizeFields fields if fields
     @after options.after
     @before options.before
 
