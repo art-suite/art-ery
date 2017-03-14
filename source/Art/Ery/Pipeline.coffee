@@ -309,7 +309,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
         fields: object @fields, (fieldProps) ->
           each Object.keys(fieldProps).sort(), out = {}, (k) ->
             v = fieldProps[k]
-            unless k == "preprocess" || k == "validate" || k == "fieldType"
+            unless isFunction v
               out[k] = v
 
       if processingLocation
