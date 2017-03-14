@@ -1,6 +1,17 @@
 {defineModule, log, Validator, merge, Promise} = require 'art-foundation'
 Filter = require '../Filter'
 
+###
+TODO!!!
+# BUG: ValidationFilter doesn't validated the TimestampFilter's fields! (when using createDatabaseFilters)
+# PROBLEM: ValidationFilter only validates the fields it is passed.
+# SOLUTION: we need it to always validate all fields declared for the pipeline.
+# createDatabaseFilters needs to change order: it needs to run ValidationFilter last.
+
+I almost want to rename this "FieldTypesFilter" - since it both validates and preprocesses.
+It should actually also have an @after pass that at least converts timestamps back into Dates.
+###
+
 defineModule module, class ValidationFilter extends Filter
   @location "both"
 
