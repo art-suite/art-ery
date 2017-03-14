@@ -18,5 +18,5 @@ defineModule module, class TimestampFilter extends Filter
         request.data if request.originatedOnServer
 
   @fields
-    createdAt: Validator.fieldTypes.timestamp
-    updatedAt: Validator.fieldTypes.timestamp
+    createdAt: "timestamp"
+    updatedAt: "timestamp"
