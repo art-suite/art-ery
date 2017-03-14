@@ -58,7 +58,8 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
   ############################
   # Class Declaration API
   ############################
-  @fields: @extendFields
+  @fields: (fields) ->
+    @extendFields normalizeFields fields
 
   ###
   IN: requestType, requestFilter
