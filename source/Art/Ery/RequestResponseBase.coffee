@@ -302,7 +302,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
         # unsupported responseProps type is an internal failure
         else
-          @_toResponse failure, @_generateErrorResponseProps responseProps
+          @_toResponse failure, @_toErrorResponseProps responseProps
 
   _toErrorResponseProps: (error) ->
     log @, {responseProps},
