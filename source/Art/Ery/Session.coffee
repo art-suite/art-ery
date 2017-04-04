@@ -10,11 +10,11 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   Or multiple instances can be created and passed to the
   constructor of each Pipeline for per-pipeline custom sessions.
   ###
-  @singletonClass {}, "Art.Ery.Session.singleton.data"
+  @singletonClass()
 
   @property "data jsonStoreKey"
 
-  constructor: (@_data = {}, @_jsonStoreKey) ->
+  constructor: (@_data = {}, @_jsonStoreKey = "Art.Ery.Session") ->
 
   loadSession: ->
     if config.location == "server"
@@ -22,7 +22,6 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
     @_sessionLoadPromise ||= if @jsonStoreKey
       jsonStore.getItem @jsonStoreKey
       .then (data) =>
-        log loadSession: {@jsonStoreKey, @data}
         @data = data if isPlainObject data
     else
       Promise.resolve()
