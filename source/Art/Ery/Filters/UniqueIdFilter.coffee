@@ -18,6 +18,10 @@ defineModule module, class UniqueIdFilter extends Filter
 
     default = bitsCalc 10 ** 12, 10 ** -9   # == 70
 
+  NOTE: probabilityOfCollisions means probabilityOfCollisions when you have
+    maximumExpectedRecordCount records. The probabily goes down proportionally
+    for smaller record counts.
+
   What if I pick bits too small? Greate news!
 
     With backends that accept strings as IDs (like DynamoDb), you can
@@ -35,20 +39,14 @@ defineModule module, class UniqueIdFilter extends Filter
 
   @uuid: uuid = -> Uuid.v4()
 
+  ###
+  Returns a base-62 string consisting of characters: [a-zA-Z0-9]
+  ###
   @getter
-    ###
-    We replace / and + with some other random a-zA-Z0-9 character for readability and general parse-friendlyness.
-
-    Technically this makes our ID base62. Also technically, we should
-    replace / and + with separatly generated randomBase62Character
-    for each, but this gets very close to true base62 since rarely are there two of either,
-    and even if there are, it's only a slight decrease in the random-range.
-    ###
     compactUniqueId: ->
       Crypto.createHmac('sha256', secret).update(uuid()).digest 'base64'
       .slice 0, @numChars
-      .replace /\//g, randomBase62Character()
-      .replace /\+/g, randomBase62Character()
+      .replace /[\/+=]/g, randomBase62Character
 
   @before
     create: (request) ->
