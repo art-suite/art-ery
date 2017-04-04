@@ -8,17 +8,38 @@ module.exports = suite:
       class MyFilter extends Filter
         @fields foo: "string"
 
-      assert.eq MyFilter.getFields(), foo: "string"
+      assert.eq ["foo"], Object.keys MyFilter.getFields()
+      assert.selectedEq
+        fieldType:  "string"
+        dataType:   "string"
+        MyFilter.getFields().foo
 
-    test "on subclass and sub-subclass", ->
+    test "on subclass and sub-subclass - with new field", ->
       class MyFilter extends Filter
         @fields foo: "string"
 
       class MySubFilter extends MyFilter
         @fields bar: "number"
 
-      assert.eq MyFilter.getFields(), foo: "string"
-      assert.eq MySubFilter.getFields(), foo: "string", bar: "number"
+      assert.eq ["foo"], Object.keys MyFilter.getFields()
+      assert.eq ["foo", "bar"], Object.keys MySubFilter.getFields()
+
+      assert.selectedEq fieldType: "string", MyFilter.getFields().foo
+      assert.selectedEq fieldType: "string", MySubFilter.getFields().foo
+      assert.selectedEq fieldType: "number", MySubFilter.getFields().bar
+
+    test "on subclass and sub-subclass - with replaced field", ->
+      class MyFilter extends Filter
+        @fields foo: "string"
+
+      class MySubFilter extends MyFilter
+        @fields foo: "number"
+
+      assert.eq ["foo"], Object.keys MyFilter.getFields()
+      assert.eq ["foo"], Object.keys MySubFilter.getFields()
+
+      assert.selectedEq fieldType: "string", MyFilter.getFields().foo
+      assert.selectedEq fieldType: "number", MySubFilter.getFields().foo
 
     test "on subclass and subclass-instance", ->
       class MyFilter extends Filter
@@ -27,8 +48,8 @@ module.exports = suite:
       myFilter = new MyFilter
       myFilter.extendFields bar: "number"
 
-      assert.eq MyFilter.getFields(), foo: "string"
-      assert.eq myFilter.getFields(), foo: "string", bar: "number"
+      assert.eq ["foo"], Object.keys MyFilter.getFields()
+      assert.eq ["foo", "bar"], Object.keys myFilter.getFields()
 
   order: ->
 
