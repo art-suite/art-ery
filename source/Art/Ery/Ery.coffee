@@ -1,5 +1,6 @@
 PipelineRegistry = require "./PipelineRegistry"
 Filters = require './Filters'
+{log, Promise} = require 'art-standard-lib'
 
 module.exports = [
   Filters
@@ -13,4 +14,11 @@ module.exports = [
   _reset: ->
     PipelineRegistry._reset()
     Filters._resetFilters()
+
+  sendInitializeRequestToAllPipelines: ->
+    promises = for k, pipeline of PipelineRegistry.pipelines
+      if pipeline.class.getHandlers().initialize
+        pipeline.initialize()
+
+    Promise.all promises
 ]

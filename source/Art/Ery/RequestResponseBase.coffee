@@ -81,6 +81,32 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   ########################
   # Subrequest
   ########################
+  ###
+  TODO:
+    I think I may have a way clean up the subrequest API and do
+    what is easy in Ruby: method-missing.
+
+    Here's the new API:
+      # request on the same pipeline
+      request.pipeline.requestType requestOptions
+
+      # request on another pipeline
+      request.pipelines.otherPipelineName.requestType requestOptions
+
+    Here's how:
+      .pipeline and .pipelines are getters
+      And the return proxy objects, generated and cached on the fly.
+
+    Alt API idea:
+      # same pipeline
+      request.subrequest.requestType
+
+      # other pipelines
+      request.crossSubrequest.user.requestType
+
+      I kinda like this more because it makes it clear we are talking
+      sub-requests. This is just a ALIASes to the API above.
+  ###
   createSubRequest: (pipelineName, type, requestOptions) ->
     throw new Error "requestOptions must be an object" if requestOptions && !isPlainObject requestOptions
     pipeline = ArtEry.pipelines[pipelineName]
