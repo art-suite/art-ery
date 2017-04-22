@@ -45,3 +45,38 @@ And some requests are more efficient to process in the cloud:
 #### Validations and Code Duplication
 
 Some code should run both on the cloud and client. Specifically, validation should happen client-side for the fastest possible response to client actions, but it needs to be verified in the cloud for security.
+
+### Custom Pipeline Example
+
+```coffeescript
+# CaffeineScript
+class Post extends &ArtEry.KeyFieldsMixin &ArtEry.Pipeline
+  @addDatabaseFilters
+    text: :trimmedString
+
+  constructor: ->
+    super
+    @data = {}
+
+  @handlers
+    get: ({key}) -> 
+      @data[key]
+    
+    create: ({data}) -> 
+      @data[key] = merge data, id: key = randomString()
+      
+    update: ({key, data}) -> 
+      @data[key] = merge @data[key], data
+```
+
+Use:
+
+```coffeescript
+{post} = &ArtEry.pipelines
+
+post.create data: text: "Hello world!"
+.then ({id})->
+  post.get key: id
+.then ({text}) ->
+  console.log text  # Hello world!
+```
