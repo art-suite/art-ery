@@ -1,3 +1,4 @@
+require 'caffeine-mc/register'
 {log, ConfigRegistry} = require 'art-foundation'
 Server  = require './Server'
 require "./test/tests/Art/Ery/ClientServer/Pipelines"

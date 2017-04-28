@@ -6,7 +6,6 @@
     "art-config": "^1.0.0",
     "art-events": "git://github.com/imikimi/art-events.git",
     "art-flux": "git://github.com/imikimi/art-flux.git",
-    "art-foundation": "git://github.com/imikimi/art-foundation.git",
     "art-standard-lib": "^1.1.0",
     "art-testbench": "^1.0.0",
     "caffeine-script": "^0.38.1",
@@ -33,6 +32,7 @@
     "build": "webpack --progress",
     "start": "webpack-dev-server --hot --inline --progress",
     "test": "webpack-dev-server --progress",
+    "testInBrowser": "webpack-dev-server --progress",
     "testServer": "coffee ./TestServer.coffee"
   },
   "version": "1.53.1"
