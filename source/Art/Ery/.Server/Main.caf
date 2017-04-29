@@ -1,14 +1,8 @@
-throng  = &throng
-&colors
-
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
-
-{config} = &Config
+&colors
 
 PromiseHttp = &PromiseHttp
 PromiseJsonWebToken = &PromiseJsonWebToken
-
-getPrivateSessionKey = -> config.server.privateSessionKey
 
 class Main extends &ArtClassSystem.BaseClass
   @defaults:
@@ -51,7 +45,7 @@ class Main extends &ArtClassSystem.BaseClass
 
     if numWorkers > 1
       log Art.Ery.Server: throng: workers: numWorkers
-      throng
+      &throng
         start:    startSingleServer
         workers:  numWorkers
         lifetime: Infinity
@@ -93,7 +87,7 @@ class Main extends &ArtClassSystem.BaseClass
     if shouldReturnNewSignedSession oldSession, newSession = responseData.session || oldSession
       PromiseJsonWebToken.sign
         objectWithout newSession, :exp :iat
-        getPrivateSessionKey()
+        config.server.privateSessionKey
         expiresIn: "30 days"
       .then (signature) -> merge responseData, session: merge newSession, {signature}
     else
@@ -111,7 +105,7 @@ class Main extends &ArtClassSystem.BaseClass
     unless sessionSignature = session
       Promise.resolve({})
     else
-      PromiseJsonWebToken.verify sessionSignature, getPrivateSessionKey()
+      PromiseJsonWebToken.verify sessionSignature, config.server.privateSessionKey
       .then (session) -> session
 
   artEryPipelineApiHandler: (request, requestData) ->
