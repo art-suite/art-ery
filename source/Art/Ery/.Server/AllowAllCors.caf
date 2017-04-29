@@ -1,0 +1,12 @@
+
+commonResponseHeaders:
+  Access-Control-Allow-Origin: :*
+
+handler: ({method, headers}) ->
+  if method == :OPTIONS
+    status: :success
+    headers:
+      Access-Control-Allow-Origin:  "" *
+      Access-Control-Allow-Methods: "" GET, POST, PUT, UPDATE, DELETE
+      Access-Control-Allow-Headers: ""
+      Content-Type:                 "" text/html; charset=utf-8

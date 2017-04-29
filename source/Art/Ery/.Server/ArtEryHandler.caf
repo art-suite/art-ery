@@ -1,0 +1,64 @@
+import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery, &ArtErySessionHandler
+
+class ArtEryHandler extends &ArtClassSystem.BaseClass
+  @artEryPipelineApiHandler: (request, requestData) =>
+    if found = @_findPipelineForRequest request
+      {pipeline, type, key} = found
+
+      processRequest = (session) ->
+        pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
+        .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+
+      verifySession requestData.session
+      .then processRequest
+      .catch ->
+        processRequest {}
+        .then (plainObjectsResponseWithSignedSession) ->
+          merge plainObjectsResponseWithSignedSession, replaceSession: true
+
+  @artEryPipelineDefaultHandler: ({url}, plainObjectRequest) =>
+    if @defaultHandlerRegex.test url
+
+      status:
+        if @exactDefaultHandlerRegex.test url
+          :success
+        else
+          :missing
+      data: @_getArtEryPipelineApiInfo()
+
+
+  @httpMethodsToArtEryRequestTypes: httpMethodsToArtEryRequestTypes =
+    get:    :get
+    post:   :create
+    put:    :update
+    delete: :delete
+
+  ######################
+  # PRIVATE
+  ######################
+  @classGetter
+    exactDefaultHandlerRegex: -> @_exactDefaultHandlerRegex ||= /// ^ (\/ | | \/ #{config.apiRoot} \/? ) $
+    defaultHandlerRegex:      -> @_defaultHandlerRegex      ||= /// ^ (\/        #{config.apiRoot} .*  ) $
+
+  @_getArtEryPipelineApiInfo: ->
+    {server, port} = @
+    server ||= :http://localhost
+    server += ":#{port}" if port
+
+    Art.Ery.pipeline.json.rest.api:
+      object pipeline from pipelines with pipeline.getApiReport {} server
+
+  ##
+    IN: plainObjectsRequest:
+      session:         # encrypted session string
+      query: session:  # encrypted session string
+    OUT:
+      promise.then (verifiedSession) ->
+      promise.catch -> # session was invalid
+
+  @_findPipelineForRequest: ({url, method}) ->
+    find pipeline, pipelineName in pipelines
+      if match = url.match pipeline.restPathRegex
+        [__, type, key] = match
+        type ||= httpMethodsToArtEryRequestTypes[method.toLocaleLowerCase()]
+        type && {} pipeline, type, key

@@ -8,12 +8,6 @@ class Main extends &ArtClassSystem.BaseClass
   @defaults:
     port: 8085
 
-  httpMethodsToArtEryRequestTypes =
-    get:    :get
-    post:   :create
-    put:    :update
-    delete: :delete
-
   @start: (options) =>
     new @(options).start()
 
@@ -55,104 +49,7 @@ class Main extends &ArtClassSystem.BaseClass
   @setter
     port: (port) -> @_port = (port || Main.defaults.port) | 0
 
-  @findPipelineForRequest: ({url, method}) ->
-    find pipeline, pipelineName in pipelines
-      if match = url.match pipeline.restPathRegex
-        [__, type, key] = match
-        type ||= httpMethodsToArtEryRequestTypes[method.toLocaleLowerCase()]
-        type && {} pipeline, type, key
-
-  iatAgeInDays = (iat) ->
-    Date.now() / 1000 - iat
-    / 60 * 60 * 24
-
-  shouldReturnNewSignedSession: shouldReturnNewSignedSession = (oldSession, newSession) ->
-    {iat, exp} = oldSession if oldSession
-    newSession &&                   # we have a new session AND
-      !iat                          # the last session wasn't signed
-      || 1 < iatAgeInDays iat       # OR the session is more than 1 day old
-      || !eq oldSession, newSession # OR the session changed
-
-  ##
-    NOTE: sessions expire after 30 days of inactivity; expiration is renewed every request.
-      TODO:
-      1) for your app, have a server-backend session record that can be manually expired
-         and store it's id in the session object
-      2) have a short-term expiration value you set in the session (5m - 1h)
-      3) check server-backend session for manual expiration after every short-term expiration
-      *) Use an ArtEry filter to do this. I'll probably write one and include it in ArtEry.Filters soon.
-        BUT it won't be tied to a specific backend; you'll still have to do that part yourself.
-  signSession: signSession = (oldSession, responseData) ->
-
-    if shouldReturnNewSignedSession oldSession, newSession = responseData.session || oldSession
-      PromiseJsonWebToken.sign
-        objectWithout newSession, :exp :iat
-        config.server.privateSessionKey
-        expiresIn: "30 days"
-      .then (signature) -> merge responseData, session: merge newSession, {signature}
-    else
-      objectWithout responseData, :session
-
-  ##
-    IN: plainObjectsRequest:
-      session:         # encrypted session string
-      query: session:  # encrypted session string
-    OUT:
-      promise.then (verifiedSession) ->
-      promise.catch -> # session was invalid
-
-  verifySession: verifySession = (session) ->
-    unless sessionSignature = session
-      Promise.resolve({})
-    else
-      PromiseJsonWebToken.verify sessionSignature, config.server.privateSessionKey
-      .then (session) -> session
-
-  artEryPipelineApiHandler: (request, requestData) ->
-    if found = Main.findPipelineForRequest request
-      {pipeline, type, key} = found
-
-      processRequest = (session) ->
-        pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
-        .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
-
-      verifySession requestData.session
-      .then processRequest
-      .catch ->
-        processRequest {}
-        .then (plainObjectsResponseWithSignedSession) ->
-          merge plainObjectsResponseWithSignedSession, replaceSession: true
-
-  getArtEryPipelineApiInfo: ->
-    {server, port} = @
-    server ||= :http://localhost
-    server += ":#{port}" if port
-
-    Art.Ery.pipeline.json.rest.api:
-      object pipeline from pipelines with pipeline.getApiReport {} server
-
-  allowAllCorsPreflightHandler: ({method, headers}) ->
-    if method == :OPTIONS
-      status: :success
-      headers:
-        Access-Control-Allow-Origin:  "" *
-        Access-Control-Allow-Methods: "" GET, POST, PUT, UPDATE, DELETE
-        Access-Control-Allow-Headers: ""
-        Content-Type:                 "" text/html; charset=utf-8
-
-  artEryPipelineDefaultHandler: ({url}, plainObjectRequest) ->
-    if @defaultHandlerRegex.test url
-
-      status:
-        if @exactDefaultHandlerRegex.test url
-          :success
-        else
-          :missing
-      data: @getArtEryPipelineApiInfo()
-
   @getter
-    exactDefaultHandlerRegex: -> @_exactDefaultHandlerRegex ||= /// ^ (\/ | | \/ #{config.apiRoot} \/? ) $
-    defaultHandlerRegex:      -> @_defaultHandlerRegex      ||= /// ^ (\/        #{config.apiRoot} .*  ) $
 
     promiseHttp: ->
       @_promiseHttp ||= new PromiseHttp merge @options, {}
@@ -161,8 +58,8 @@ class Main extends &ArtClassSystem.BaseClass
         name: :Art.Ery.Server
 
         apiHandlers:
-          fastBind @artEryPipelineApiHandler,     @
-          fastBind @artEryPipelineDefaultHandler, @
+          &ArtEryHandler.artEryPipelineApiHandler
+          &ArtEryHandler.artEryPipelineDefaultHandler
 
         ##
           CORS: allow absolutely everything!
@@ -173,7 +70,7 @@ class Main extends &ArtClassSystem.BaseClass
           For more thoughts on moiving beyond the tradgedy that is CORS:
           SEE: http://www.essenceandartifact.com/2017/01/why-cors-why.html
 
-        commonResponseHeaders:  Access-Control-Allow-Origin: :*
-        handlers:               @allowAllCorsPreflightHandler
+        commonResponseHeaders:  &AllowAllCors.commonResponseHeaders
+        handlers:               &AllowAllCors.handler
 
-    middleware: -> @promiseHttp.middleware
+    # middleware: -> @promiseHttp.middleware
