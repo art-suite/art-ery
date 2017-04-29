@@ -31,6 +31,33 @@ class Main extends &ArtClassSystem.BaseClass
 
   @property :port :numWorkers
 
+  start: ->
+    unless 0 < objectKeyCount pipelines
+      log.error
+        """
+          WARNING: there are 0 pipelines loaded; this server won't do much :).
+
+          Please require your pipelines before starting the server.
+
+    {numWorkers} = @
+    {verbose} = config
+
+    startSingleServer = => @promiseHttp.start {} @options.static
+
+    if verbose
+      log Art.Ery.Server:
+        env:      object v, k from process.env when k.match /^art/
+        versions: Neptune.getVersions()
+
+    if numWorkers > 1
+      log Art.Ery.Server: throng: workers: numWorkers
+      throng
+        start:    startSingleServer
+        workers:  numWorkers
+        lifetime: Infinity
+    else
+      startSingleServer()
+
   @setter
     port: (port) -> @_port = (port || Main.defaults.port) | 0
 
@@ -90,6 +117,7 @@ class Main extends &ArtClassSystem.BaseClass
   artEryPipelineApiHandler: (request, requestData) ->
     if found = Main.findPipelineForRequest request
       {pipeline, type, key} = found
+
       processRequest = (session) ->
         pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
         .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
@@ -107,10 +135,10 @@ class Main extends &ArtClassSystem.BaseClass
     server += ":#{port}" if port
 
     Art.Ery.pipeline.json.rest.api:
-      object pipeline from pipelines with pipeline.getApiReport server: server
+      object pipeline from pipelines with pipeline.getApiReport {} server
 
   allowAllCorsPreflightHandler: ({method, headers}) ->
-    method == :OPTIONS &&
+    if method == :OPTIONS
       status: :success
       headers:
         Access-Control-Allow-Origin:  "" *
@@ -119,7 +147,7 @@ class Main extends &ArtClassSystem.BaseClass
         Content-Type:                 "" text/html; charset=utf-8
 
   artEryPipelineDefaultHandler: ({url}, plainObjectRequest) ->
-    if url.match @defaultHandlerRegex
+    if @defaultHandlerRegex.test url
 
       status:
         if @exactDefaultHandlerRegex.test url
@@ -130,13 +158,13 @@ class Main extends &ArtClassSystem.BaseClass
 
   @getter
     exactDefaultHandlerRegex: -> @_exactDefaultHandlerRegex ||= /// ^ (\/ | | \/ #{config.apiRoot} \/? ) $
-    defaultHandlerRegex: -> @_defaultHandlerRegex ||= /// ^ (\/ #{config.apiRoot} .*) $
+    defaultHandlerRegex:      -> @_defaultHandlerRegex      ||= /// ^ (\/        #{config.apiRoot} .*  ) $
+
     promiseHttp: ->
-      @_promiseHttp ||= new PromiseHttp merge
-        @options
-        verbose:  config.verbose
-        port:     @port
-        name:     :Art.Ery.Server
+      @_promiseHttp ||= new PromiseHttp merge @options, {}
+        config.verbose
+        @port
+        name: :Art.Ery.Server
 
         apiHandlers:
           fastBind @artEryPipelineApiHandler,     @
@@ -144,37 +172,14 @@ class Main extends &ArtClassSystem.BaseClass
 
         ##
           CORS: allow absolutely everything!
+
           This is ONLY safe because we don't use cookies, ever:
             Our session information is passed as normal data, and is stored in localStorage.
 
-        commonResponseHeaders: Access-Control-Allow-Origin: :*
-        handlers: [] @allowAllCorsPreflightHandler
+          For more thoughts on moiving beyond the tradgedy that is CORS:
+          SEE: http://www.essenceandartifact.com/2017/01/why-cors-why.html
+
+        commonResponseHeaders:  Access-Control-Allow-Origin: :*
+        handlers:               @allowAllCorsPreflightHandler
 
     middleware: -> @promiseHttp.middleware
-
-  start: ->
-    unless 0 < objectKeyCount pipelines
-      log.error
-        """
-          WARNING: there are 0 pipelines loaded; this server won't do much :).
-
-          Please require your pipelines before starting the server.
-
-    {numWorkers} = @
-    {verbose} = config
-
-    startSingleServer = => @promiseHttp.start static: @options.static
-
-    if verbose
-      log Art.Ery.Server:
-        env:      object v, k from process.env when k.match /^art/
-        versions: Neptune.getVersions()
-
-    if numWorkers > 1
-      log Art.Ery.Server: throng: workers: numWorkers
-      throng
-        start:    startSingleServer
-        workers:  numWorkers
-        lifetime: Infinity
-    else
-      startSingleServer()
