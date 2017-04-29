@@ -2,22 +2,20 @@ import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 &colors
 
 PromiseHttp = &PromiseHttp
-PromiseJsonWebToken = &PromiseJsonWebToken
+ArtEryHandler = &ArtEryHandler
 
 class Main extends &ArtClassSystem.BaseClass
   @defaults:
-    port: 8085
+    port:   8085
+    server: :http://localhost
 
   @start: (options) =>
     new @(options).start()
 
-  constructor: (@options = {}) ->
+  constructor: (options) ->
     super
+    @options = merge Main.defaults, options
     config.location = :server
-    @port       = @options.port
-    @numWorkers = @options.numWorkers
-
-  @property :port :numWorkers
 
   start: ->
     unless 0 < objectKeyCount pipelines
@@ -46,31 +44,16 @@ class Main extends &ArtClassSystem.BaseClass
     else
       startSingleServer()
 
-  @setter
-    port: (port) -> @_port = (port || Main.defaults.port) | 0
-
   @getter
+    numWorkers: -> @options.numWorkers
+    port:       -> @options.port
+    server:     -> @options.server
 
     promiseHttp: ->
       @_promiseHttp ||= new PromiseHttp merge @options, {}
         config.verbose
-        @port
-        name: :Art.Ery.Server
-
-        apiHandlers:
-          &ArtEryHandler.artEryPipelineApiHandler
-          &ArtEryHandler.artEryPipelineDefaultHandler
-
-        ##
-          CORS: allow absolutely everything!
-
-          This is ONLY safe because we don't use cookies, ever:
-            Our session information is passed as normal data, and is stored in localStorage.
-
-          For more thoughts on moiving beyond the tradgedy that is CORS:
-          SEE: http://www.essenceandartifact.com/2017/01/why-cors-why.html
-
+        port:                   @port | 0
+        name:                   :Art.Ery.Server
+        apiHandlers:            new ArtEryHandler({@port, @server}).apiHandlers
         commonResponseHeaders:  &AllowAllCors.commonResponseHeaders
         handlers:               &AllowAllCors.handler
-
-    # middleware: -> @promiseHttp.middleware
