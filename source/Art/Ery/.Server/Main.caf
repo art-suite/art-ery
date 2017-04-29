@@ -35,13 +35,15 @@ class Main extends &ArtClassSystem.BaseClass
     port: (port) -> @_port = (port || Main.defaults.port) | 0
 
   @findPipelineForRequest: ({url, method}) ->
-    find pipeline, pipelineName from pipelines
+    find pipeline, pipelineName in pipelines
       if match = url.match pipeline.restPathRegex
         [__, type, key] = match
         type ||= httpMethodsToArtEryRequestTypes[method.toLocaleLowerCase()]
-        type && {pipeline, type, key}
+        type && {} pipeline, type, key
 
-  iatAgeInDays = (iat) -> (Date.now() / 1000 - iat) / (60 * 60 * 24)
+  iatAgeInDays = (iat) ->
+    Date.now() / 1000 - iat
+    / 60 * 60 * 24
 
   shouldReturnNewSignedSession: shouldReturnNewSignedSession = (oldSession, newSession) ->
     {iat, exp} = oldSession if oldSession
@@ -63,12 +65,12 @@ class Main extends &ArtClassSystem.BaseClass
 
     if shouldReturnNewSignedSession oldSession, newSession = responseData.session || oldSession
       PromiseJsonWebToken.sign
-        objectWithout newSession, "exp", "iat"
+        objectWithout newSession, :exp :iat
         getPrivateSessionKey()
         expiresIn: "30 days"
       .then (signature) -> merge responseData, session: merge newSession, {signature}
     else
-      objectWithout responseData, "session"
+      objectWithout responseData, :session
 
   ##
     IN: plainObjectsRequest:
@@ -101,20 +103,20 @@ class Main extends &ArtClassSystem.BaseClass
 
   getArtEryPipelineApiInfo: ->
     {server, port} = @
-    server ||= "http://localhost"
+    server ||= :http://localhost
     server += ":#{port}" if port
 
-    "Art.Ery.pipeline.json.rest.api":
+    Art.Ery.pipeline.json.rest.api:
       object pipeline from pipelines with pipeline.getApiReport server: server
 
   allowAllCorsPreflightHandler: ({method, headers}) ->
-    method == "OPTIONS" &&
-      status: "success"
+    method == :OPTIONS &&
+      status: :success
       headers:
-        "Access-Control-Allow-Origin": "*"
-        "Access-Control-Allow-Methods": "GET, POST, PUT, UPDATE, DELETE"
-        "Access-Control-Allow-Headers": ""
-        "Content-Type": "text/html; charset=utf-8"
+        Access-Control-Allow-Origin:  "" *
+        Access-Control-Allow-Methods: "" GET, POST, PUT, UPDATE, DELETE
+        Access-Control-Allow-Headers: ""
+        Content-Type:                 "" text/html; charset=utf-8
 
   artEryPipelineDefaultHandler: ({url}, plainObjectRequest) ->
     if url.match @defaultHandlerRegex
@@ -132,20 +134,21 @@ class Main extends &ArtClassSystem.BaseClass
     promiseHttp: ->
       @_promiseHttp ||= new PromiseHttp merge
         @options
-        verbose: config.verbose
-        port: @port
-        name: "Art.Ery.Server"
+        verbose:  config.verbose
+        port:     @port
+        name:     :Art.Ery.Server
 
-        apiHandlers: [
-          fastBind @artEryPipelineApiHandler, @
+        apiHandlers:
+          fastBind @artEryPipelineApiHandler,     @
           fastBind @artEryPipelineDefaultHandler, @
-        ]
 
-        # CORS: allow absolutely everything!
-        # This is ONLY safe because we don't use cookies, ever:
-        #   Our session information is passed as normal data, and is stored in localStorage.
-        commonResponseHeaders: "Access-Control-Allow-Origin": "*"
-        handlers: [@allowAllCorsPreflightHandler]
+        ##
+          CORS: allow absolutely everything!
+          This is ONLY safe because we don't use cookies, ever:
+            Our session information is passed as normal data, and is stored in localStorage.
+
+        commonResponseHeaders: Access-Control-Allow-Origin: :*
+        handlers: [] @allowAllCorsPreflightHandler
 
     middleware: -> @promiseHttp.middleware
 
@@ -163,12 +166,12 @@ class Main extends &ArtClassSystem.BaseClass
     startSingleServer = => @promiseHttp.start static: @options.static
 
     if verbose
-      log "Art.Ery.Server":
-        env: object v, k from process.env when k.match /^art/
+      log Art.Ery.Server:
+        env:      object v, k from process.env when k.match /^art/
         versions: Neptune.getVersions()
 
     if numWorkers > 1
-      log "Art.Ery.Server": throng: workers: numWorkers
+      log Art.Ery.Server: throng: workers: numWorkers
       throng
         start:    startSingleServer
         workers:  numWorkers
