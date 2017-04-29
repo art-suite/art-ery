@@ -1,9 +1,11 @@
 import &ArtStandardLib, &ArtCommunicationStatus
-
-http = &http
 querystring = &querystring
 
 class PromiseHttp extends &ArtClassSystem.BaseClass
+
+  @getLogTime: getLogTime = ->
+    dateFormat :UTC:yyyy-mm-dd_HH-MM-ss
+
   @start: (options) ->
     new PromiseHttp(options).start()
 
@@ -17,6 +19,26 @@ class PromiseHttp extends &ArtClassSystem.BaseClass
     @addApiHandler  @options.apiHandlers
 
   @getter "handlers"
+
+  start: ->
+    log PromiseHttp: start: {} @options
+
+    {port, name} = @options
+    staticOptions = @options.static
+
+    app = &express()
+    app.use &compression()
+    app.use @middleware
+
+    if staticOptions
+      log "" serving static assets from: #{staticOptions.root}
+      app.use &express.static staticOptions.root, merge
+        staticOptions
+        maxAge:     3600*24*7 # 1 week
+        setHeaders: (res) -> res.setHeader :Access-Control-Allow-Origin :* # CORS
+
+    app.listen port, =>
+      log "" #{name || 'PromiseHttpServer'} listening on: http://localhost:#{port}
 
   ##
     IN:
@@ -112,9 +134,6 @@ class PromiseHttp extends &ArtClassSystem.BaseClass
                 else
                   formattedInspect responseData, 160
 
-  getLogTime = ->
-    dateFormat :UTC:yyyy-mm-dd_HH-MM-ss
-
   _processRequestWithHandlers: (request, requestData) ->
     Promise.then =>
       serilizer = new Promise.Serializer
@@ -198,23 +217,3 @@ class PromiseHttp extends &ArtClassSystem.BaseClass
               #{getLogTime()}
               PromiseHttp: #{request.method} #{request.url},
               ERROR: #{formattedInspect error}
-
-  start: ->
-    log PromiseHttp: start: {} @options
-
-    {port, name} = @options
-    staticOptions = @options.static
-
-    app = &express()
-    app.use &compression()
-    app.use @middleware
-
-    if staticOptions
-      log "" serving static assets from: #{staticOptions.root}
-      app.use &express.static staticOptions.root, merge
-        staticOptions
-        maxAge:     3600*24*7 # 1 week
-        setHeaders: (res) -> res.setHeader :Access-Control-Allow-Origin :* # CORS
-
-    app.listen port, =>
-      log "" #{name || 'PromiseHttpServer'} listening on: http://localhost:#{port}
