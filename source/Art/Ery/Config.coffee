@@ -21,4 +21,25 @@ defineModule module, class ArtEryConfig extends Configurable
     # increase logging level with interesting stuff
     verbose: false
 
+
+    ###
+      generating a secury HMAC privateSessionKey:
+
+      in short, run: openssl rand -base64 16
+
+      http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
+      Recommends 128bit string generated with a "cryptographically
+      secure pseudo random number generator (CSPRNG)."
+
+      http://osxdaily.com/2011/05/10/generate-random-passwords-command-line/
+      # 128 bits:
+      > openssl rand -base64 16
+
+      # 256 bits:
+      > openssl rand -base64 32
+    ###
+
+    server:
+      privateSessionKey: "todo+generate+your+one+unique+key" # 22 base64 characters == 132 bits
+
   @getPrefixedTableName: (tableName) => "#{@config.tableNamePrefix}#{tableName}"
