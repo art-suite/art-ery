@@ -1,26 +1,10 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 
-class ArtEryInfoHandler extends &ArtClassSystem.BaseClass
-
-  constructor: (@options = {}) ->
-    super
+class ArtEryInfoHandler extends &ExpressPromiseHandlerBase
 
   @getter
-    exactDefaultHandlerRegex: -> @_exactDefaultHandlerRegex ||= /// ^ (\/ | | \/ #{config.apiRoot} \/? ) $
-    defaultHandlerRegex:      -> @_defaultHandlerRegex      ||= /// ^ (\/        #{config.apiRoot} .*  ) $
+    handleUrlRegex: -> @_exactDefaultHandlerRegex ||= /// ^ \/ #{config.apiRoot} \/? $
 
-    handler: ->
-      ({url}, plainObjectRequest) ->
-        if @defaultHandlerRegex.test url
-          {server, port} = @options
-          server = "#{server}:#{port}" if port
-
-          status:
-            if @exactDefaultHandlerRegex.test url
-              success
-            else
-              missing
-          data:
-            Art.Ery.pipeline.json.rest.api:
-              object pipeline from pipelines with pipeline.getApiReport {} server
-
+  handleApiRequest: (request, requestData) ->
+    Art.Ery.pipeline.json.rest.api:
+      object pipeline from pipelines with pipeline.getApiReport {} server

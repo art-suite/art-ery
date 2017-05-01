@@ -1,52 +1,33 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery, &ArtErySessionHandler
 
-ArtEryInfoHandler = &ArtEryInfoHandler
+class ArtEryHandler extends &ExpressPromiseHandlerBase
 
-class ArtEryHandler extends &ArtClassSystem.BaseClass
-  # options: port and server - both just for info when generating pipeline-info
-  constructor: (@options = {}) ->
-    super
-    log ArtEryHandler: constuctor: {@options}
+  canHandleRequest: ({url}) ->
+    find pipeline, pipelineName in pipelines when pipeline.restPathRegex.test url
 
-  @getter
-    apiHandlers: ->
-      log ArtEryHandler: apiHandlers: {@options}
+  handleApiRequest: (request, requestData) ->
+    {pipeline, type, key} = @_findPipelineForRequest request
 
-      []
-        (request, requestData) ->
-          if found = @_findPipelineForRequest request
-            {pipeline, type, key} = found
+    processRequest = (session) ->
+      pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
+      .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
 
-            processRequest = (session) ->
-              pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
-              .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
-
-            verifySession requestData.session
-            .then processRequest
-            .catch ->
-              processRequest {}
-              .then (plainObjectsResponseWithSignedSession) ->
-                merge plainObjectsResponseWithSignedSession, replaceSession: true
-
-        new ArtEryInfoHandler(@options).handler
-
-  httpMethodsToArtEryRequestTypes: httpMethodsToArtEryRequestTypes =
-    get:    :get
-    post:   :create
-    put:    :update
-    delete: :delete
+    verifySession requestData.session
+    .then processRequest
+    .catch ->
+      processRequest {}
+      .then (plainObjectsResponseWithSignedSession) ->
+        merge plainObjectsResponseWithSignedSession, replaceSession: true
 
   ######################
   # PRIVATE
   ######################
 
-  ##
-    IN: plainObjectsRequest:
-      session:         # encrypted session string
-      query: session:  # encrypted session string
-    OUT:
-      promise.then (verifiedSession) ->
-      promise.catch -> # session was invalid
+  httpMethodsToArtEryRequestTypes =
+    get:    :get
+    post:   :create
+    put:    :update
+    delete: :delete
 
   _findPipelineForRequest: ({url, method}) ->
     find pipeline, pipelineName in pipelines

@@ -1,0 +1,185 @@
+import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
+querystring = &querystring
+
+class ExpressPromiseHandlerBase extends &ArtClassSystem.BaseClass
+
+  @getLogTime: getLogTime = ->
+    dateFormat :UTC:yyyy-mm-dd_HH-MM-ss
+
+  @getMiddleware: (@options) ->
+    new @ @options
+    .middleware
+
+  constructor: (@options = {}) ->
+    super
+    @verbose = @options.verbose || config.verbose
+    @logVerbose {@options}
+    @_commonResponseHeaders = @options.commonResponseHeaders
+
+  ####################
+  # OVERRIDABLES
+  ####################
+  # set handleUrlRegex to match the Urls you want to handle
+  @getter handleUrlRegex: -> null
+
+  # override for more control over which requests you handle
+  canHandleRequest: (request) ->
+    @handleUrlRegex?.test request.url
+
+  handleApiRequest:   null
+  handleHttpRequest:  null  # (request, jsonData) -> promise.
+
+  handleRequest: (request, requestData) ->
+    ##
+      IN:
+        request: the express/node request object
+        requestData: the entire request data, as a string, otherwise unprocessed
+      OUT:
+        promise.then (plainResponseObject) ->
+
+        plainResponseObject:
+          headers:    plainHeadersObject
+          data:       (optional) string
+          statusCode: Http Status-code
+          status:     Art.CommunicationStatus
+
+        if plainResponseObject is null, a 'missing' or '404' status is returned.
+
+      OVERRIDE this for handling all requests
+
+    Promise.then ->
+
+      # TODO - eventually this should check the Content-Type, too
+      switch
+      when @handleApiRequest
+        @_handleApiRequestWrapper request, requestData
+
+      when @handleHttpRequest
+        @handleHttpRequest request, requestData
+
+      else null
+
+  ######################
+  # Logging
+  ######################
+  logError: (toLog) ->
+    log.error "#{@logHeader}": toLog
+
+  log: (toLog) ->
+    log "#{@logHeader}": toLog
+
+  logVerbose: (toLog) ->
+    @log toLog if @verbose
+
+  @getter
+    logHeader: -> "#{getLogTime()} #{@class.getName()}"
+
+  ######################
+  # ExpressHandler API
+  ######################
+  @getter middleware: ->
+    (request, response, next) ->
+      if @canHandleRequest request
+        @logVerbose start: {request.method, request.url}
+
+        dataChunks = []
+        request.on :data (chunk) -> dataChunks.push chunk
+
+        request.on :end ->
+          Promise.then ->
+            @handleRequest request, dataChunks.join ''
+
+          .catch (error) ->
+            @logError internalError: {request, error}
+            status:       serverFailure
+
+          .then (plainResponse) ->
+
+            if plainResponse
+              {headers, data, status, statusCode} = plainResponse
+              unless data? || status? || statusCode?
+                throw new Error "expected data, status or statusCode in response: #{formattedInspect plainResponse}"
+
+            responseData = data
+
+            response.statusCode =
+              encodeHttpStatus status
+              || if data then 200 else 404
+
+            if (statusCode/100 | 0) == 5
+              @logError
+                url:              request.url
+                requestData:      (try JSON.parse requestData    ) || requestData
+                requestResponse:  (try JSON.parse requestResponse) || requestResponse
+
+            @_encodeOutput request, response, headers, responseData
+
+      else
+        # @logVerbose {} notHandled: request.url, @handleUrlRegex
+
+        next()
+
+  ###################
+  # PRIVATE
+  ###################
+  _encodeJson: (responseHeaders, responseData) ->
+    responseHeaders[:Content-Type] = :application/json
+    JSON.stringify responseData
+
+  _encodeHtml: (responseHeaders, responseData) ->
+    responseHeaders[:Content-Type] = :text/html
+    if isString responseData
+      responseData
+    else
+      """
+        <html><body style='font-family:Monaco,courier;font-size:10pt'>
+        #{
+          formattedInspect responseData
+          .replace /\n/g, "<br>\n"
+          .replace /\ /g, "&nbsp;"
+          .replace
+            ///g (#{findUrlRegexp.source})
+            "<a href='$1'>$1</a>"
+        }
+        </body></html>
+
+  _encodePlain: (responseHeaders, responseData) ->
+    responseHeaders[:Content-Type] = :text/plain
+    if isString responseData
+      responseData
+    else
+      formattedInspect responseData
+
+  _encodeOutput: (request, response, responseHeaders = {}, responseData) ->
+    {accept = 'text/html'} = request.headers
+
+    encodedData = responseData && switch
+    when /json/.test accept then @_encodeJson  responseHeaders, responseData
+    when /html/.test accept then @_encodeHtml  responseHeaders, responseData
+    else                         @_encodePlain responseHeaders, responseData
+
+    each v, k from headers = merge @_commonResponseHeaders, responseHeaders
+      response.setHeader k, v
+
+    @logVerbose done: {request.method, request.url, accept, responseData, headers, encodedData}
+    response.end encodedData
+
+  _handleApiRequestWrapper: (request, requestData) ->
+
+    Promise.then -> JSON.parse requestData || "{}"
+    .catch -> throw new Error "" requested data was not valid JSON: #{requestData}
+    .then (parsedData) ->
+      {url} = request
+      [__, query] = url.split :?
+      merge
+        parsedData
+        query && object v from querystring.parse query
+          try
+            JSON.parse v
+          catch
+            v
+
+    .then (parsedData) ->
+      @handleApiRequest request, parsedData
+
+    .then (data) -> {data}

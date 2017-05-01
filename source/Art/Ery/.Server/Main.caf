@@ -29,7 +29,13 @@ class Main extends &ArtClassSystem.BaseClass
     {verbose} = config
 
     startSingleServer = =>
-      &ExpressServer.start merge @options, handlers: @promiseHttp
+      &ExpressServer.start merge
+        @options
+        commonResponseHeaders:  &AllowAllCorsHandler.commonResponseHeaders
+        handlers:
+          &AllowAllCorsHandler
+          &ArtEryHandler
+          &ArtEryInfoHandler
 
     if verbose
       log Art.Ery.Server:
@@ -50,11 +56,11 @@ class Main extends &ArtClassSystem.BaseClass
     port:       -> @options.port
     server:     -> @options.server
 
-    promiseHttp: ->
-      @_promiseHttp ||= new PromiseHttp merge @options, {}
-        config.verbose
-        port:                   @port | 0
-        name:                   :Art.Ery.Server
-        apiHandlers:            new ArtEryHandler({@port, @server}).apiHandlers
-        commonResponseHeaders:  &AllowAllCors.commonResponseHeaders
-        handlers:               &AllowAllCors.handler
+    # promiseHttp: ->
+    #   @_promiseHttp ||= new PromiseHttp merge @options, {}
+    #     config.verbose
+    #     port:                   @port | 0
+    #     name:                   :Art.Ery.Server
+    #     apiHandlers:            new ArtEryHandler({@port, @server}).apiHandlers
+    #     commonResponseHeaders:  &AllowAllCors.commonResponseHeaders
+    #     handlers:               &AllowAllCors.handler

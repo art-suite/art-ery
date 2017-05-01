@@ -1,3 +1,4 @@
+import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 ##
   CORS: allow absolutely everything!
 
@@ -7,11 +8,13 @@
   For more thoughts on moiving beyond the tradgedy that is CORS:
   SEE: http://www.essenceandartifact.com/2017/01/why-cors-why.html
 
-commonResponseHeaders:
-  Access-Control-Allow-Origin: :*
+class AllowAllCorsHandler extends &ExpressPromiseHandlerBase
+  @commonResponseHeaders:
+    Access-Control-Allow-Origin: :*
 
-handler: ({method, headers}) ->
-  if method == :OPTIONS
+  canHandleRequest: ({method}) -> method == :OPTIONS
+
+  handleRequest: ->
     status: :success
     headers:
       Access-Control-Allow-Origin:  "" *

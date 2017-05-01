@@ -18,8 +18,9 @@ class ExpressServer extends &ArtClassSystem.BaseClass
     app = &express()
     app.use &compression()
 
+    log {handlers}
     each handler in if isArray handlers then handlers else [handlers]
-      app.use handler.middleware
+      app.use handler.getMiddleware options
 
     if staticOptions
       log "" serving static assets from: #{staticOptions.root}

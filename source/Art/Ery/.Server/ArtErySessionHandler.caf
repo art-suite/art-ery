@@ -3,15 +3,19 @@ PromiseJsonWebToken = &PromiseJsonWebToken
 
 class ArtErySessionHandler
   @verifySession: (session) ->
+    ##
+      IN: plainObjectsRequest:
+        session:         # encrypted session string
+        query: session:  # encrypted session string
+      OUT:
+        promise.then (verifiedSession) ->
+        promise.catch -> # session was invalid
+
     unless sessionSignature = session
       Promise.resolve({})
     else
       PromiseJsonWebToken.verify sessionSignature, config.server.privateSessionKey
       .then (session) -> session
-
-  @iatAgeInDays: iatAgeInDays = (iat) ->
-    Date.now() / 1000 - iat
-    / 60 * 60 * 24
 
   ##
     NOTE: sessions expire after 30 days of inactivity; expiration is renewed every request.
@@ -24,7 +28,6 @@ class ArtErySessionHandler
         BUT it won't be tied to a specific backend; you'll still have to do that part yourself.
 
   @signSession: (oldSession, responseData) =>
-
     if @_shouldReturnNewSignedSession oldSession, newSession = responseData.session || oldSession
       PromiseJsonWebToken.sign
         objectWithout newSession, :exp :iat
@@ -33,6 +36,10 @@ class ArtErySessionHandler
       .then (signature) -> merge responseData, session: merge newSession, {signature}
     else
       objectWithout responseData, :session
+
+  @iatAgeInDays: iatAgeInDays = (iat) ->
+    Date.now() / 1000 - iat
+    / 60 * 60 * 24
 
   ####################
   # PRIVATE
