@@ -1,19 +1,15 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 querystring = &querystring
 
-class ExpressPromiseHandlerBase extends &ArtClassSystem.BaseClass
+class ExpressPromiseHandlerBase extends &LoggingMixin &ArtClassSystem.BaseClass
 
-  @getLogTime: getLogTime = ->
-    dateFormat :UTC:yyyy-mm-dd_HH-MM-ss
-
-  @getMiddleware: (@options) ->
-    new @ @options
+  @getMiddleware: (options) ->
+    new @ options
     .middleware
 
   constructor: (@options = {}) ->
     super
-    @verbose = @options.verbose || config.verbose
-    @logVerbose :init #: {@options}
+    @logVerbose :initialized # : {@options}
     @_commonResponseHeaders = @options.commonResponseHeaders
 
   ####################
@@ -58,21 +54,6 @@ class ExpressPromiseHandlerBase extends &ArtClassSystem.BaseClass
         @handleHttpRequest request, requestData
 
       else null
-
-  ######################
-  # Logging
-  ######################
-  logError: (toLog) ->
-    log.error "#{@logHeader}": toLog
-
-  log: (toLog) ->
-    log "#{@logHeader}": toLog
-
-  logVerbose: (toLog) ->
-    @log toLog if @verbose
-
-  @getter
-    logHeader: -> "#{getLogTime()} #{@class.getName()}"
 
   ######################
   # ExpressHandler API

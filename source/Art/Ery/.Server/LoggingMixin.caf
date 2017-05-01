@@ -1,0 +1,14 @@
+import &ArtStandardLib, &Art/Ery
+
+(superClass) -> class LoggingMixin extends superClass
+
+  log:        (toLog) -> log.withOptions {color: true}, @preprocessLog toLog
+  logError:   (toLog) -> log.error @preprocessLog toLog
+  logVerbose: (toLog) -> @log toLog if @verbose
+
+  preprocessLog: (toLog) -> "#{@logHeader}": toLog
+
+  @getter
+    logTime:    -> dateFormat :UTC:yyyy-mm-dd_HH-MM-ss
+    verbose:    -> config.verbose || @_verbose || @options?.verbose
+    logHeader:  -> "#{@logTime} #{@class.getName()}"

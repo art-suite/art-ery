@@ -1,6 +1,14 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery, &ArtErySessionHandler
 
 class ArtEryHandler extends &ExpressPromiseHandlerBase
+  # constructor: ->
+  #   super
+  #   unless 0 < objectKeyCount pipelines
+  #     @logError
+  #       """
+  #         WARNING: there are 0 pipelines loaded; this server won't do much :).
+
+  #         Please require your pipelines before starting the server.
 
   canHandleRequest: ({url}) ->
     find pipeline, pipelineName in pipelines when pipeline.restPathRegex.test url
