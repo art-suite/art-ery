@@ -52,7 +52,9 @@ class ExpressServer extends &LoggingMixin &ArtClassSystem.BaseClass
       app.use &express.static staticOptions.root, merge
         staticOptions
         maxAge:     3600*24*7 # 1 week
-        setHeaders: (res) -> res.setHeader :Access-Control-Allow-Origin :* # CORS
+        setHeaders: (response) ->
+          each v, k from merge commonResponseHeaders, staticOptions.headers
+            response.setHeader k, v
 
     app.listen port, =>
       @log "" listening on: http://localhost:#{port}

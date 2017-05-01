@@ -1,10 +1,10 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 
-class ArtEryInfoHandler extends &ExpressPromiseHandlerBase
+class ArtEryInfoHandler extends &ExpressHandler
 
   @getter
     handleUrlRegex: -> @_exactDefaultHandlerRegex ||= /// ^ \/ #{config.apiRoot} \/? $
 
   handleApiRequest: (request, requestData) ->
-    Art.Ery.pipeline.json.rest.api:
+    Art.Ery.Api:
       object pipeline from pipelines with pipeline.getApiReport {} server

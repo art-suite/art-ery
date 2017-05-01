@@ -8,7 +8,7 @@ import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
   For more thoughts on moiving beyond the tradgedy that is CORS:
   SEE: http://www.essenceandartifact.com/2017/01/why-cors-why.html
 
-class AllowAllCorsHandler extends &ExpressPromiseHandlerBase
+class AllowAllCorsHandler extends &ExpressHandler
   @commonResponseHeaders:
     Access-Control-Allow-Origin: :*
 

@@ -30,7 +30,7 @@ module.exports = suite:
         RestClient.get "http://localhost:8085/api"
         .then (v) ->
           assert.isString v
-          assert.match v, "Art.Ery.pipeline.json.rest.api"
+          assert.match v, /Art.Ery.*api/i
         .catch (e) ->
           log.error "START THE TEST SERVER: npm run testServer"
           throw e

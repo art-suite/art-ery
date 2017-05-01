@@ -1,4 +1,4 @@
-{log, ConfigRegistry} = require 'art-foundation'
+{ConfigRegistry} = require 'art-config'
 Server  = require './Server'
 require "./test/tests/Art/Ery/ClientServer/Pipelines"
 

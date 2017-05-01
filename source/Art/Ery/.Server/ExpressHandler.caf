@@ -1,7 +1,7 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 querystring = &querystring
 
-class ExpressPromiseHandlerBase extends &LoggingMixin &ArtClassSystem.BaseClass
+class ExpressHandler extends &LoggingMixin &ArtClassSystem.BaseClass
 
   @getMiddleware: (options) ->
     new @ options

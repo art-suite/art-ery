@@ -5,8 +5,12 @@ start: (options) =>
   config.location = :server
   &ExpressServer.start
     options
-    commonResponseHeaders:  &AllowAllCorsHandler.commonResponseHeaders
-    handlers:
+    commonResponseHeaders: merge
+      &AllowAllCorsHandler.commonResponseHeaders
+      options.commonResponseHeaders
+
+    handlers: compactFlatten []
       &AllowAllCorsHandler
       &ArtEryHandler
       &ArtEryInfoHandler
+      options.handlers
