@@ -1,9 +1,6 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 &colors
 
-PromiseHttp = &PromiseHttp
-ArtEryHandler = &ArtEryHandler
-
 class Main extends &ArtClassSystem.BaseClass
   @defaults:
     port:   8085
@@ -55,12 +52,3 @@ class Main extends &ArtClassSystem.BaseClass
     numWorkers: -> @options.numWorkers
     port:       -> @options.port
     server:     -> @options.server
-
-    # promiseHttp: ->
-    #   @_promiseHttp ||= new PromiseHttp merge @options, {}
-    #     config.verbose
-    #     port:                   @port | 0
-    #     name:                   :Art.Ery.Server
-    #     apiHandlers:            new ArtEryHandler({@port, @server}).apiHandlers
-    #     commonResponseHeaders:  &AllowAllCors.commonResponseHeaders
-    #     handlers:               &AllowAllCors.handler

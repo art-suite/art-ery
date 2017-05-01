@@ -13,7 +13,7 @@ class ExpressPromiseHandlerBase extends &ArtClassSystem.BaseClass
   constructor: (@options = {}) ->
     super
     @verbose = @options.verbose || config.verbose
-    @logVerbose {@options}
+    @logVerbose :init #: {@options}
     @_commonResponseHeaders = @options.commonResponseHeaders
 
   ####################
