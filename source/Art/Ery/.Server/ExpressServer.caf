@@ -1,0 +1,32 @@
+import &ArtStandardLib, &ArtCommunicationStatus
+
+class ExpressServer extends &ArtClassSystem.BaseClass
+
+  @start: (options) ->
+    ##
+      IN: options:
+        port:     (number) port to listen on
+        name:     (string) just for informational purposes
+        static:   (string) path to static assets to serve
+        handlers: [middleware: ->] - array objects with 'middleware' properties to be passed to express.use
+
+    {port, name = 'Art.Ery.ExpressServer', handlers} = options
+    staticOptions = options.static
+
+    log [name]: options: objectWithout options, "handlers"
+
+    app = &express()
+    app.use &compression()
+
+    each handler in if isArray handlers then handlers else [handlers]
+      app.use handler.middleware
+
+    if staticOptions
+      log "" serving static assets from: #{staticOptions.root}
+      app.use &express.static staticOptions.root, merge
+        staticOptions
+        maxAge:     3600*24*7 # 1 week
+        setHeaders: (res) -> res.setHeader :Access-Control-Allow-Origin :* # CORS
+
+    app.listen port, =>
+      log [name]: "" listening on: http://localhost:#{port}

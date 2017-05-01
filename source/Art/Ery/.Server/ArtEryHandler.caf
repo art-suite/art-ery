@@ -1,36 +1,34 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery, &ArtErySessionHandler
 
+ArtEryInfoHandler = &ArtEryInfoHandler
+
 class ArtEryHandler extends &ArtClassSystem.BaseClass
   # options: port and server - both just for info when generating pipeline-info
-  constuctor: (@options = {}) ->
+  constructor: (@options = {}) ->
     super
+    log ArtEryHandler: constuctor: {@options}
 
   @getter
-    apiHandlers: -> []
-      (request, requestData) =>
-        if found = @_findPipelineForRequest request
-          {pipeline, type, key} = found
+    apiHandlers: ->
+      log ArtEryHandler: apiHandlers: {@options}
 
-          processRequest = (session) ->
-            pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
-            .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+      []
+        (request, requestData) ->
+          if found = @_findPipelineForRequest request
+            {pipeline, type, key} = found
 
-          verifySession requestData.session
-          .then processRequest
-          .catch ->
-            processRequest {}
-            .then (plainObjectsResponseWithSignedSession) ->
-              merge plainObjectsResponseWithSignedSession, replaceSession: true
+            processRequest = (session) ->
+              pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
+              .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
 
-      ({url}, plainObjectRequest) =>
-        if @defaultHandlerRegex.test url
+            verifySession requestData.session
+            .then processRequest
+            .catch ->
+              processRequest {}
+              .then (plainObjectsResponseWithSignedSession) ->
+                merge plainObjectsResponseWithSignedSession, replaceSession: true
 
-          status:
-            if @exactDefaultHandlerRegex.test url
-              :success
-            else
-              :missing
-          data: @_getArtEryPipelineApiInfo()
+        new ArtEryInfoHandler(@options).handler
 
   httpMethodsToArtEryRequestTypes: httpMethodsToArtEryRequestTypes =
     get:    :get
@@ -41,16 +39,6 @@ class ArtEryHandler extends &ArtClassSystem.BaseClass
   ######################
   # PRIVATE
   ######################
-  @getter
-    exactDefaultHandlerRegex: -> @_exactDefaultHandlerRegex ||= /// ^ (\/ | | \/ #{config.apiRoot} \/? ) $
-    defaultHandlerRegex:      -> @_defaultHandlerRegex      ||= /// ^ (\/        #{config.apiRoot} .*  ) $
-
-  _getArtEryPipelineApiInfo: ->
-    {server, port} = @options
-    server = "#{server}:#{port}" if port
-
-    Art.Ery.pipeline.json.rest.api:
-      object pipeline from pipelines with pipeline.getApiReport {} server
 
   ##
     IN: plainObjectsRequest:

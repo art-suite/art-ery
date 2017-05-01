@@ -28,7 +28,8 @@ class Main extends &ArtClassSystem.BaseClass
     {numWorkers} = @
     {verbose} = config
 
-    startSingleServer = => @promiseHttp.start {} @options.static
+    startSingleServer = =>
+      &ExpressServer.start merge @options, handlers: @promiseHttp
 
     if verbose
       log Art.Ery.Server:

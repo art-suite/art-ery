@@ -20,119 +20,102 @@ class PromiseHttp extends &ArtClassSystem.BaseClass
 
   @getter "handlers"
 
-  start: ->
-    log PromiseHttp: start: {} @options
+  addHandler:
+    ##
+      IN:
+        handler: (request, data) -> promise.then (simpleResponse) ->
+          IN: request is an IncomingMessaage (https://nodejs.org/api/http.html#http_class_http_incomingmessage)
+          IN: data - a string for now, but might also be a Buffer later
 
-    {port, name} = @options
-    staticOptions = @options.static
+      IN: hanlder: array of handlers; each handler gets added
+      IN: null -> noop
 
-    app = &express()
-    app.use &compression()
-    app.use @middleware
+      OUT:
+        if falsish, then the next handler in the chain is tried
+        else simpleResponse or promise returning simpleResponse
 
-    if staticOptions
-      log "" serving static assets from: #{staticOptions.root}
-      app.use &express.static staticOptions.root, merge
-        staticOptions
-        maxAge:     3600*24*7 # 1 week
-        setHeaders: (res) -> res.setHeader :Access-Control-Allow-Origin :* # CORS
+        simpleResponse:
+          headers: simple object defining the response headers
+          data: unintepreted response data
+          json: JSON.stringified repsonse data
+            # also sets the correct response headers
 
-    app.listen port, =>
-      log "" #{name || 'PromiseHttpServer'} listening on: http://localhost:#{port}
+      handler returns null if it passes on handling the request
+      handler returns a promise (or a value which will be wrapped in a promise) if it is handling the request
 
-  ##
-    IN:
-      handler: (request, data) -> promise.then (simpleResponse) ->
-        IN: request is an IncomingMessaage (https://nodejs.org/api/http.html#http_class_http_incomingmessage)
-        IN: data - a string for now, but might also be a Buffer later
+    (handler) ->
+      switch
+        when !handler             then null
+        when isPlainArray handler then @_handlers = @_handlers.concat handler
+        else @_handlers.push handler
 
-    IN: hanlder: array of handlers; each handler gets added
-    IN: null -> noop
+  addApiHandler:
+    ##
+      IN: apiHandler: (request, plainObjectStructureInput) -> Promise.then (plainObjectStructureOutput) ->
+      IN: apiHandler can be an array of apiHandlers to add
+      IN: null -> noop
 
-    OUT:
-      if falsish, then the next handler in the chain is tried
-      else simpleResponse or promise returning simpleResponse
+      apiHandlers don't need to manage:
+        - parsing and encoding JSON
+        - response headers
 
-      simpleResponse:
-        headers: simple object defining the response headers
-        data: unintepreted response data
-        json: JSON.stringified repsonse data
-          # also sets the correct response headers
+      apiHandler OUT:
+        if the handler can't respond to that request
+          null/false
+        else if success
+          plainObjectStructureOutput or a promise resolving to plainObjectStructureOutput
+        else if failure
+          throw error or return rejected promise
 
-    handler returns null if it passes on handling the request
-    handler returns a promise (or a value which will be wrapped in a promise) if it is handling the request
+    (apiHandler) ->
+      switch
+        when !apiHandler then null
 
-  addHandler: (handler) ->
-    switch
-      when !handler             then null
-      when isPlainArray handler then @_handlers = @_handlers.concat handler
-      else @_handlers.push handler
+        when isPlainArray apiHandler
+          each handler in apiHandler do @addApiHandler handler
 
-  ##
-    IN: apiHandler: (request, plainObjectStructureInput) -> Promise.then (plainObjectStructureOutput) ->
-    IN: apiHandler can be an array of apiHandlers to add
-    IN: null -> noop
+        else
+          @addHandler (request, data) ->
+            Promise.then -> JSON.parse data || "{}"
+            .catch -> throw new Error "" requested data was not valid JSON: #{data}
+            .then (parsedData) ->
+              {url} = request
+              [__, query] = url.split :?
+              merge
+                parsedData
+                query && object v from querystring.parse query
+                  try
+                    JSON.parse v
+                  catch
+                    v
 
-    apiHandlers don't need to manage:
-      - parsing and encoding JSON
-      - response headers
+            .then (parsedData) ->
+              apiHandler request, parsedData
 
-    apiHandler OUT:
-      if the handler can't respond to that request
-        null/false
-      else if success
-        plainObjectStructureOutput or a promise resolving to plainObjectStructureOutput
-      else if failure
-        throw error or return rejected promise
-  addApiHandler: (apiHandler) ->
-    switch
-      when !apiHandler then null
+            .catch (error) ->
+              log.error [getLogTime()]: PromiseHttp: apiHandler: {error}
+              status: :failure
+              data: message: "#{error}"
 
-      when isPlainArray apiHandler
-        each handler in apiHandler do @addApiHandler handler
+            .then (responseData) ->
+              unless responseData
+                false
+              else
+                unless isJsonType responseData
+                  throw new Error "" INTERNAL ERROR: api handler did not return a JSON compatible type: #{formattedInspect responseData}
 
-      else
-        @addHandler (request, data) ->
-          Promise.then -> JSON.parse data || "{}"
-          .catch -> throw new Error "" requested data was not valid JSON: #{data}
-          .then (parsedData) ->
-            {url} = request
-            [__, query] = url.split :?
-            merge
-              parsedData
-              query && object v from querystring.parse query
-                try
-                  JSON.parse v
-                catch
-                  v
+                statusCode: switch responseData.status
+                  when success        then 200
+                  when missing        then 404
+                  when clientFailure  then 400
+                  else 500
 
-          .then (parsedData) ->
-            apiHandler request, parsedData
-
-          .catch (error) ->
-            log.error [getLogTime()]: PromiseHttp: apiHandler: {error}
-            status: :failure
-            data: message: "#{error}"
-
-          .then (responseData) ->
-            unless responseData
-              false
-            else
-              unless isJsonType responseData
-                throw new Error "" INTERNAL ERROR: api handler did not return a JSON compatible type: #{formattedInspect responseData}
-
-              statusCode: switch responseData.status
-                when success        then 200
-                when missing        then 404
-                when clientFailure  then 400
-                else 500
-
-              headers: Content-Type: :application/json
-              data:
-                if request.headers.accept?.match /json/
-                  JSON.stringify responseData
-                else
-                  formattedInspect responseData, 160
+                headers: Content-Type: :application/json
+                data:
+                  if request.headers.accept?.match /json/
+                    JSON.stringify responseData
+                  else
+                    formattedInspect responseData, 160
 
   _processRequestWithHandlers: (request, requestData) ->
     Promise.then =>
