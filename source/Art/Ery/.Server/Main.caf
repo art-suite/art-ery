@@ -3,14 +3,15 @@ import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 
 start: (options) =>
   config.location = :server
-  &ExpressServer.start
+  &ArtExpressServer.start
     options
+    verbose: config.verbose
     commonResponseHeaders: merge
-      &AllowAllCorsHandler.commonResponseHeaders
+      &ArtExpressServer.AllowAllCorsHandler.commonResponseHeaders
       options.commonResponseHeaders
 
     handlers: compactFlatten []
-      &AllowAllCorsHandler
+      &ArtExpressServer.AllowAllCorsHandler
       &ArtEryHandler
       &ArtEryInfoHandler
       options.handlers

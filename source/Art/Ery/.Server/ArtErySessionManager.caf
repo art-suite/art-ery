@@ -1,7 +1,7 @@
 import &ArtStandardLib, &Art/Ery
 PromiseJsonWebToken = &PromiseJsonWebToken
 
-class ArtErySessionHandler
+class ArtErySessionManager
   @verifySession: (session) ->
     ##
       IN: plainObjectsRequest:

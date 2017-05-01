@@ -1,6 +1,6 @@
-import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery, &ArtErySessionHandler
+import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery, &ArtErySessionManager
 
-class ArtEryHandler extends &ExpressHandler
+class ArtEryHandler extends &ArtExpressServer.PromiseHandler
 
   canHandleRequest: ({url}) ->
     find pipeline, pipelineName in pipelines when pipeline.restPathRegex.test url

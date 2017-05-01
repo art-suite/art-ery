@@ -10,12 +10,13 @@ module.exports =
       "
 
     dependencies:
-      "art-events":     "git://github.com/imikimi/art-events.git"
-      "art-flux":       "git://github.com/imikimi/art-flux.git"
-      "express":        "^4.14.0"
-      compress:         "^0.99.0"
-      throng:           "^4.0.0"
-      jsonwebtoken:     "^7.2.1"
+      "art-events":         "git://github.com/imikimi/art-events.git"
+      "art-flux":           "git://github.com/imikimi/art-flux.git"
+      "art-express-server": "git://github.com/imikimi/art-express-server.git"
+      "express":            "^4.14.0"
+      compress:             "^0.99.0"
+      throng:               "^4.0.0"
+      jsonwebtoken:         "^7.2.1"
 
   webpack:
     common: {}

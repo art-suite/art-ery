@@ -1,6 +1,6 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 
-class ArtEryInfoHandler extends &ExpressHandler
+class ArtEryInfoHandler extends &ArtExpressServer.PromiseHandler
 
   @getter
     handleUrlRegex: -> @_exactDefaultHandlerRegex ||= /// ^ \/ #{config.apiRoot} \/? $
