@@ -1,54 +1,12 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
 &colors
 
-class Main extends &ArtClassSystem.BaseClass
-  @defaults:
-    port:   8085
-    server: :http://localhost
-
-  @start: (options) =>
-    new @(options).start()
-
-  constructor: (options) ->
-    super
-    @options = merge Main.defaults, options
-    config.location = :server
-
-  start: ->
-    unless 0 < objectKeyCount pipelines
-      log.error
-        """
-          WARNING: there are 0 pipelines loaded; this server won't do much :).
-
-          Please require your pipelines before starting the server.
-
-    {numWorkers} = @
-    {verbose} = config
-
-    startSingleServer = =>
-      &ExpressServer.start merge
-        @options
-        commonResponseHeaders:  &AllowAllCorsHandler.commonResponseHeaders
-        handlers:
-          &AllowAllCorsHandler
-          &ArtEryHandler
-          &ArtEryInfoHandler
-
-    if verbose
-      log Art.Ery.Server:
-        env:      object v, k from process.env when k.match /^art/
-        versions: Neptune.getVersions()
-
-    if numWorkers > 1
-      log Art.Ery.Server: throng: workers: numWorkers
-      &throng
-        start:    startSingleServer
-        workers:  numWorkers
-        lifetime: Infinity
-    else
-      startSingleServer()
-
-  @getter
-    numWorkers: -> @options.numWorkers
-    port:       -> @options.port
-    server:     -> @options.server
+start: (options) =>
+  config.location = :server
+  &ExpressServer.start
+    options
+    commonResponseHeaders:  &AllowAllCorsHandler.commonResponseHeaders
+    handlers:
+      &AllowAllCorsHandler
+      &ArtEryHandler
+      &ArtEryInfoHandler
