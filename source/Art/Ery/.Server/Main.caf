@@ -1,17 +1,25 @@
 import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery
-&colors
 
 start: (options) =>
+  ##
+    IN: options
+      SEE: ArtExpressServer's start() options
+
+      (from: ArtExpressServer's start() method doc:)
+      handlers: [getMiddleware()] -
+        Array objects that implement 'getMiddleware(options)' which returns the value
+        to pass to `express.use`.
+
+        The merged options-object passed into start is passed to each getMiddleware call.
+
   config.location = :server
+
   &ArtExpressServer.start
+    verbose:      config.verbose
+    allowAllCors: true
     options
-    verbose: config.verbose
-    commonResponseHeaders: merge
-      &ArtExpressServer.AllowAllCorsHandler.commonResponseHeaders
-      options.commonResponseHeaders
 
     handlers: compactFlatten []
-      &ArtExpressServer.AllowAllCorsHandler
       &ArtEryHandler
       &ArtEryInfoHandler
       options.handlers
