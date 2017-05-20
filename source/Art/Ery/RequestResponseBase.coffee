@@ -303,15 +303,19 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   _toResponse: (status, responseProps) ->
     throw new Error "missing status" unless isString status
 
-    if (status == clientFailure || status == failure) && config.verbose
-      log RequestResponseBase: toResponse: {
-        @type
-        @pipelineName
-        @requestProps
-        status
-        responseProps
-        error: Promise.reject new Error
-      }
+    status = responseProps.status if isString responseProps?.status
+
+    if status != success && config.verbose
+      log RequestResponseBase:
+        config: verbose: config.verbose
+        toResponse: {
+          status
+          @type
+          @pipelineName
+          @requestProps
+          responseProps
+          error: Promise.reject new Error
+        }
 
     Promise.resolve responseProps
     .then (responseProps = {}) =>
