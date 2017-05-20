@@ -158,7 +158,7 @@ module.exports = class Request extends require './RequestResponseBase'
 
       getRestClientParamsForArtEryRequest
         restPath: pipeline.restPath
-        server:   pipeline.remoteServer
+        server:   if pipeline.remoteServer == true then "" else pipeline.remoteServer
         type:     type
         key:      key
         data:     remoteRequestData
