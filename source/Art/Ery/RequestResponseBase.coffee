@@ -277,10 +277,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         error.info.response
       else throw error
 
-  success:        (responseProps) -> @_toResponse success, responseProps
-  missing:        (responseProps) -> @_toResponse missing, responseProps
-  failure:        (responseProps) -> @_toResponse failure, responseProps
-  clientFailure:  (responseProps) -> @_toResponse clientFailure, responseProps
+  success:        (responseProps) -> @toResponse success, responseProps
+  missing:        (responseProps) -> @toResponse missing, responseProps
+  failure:        (responseProps) -> @toResponse failure, responseProps
+  clientFailure:  (responseProps) -> @toResponse clientFailure, responseProps
   # NOTE: there is no serverFailure method because you should always use just 'failure'.
   # This is because you may be running on the client or the server. If running on the client, it isn't a serverFailure.
   # If status == "failure" in the server's response, the client will convert that status to serverFailure automatically.
@@ -300,10 +300,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     promise.then (response) ->
     .catch -> # should never happen
   ###
-  _toResponse: (status, responseProps) ->
+  toResponse: (status, responseProps) ->
     throw new Error "missing status" unless isString status
 
-    status = responseProps.status if isString responseProps?.status
+    # status = responseProps.status if isString responseProps?.status
 
     if status != success && config.verbose
       log RequestResponseBase:
@@ -321,7 +321,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     .then (responseProps = {}) =>
       switch
         when responseProps instanceof RequestResponseBase
-          log.warn "_toResponse is instanceof RequestResponseBase - is this EVER used???"
+          log.warn "toResponse is instanceof RequestResponseBase - is this EVER used???"
           # if used, shouldn't this still transform Request objects into Response objects?
           responseProps
 
@@ -329,15 +329,15 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
           new ArtEry.Response merge @propsForResponse, responseProps, {status, @request}
 
         when isString responseProps
-          @_toResponse status, data: message: responseProps
+          @toResponse status, data: message: responseProps
 
         # unsupported responseProps type is an internal failure
         else
-          @_toResponse failure, @_toErrorResponseProps responseProps
+          @toResponse failure, @_toErrorResponseProps responseProps
 
   _toErrorResponseProps: (error) ->
     log @, {responseProps},
       data: message: if responseProps instanceof Error
-          "Internal Error: ArtEry.RequestResponseBase#_toResponse received Error instance: #{formattedInspect responseProps}"
+          "Internal Error: ArtEry.RequestResponseBase#toResponse received Error instance: #{formattedInspect responseProps}"
         else
-          "Internal Error: ArtEry.RequestResponseBase#_toResponse received unsupported type"
+          "Internal Error: ArtEry.RequestResponseBase#toResponse received unsupported type"

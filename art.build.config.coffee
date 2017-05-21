@@ -1,4 +1,9 @@
 module.exports =
+  # to test in browser: (TODO - make this suck less)
+  #   1. comment this next line out
+  #   2. > abc -c
+  #   3. npm test
+  target: node: true
   package:
     scripts:
       testServer: "coffee ./TestServer.coffee"

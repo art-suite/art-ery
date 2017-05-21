@@ -1,4 +1,4 @@
-require 'art-flux/web_worker'
+require 'art-flux/Core'
 require '../'
 {ArtEryFluxModel} = require '../Flux'
 

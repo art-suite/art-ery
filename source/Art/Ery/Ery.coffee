@@ -11,8 +11,8 @@ module.exports = [
   config: require('./Config').config
 
   # for testing
-  _reset: ->
-    PipelineRegistry._reset()
+  _reset: (pipelineTestFunction)->
+    PipelineRegistry._reset pipelineTestFunction
     Filters._resetFilters()
 
   sendInitializeRequestToAllPipelines: ->

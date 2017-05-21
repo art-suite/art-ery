@@ -1,6 +1,6 @@
 {log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
 {Pipeline, pipelines, session} = Neptune.Art.Ery
-{ApplicationState} = ArtFlux = require 'art-flux'
+{ApplicationState} = ArtFlux = Neptune.Art.Flux
 {clientFailure, missing, serverFailure} = CommunicationStatus
 
 module.exports = suite: ->
