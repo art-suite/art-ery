@@ -7,4 +7,4 @@ class ArtEryInfoHandler extends &ArtExpressServer.PromiseHandler
 
   handleApiRequest: (request, requestData) ->
     Art.Ery.Api:
-      object pipeline from pipelines with pipeline.getApiReport {} server
+      object pipeline from pipelines with pipeline.getApiReport {} # server

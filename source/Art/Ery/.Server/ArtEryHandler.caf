@@ -2,7 +2,8 @@ import &ArtStandardLib, &ArtCommunicationStatus, &Art/Ery, &ArtErySessionManager
 
 class ArtEryHandler extends &ArtExpressServer.PromiseHandler
 
-  canHandleRequest: ({url}) ->
+  canHandleRequest: (request) ->
+    {url} = request
     find pipeline, pipelineName in pipelines when pipeline.restPathRegex.test url
 
   handleApiRequest: (request, requestData) ->
@@ -29,7 +30,8 @@ class ArtEryHandler extends &ArtExpressServer.PromiseHandler
     put:    :update
     delete: :delete
 
-  _findPipelineForRequest: ({url, method}) ->
+  _findPipelineForRequest: (request) ->
+    {url, method} = request
     find pipeline, pipelineName in pipelines
       if match = url.match pipeline.restPathRegex
         [__, type, key] = match
