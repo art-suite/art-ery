@@ -25,7 +25,7 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
     ###
     Pass includedData from the requestProps to the ultimate responseProps.
     IncludedData is removed from 'data' so it isn't writen in this pipeline's record, but instead,
-    if vivifiy is true, it is written to its own pipeline and linked in.
+    if autoCreate/vivifiy is true, it is written to its own pipeline and linked in.
 
     postIncludeLinkedFieldData allows us to return the includedData in the response without
     re-reading the data back with additional requests.
