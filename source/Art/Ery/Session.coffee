@@ -16,6 +16,19 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
 
   constructor: (@_data = {}, @_jsonStoreKey = "Art.Ery.Session") ->
 
+    if global?.document
+      @_startPollingSession()
+
+  _startPollingSession: ->
+    setInterval(
+      => @reloadSession()
+      2000
+    )
+
+  reloadSession: ->
+    @_sessionLoadPromise = null
+    @loadSession()
+
   loadSession: ->
     if config.location == "server"
       throw new Error "INTERNAL ERROR: Attempt to access the global session Serverside."
