@@ -48,7 +48,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     pipelineName:       -> @pipeline.getName()
     requestDataWithKey: -> merge @requestData, @keyObject
     keyObject:          -> @request.pipeline.toKeyObject @key
-    rootRequest:        -> @parentRequest?.rootRequest || @
+    rootRequest:        -> @parentRequest?.rootRequest || @request
 
     inspectedObjects: ->
       "#{@class.namespacePath}":

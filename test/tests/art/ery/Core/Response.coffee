@@ -58,6 +58,17 @@ module.exports = suite:
           status: missing
           request: newRequest()
 
+  getters: ->
+    test "request", -> assert.instanceof Request, newResponse().request
+    test "requestData",   -> r = newResponse(props: foo: 1, data: bar: 2); assert.equal r.request.data, r.requestData
+    test "requestProps",  -> r = newResponse(props: foo: 1, data: bar: 2); assert.equal r.request.props, r.requestProps
+    test "responseProps", -> r = newResponse(props: foo: 1, data: bar: 2); assert.equal r.props, r.responseProps; assert.neq r.props, r.requestProps
+    test "responseData",  -> r = newResponse(props: foo: 1, data: bar: 2); assert.equal r.data,  r.responseData;  assert.neq r.data, r.requestData
+    test "parentRequest", -> assert.eq undefined, newResponse().parentRequest
+    test "rootRequest", ->
+      response = newResponse()
+      assert.eq response.request, response.rootRequest
+
   props: ->
     test "props defaults to {}", ->
       assert.selectedPropsEq
