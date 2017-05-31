@@ -22,18 +22,29 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
     # for example, add: or setDefault: values may be specified for updates.
     {type, pipeline, data = {}, session} = request
 
+    ###
+    Pass includedData from the requestProps to the ultimate responseProps.
+    IncludedData is removed from 'data' so it isn't writen in this pipeline's record, but instead,
+    if vivifiy is true, it is written to its own pipeline and linked in.
+
+    postIncludeLinkedFieldData allows us to return the includedData in the response without
+    re-reading the data back with additional requests.
+    ###
+    postIncludeLinkedFieldData = null
+
     processedData = merge data
     Promise.all array @_linkFields,
       when: ({idFieldName}, fieldName) -> !data[idFieldName] && data[fieldName]
-      with: ({idFieldName, autoCreate, pipelineName}, fieldName, __, linkedRecordData) =>
+      with: ({idFieldName, autoCreate, pipelineName}, fieldName, __, linkedFieldData) =>
         Promise.then =>
-          if linkedRecordData.id then linkedRecordData
-          else if autoCreate     then request.subrequest pipelineName, "create", data: linkedRecordData
-          else                   throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedRecordData}"
-        .then (linkedRecordData) =>
-          processedData[idFieldName] = linkedRecordData.id
+          if linkedFieldData.id then linkedFieldData
+          else if autoCreate    then request.subrequest pipelineName, "create", data: linkedFieldData
+          else                  throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedFieldData}"
+        .then (linkedFieldData) =>
+          (postIncludeLinkedFieldData||={})[fieldName] = linkedFieldData
+          processedData[idFieldName] = linkedFieldData.id
           delete processedData[fieldName]
-    .then -> request.withData processedData
+    .then -> request.with data: processedData, props: merge request.props, postIncludeLinkedFieldData && {postIncludeLinkedFieldData}
 
   booleanProps = wordsArray "link required include autoCreate"
   @normalizeLinkFields: (linkFields) ->
@@ -49,16 +60,23 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
 
 
   # OUT: promise.then -> new data
-  includeLinkedFields: (request, session, data) ->
-    {include} = request.rootRequest.props
-    return data unless include == "auto"
+  includeLinkedFields: (response, data) ->
+    {include:requestIncludeProp} = response.rootRequest.props
+    {requestData, requestProps:{postIncludeLinkedFieldData}} = response
 
     linkedData = shallowClone data
     promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
       do (fieldName, idFieldName, pipelineName, include) =>
         Promise
-        .then           => id && request.cachedPipelineGet pipelineName, id
-        .then (value)   -> linkedData[fieldName] = if value? then value else null
+        .then =>
+          if id?
+            if linkData = requestData?[fieldName] || postIncludeLinkedFieldData?[fieldName]
+              merge {id}, linkData
+            else if requestIncludeProp == 'auto'
+              response.cachedPipelineGet pipelineName, id
+
+        .then (value) ->
+          linkedData[fieldName] = value if value?
         .catch (response) ->
           log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
           # continue anyway
@@ -74,15 +92,12 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   # Idealy, we'd also use the bulkGet feature
   @after
     all: (response) ->
-      {request, session, data} = response
-      switch request.type
-        when "create", "update" then response
-        else
-          response.withData if isPlainArray data
-            # TODO: use bulkGet for efficiency
-            Promise.all array data, (record) => @includeLinkedFields request, session, record
+      {data} = response
+      response.withData if isPlainArray data
+        # TODO: use bulkGet for efficiency
+        Promise.all array data, (record) => @includeLinkedFields response, record
 
-          else if isPlainObject data
-            @includeLinkedFields request, session, data
-          else
-            data
+      else if isPlainObject data
+        @includeLinkedFields response, data
+      else
+        data
