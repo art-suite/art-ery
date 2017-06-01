@@ -126,10 +126,11 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
     TODO: DataUpdatesFilter needs change the protocol to return oldData, too, if needed - there may be more than one oldData per request.
     TODO: DataUpdatesFilter needs to pass in: response.props.oldData[key]
   ###
-  dataUpdated: (key, data, oldData) ->
-    oldData ||= @fluxStoreGet(key)?.data
+  dataUpdated: (key, data) ->
+    oldData = @fluxStoreGet(key)?.data
+    data = merge oldData, data
 
-    @updateFluxStore key, (oldFluxRecord) -> merge oldFluxRecord, data: merge oldFluxRecord.data, data
+    @updateFluxStore key, (oldFluxRecord) -> merge oldFluxRecord, {data}
 
     each @_queryModels, (queryModel) =>
       oldQueryKey = oldData && queryModel.dataToKeyString oldData
