@@ -73,7 +73,6 @@ module.exports = class Response extends require './RequestResponseBase'
     @session = merge @request.session, @session unless @replaceSession
 
   isResponse:     true
-  toString: -> "ArtEry.Response(#{@type}: #{@status}): #{@message}"
 
   # OUT: @
   handled: (_handledBy) ->

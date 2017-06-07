@@ -1,5 +1,5 @@
 {
-  BaseObject, CommunicationStatus, log, arrayWith
+  log, arrayWith
   defineModule, merge, isJsonType, isString, isPlainObject, inspect
   inspectedObjectLiteral
   toInspectedObjects
@@ -10,10 +10,10 @@
   isFunction
   objectWithDefinedValues
   objectWithout
-} = require 'art-foundation'
+} = require 'art-standard-lib'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
-{success, missing, failure, clientFailure} = CommunicationStatus
+{success, missing, failure, clientFailure} = require 'art-communication-status'
 {config} = require './Config'
 
 ###
@@ -65,6 +65,23 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     type:               -> @request.type
     originatedOnServer: -> @request.originatedOnServer
     context:            -> @request.context
+    requestPathArray: (into) ->
+      localInto = into || []
+      {parentRequest} = @
+      if parentRequest
+        parentRequest.getRequestPathArray localInto
+
+      localInto.push @
+      localInto
+
+    requestPath: ->
+      "<#{(r.toStringCore() for r in @requestPathArray).join ' >> '}>"
+
+  toStringCore: ->
+    "ArtEry.#{if @isResponse then 'Response' else 'Request'} #{@pipelineName}.#{@type}#{if @key then " key: #{@key}" else ''}"
+
+  toString: ->
+    "<#{@toStringCore()}>"
 
   ########################
   # Context Props
@@ -306,16 +323,15 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     # status = responseProps.status if isString responseProps?.status
 
     if status != success && config.verbose
-      log RequestResponseBase:
-        config: verbose: config.verbose
-        toResponse: {
-          status
-          @type
-          @pipelineName
+      log.error RequestResponseBase_toResponse:
+        arguments: {status, responseProps}
+        config: verbose: true
+        request: {
+          @requestPath
           @requestProps
-          responseProps
-          error: Promise.reject new Error
+          @session
         }
+        error: Promise.reject new Error
 
     Promise.resolve responseProps
     .then (responseProps = {}) =>
