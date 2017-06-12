@@ -9,16 +9,14 @@ class ArtEryHandler extends &ArtExpressServer.PromiseHandler
   handleApiRequest: (request, requestData) ->
     {pipeline, type, key} = @_findPipelineForRequest request
 
-    processRequest = (session) ->
-      pipeline._processRequest Request.createFromRemoteRequestProps {session, pipeline, type, key, requestData}
-      .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+    processRequest =
 
     verifySession requestData.session
-    .then processRequest
-    .catch ->
-      processRequest {}
-      .then (plainObjectsResponseWithSignedSession) ->
-        merge plainObjectsResponseWithSignedSession, replaceSession: true
+    .catch -> null
+    .then (session) ->
+      pipeline._processRequest Request.createFromRemoteRequestProps {session: session || {}, pipeline, type, key, requestData}
+    .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+
 
   ######################
   # PRIVATE

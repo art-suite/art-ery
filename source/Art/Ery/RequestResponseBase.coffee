@@ -230,29 +230,31 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   ##################################
   # GENERATE NEW RESPONSES/REQUESTS
   ##################################
-  ###
-  IN: data can be a plainObject or a promise returning a plainObject
-  OUT: promise.then (newRequestWithNewData) ->
-  ###
-  withData: (data) ->
-    Promise.resolve(data).then (data) =>
-      new @class merge @propsForClone, {data}
 
-  # withKey: (newKey) ->
-  #   Promise.resolve(newKey).then (key) =>
-  #     new @class merge @propsForClone, {key}
-
-  ###
-  IN: data can be a plainObject or a promise returning a plainObject
-  OUT: promise.then (newRequestWithNewData) ->
-  ###
-  withMergedData: (data) ->
-    Promise.resolve(data).then (data) =>
-      new @class merge @propsForClone, props: merge @_props, data: merge @data, data
-
+  # Clones this instance with optional overriding constructorOptions
   with: (constructorOptions) ->
     Promise.resolve(constructorOptions).then (constructorOptions) =>
-      new @class merge @propsForClone, constructorOptions
+      @_with constructorOptions
+
+  # Private; expects 'o' to be a plainObject (not a promise -> plainObject)
+  _with: (o) -> new @class merge @propsForClone, o
+
+  ###
+  IN: data can be a plainObject or a promise returning a plainObject
+  OUT: promise.then (new request or response instance) ->
+
+  withData:           new instance has @data replaced by `data`
+  withMergedData:     new instance has @data merged with `data`
+  withSession:        new instance has @session replaced by `session`
+  withMergedSession:  new instance has @session merged with `session`
+  ###
+  withData:           (data)    -> Promise.resolve(data).then    (data)    => @_with {data}
+  withMergedData:     (data)    -> Promise.resolve(data).then    (data)    => @_with data: merge @data, data
+  withSession:        (session) -> Promise.resolve(session).then (session) => @_with {session}
+  withMergedSession:  (session) -> Promise.resolve(session).then (session) => @_with session: merge @session, session
+
+  respondWithSession:        (session) -> @success {session}
+  respondWithMergedSession:  (session) -> @success session: merge @session, session
 
   ###
   next is used right after a filter or a handler.

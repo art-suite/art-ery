@@ -45,8 +45,7 @@ class ArtErySessionManager
   # PRIVATE
   ####################
   @_shouldReturnNewSignedSession: (oldSession, newSession) ->
-    {iat, exp} = oldSession if oldSession
-    newSession &&                   # we have a new session AND
-      !iat                          # the last session wasn't signed
-      || 1 < iatAgeInDays iat       # OR the session is more than 1 day old
-      || !eq oldSession, newSession # OR the session changed
+    {iat} = oldSession if oldSession
+    !iat                          # the last session wasn't signed
+    || 1 < iatAgeInDays iat       # OR the session is more than 1 day old
+    || !eq oldSession, newSession # OR the session changed

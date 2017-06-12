@@ -1,4 +1,4 @@
-{present, merge, isString, log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
+{objectWithout, present, merge, isString, log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
 {missing, Pipeline, pipelines, session} = Neptune.Art.Ery
 {clientFailure} = CommunicationStatus
 
@@ -30,6 +30,14 @@ module.exports = suite:
           assert.eq session.data.username, "alice"
           assert.eq username, "alice"
 
+      test "doesn't alter other session props", ->
+        pipelines.auth.setFooSession data: foo: "bar"
+        .then -> assert.eq session.data.foo, "bar"
+        .then -> pipelines.auth.authenticate data: username: "alice", password: "alice"
+        .then ->
+          assert.eq session.data.username, "alice"
+          assert.eq session.data.foo, "bar"
+
       test "sessions get passed to sub-requests serverside", ->
         pipelines.auth.authenticate data: username: "Bill", password: "Bill"
         .then -> pipelines.myRemote.hello()
@@ -44,17 +52,17 @@ module.exports = suite:
           pipelines.auth.session.data = merge pipelines.auth.session.data, username: "bob"
           pipelines.auth.loggedInAs()
         .then ({username}) ->
-          assert.eq session.data.username, "bob"
+          assert.eq session.data.username, "alice"
           assert.eq username, "alice"
 
       test "clearing the session signature resets the remote session", ->
         pipelines.auth.authenticate data: username: "alice", password: "alice"
         .then ->
           assert.eq session.data.username, "alice"
-          pipelines.auth.session.data = username: "bob"
+          pipelines.auth.session.data = objectWithout pipelines.auth.session.data, "signature"
           pipelines.auth.loggedInAs()
         .then (response) ->
-          assert.eq session.data.username, "bob"
+          assert.eq session.data.username?, false
           assert.doesNotExist response
 
 

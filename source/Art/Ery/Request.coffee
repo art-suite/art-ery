@@ -118,6 +118,9 @@ module.exports = class Request extends require './RequestResponseBase'
 
     urlKeyClause: -> if present @key then "/#{@key}" else ""
 
+  handled: (_handledBy) ->
+    @success().then (response) -> response.handled _handledBy
+
   getRestRequestUrl:    (server) -> "#{server}/#{@pipeline.name}#{@urlKeyClause}"
   getNonRestRequestUrl: (server) -> "#{server}/#{@pipeline.name}-#{@type}#{@urlKeyClause}"
 
@@ -178,4 +181,4 @@ module.exports = class Request extends require './RequestResponseBase'
     RestClient.restJsonRequest remoteRequest = @remoteRequestProps
     .catch ({info: {status, response}}) => merge response, {status}
     .then (remoteResponse)              => @toResponse remoteResponse.status, merge remoteResponse, {remoteRequest, remoteResponse}
-    .then (response) => response.handled "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"
+    .then (response)                    => response.handled "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"

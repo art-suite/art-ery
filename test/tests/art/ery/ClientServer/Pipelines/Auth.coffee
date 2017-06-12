@@ -22,7 +22,7 @@ defineModule module, class Auth extends Pipeline
       if message = authenticationFailed data
         request.clientFailure data: message: message
       else
-        request.success session: username: data.username
+        request.withMergedSession username: data.username
 
     # in order for this to work in production,
     # it has to be handled client-side
@@ -36,3 +36,5 @@ defineModule module, class Auth extends Pipeline
 
     hello: (request) ->
       request.subrequest "myRemote", "hello" # request.session.username
+
+    setFooSession: (request) -> request.withMergedSession foo: request.data.foo

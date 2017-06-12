@@ -17,11 +17,19 @@ module.exports = suite: ->
       assert.eq session.data.sessionA, true
       assert.eq session.data.sessionB, true
 
-  test "simultanious setSessionA and setSessionB don't clobber each other", ->
+  ###
+  Two parallel requests will clober each other's sessions. It has to be this way
+  because the both return different signed sessions. The client has no power
+  to merge two signed sessions. It's cryptographically guaranteed.
+
+  We could merge the unsigned data, BUT the signature won't match, and
+  the server will only see one or the other session which was previously
+  returned by the server.
+  ###
+  test "simultanious setSessionA and setSessionB DO clobber each other", ->
     Promise.all([
       pipelines.myRemote.setSessionA()
       pipelines.myRemote.setSessionB()
     ])
     .then ->
-      assert.eq session.data.sessionA, true
-      assert.eq session.data.sessionB, true
+      assert.neq session.data.sessionA, session.data.sessionB

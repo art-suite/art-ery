@@ -43,7 +43,7 @@ defineModule module, class MyRemote extends Pipeline
 
     handledByFilterRequest: ->
 
-    setSessionA: (request) -> request.success session: sessionA: true
-    setSessionB: (request) -> request.success session: sessionB: true
+    setSessionA: (request) -> request.withMergedSession sessionA: true
+    setSessionB: (request) -> request.withMergedSession sessionB: true
 
     handlerClientFailure: (request) -> request.require false, "handler allways fails"

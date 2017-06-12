@@ -11,7 +11,7 @@ defineModule module, class AuthPipeline extends Pipeline
 
     test "clientApiMethodList", ->
       p = new AuthPipeline
-      assert.eq p.clientApiMethodList, wordsArray "authenticate get"
+      assert.eq p.clientApiMethodList, wordsArray "authenticate get setFooSession"
 
     test "auth success", ->
       # NOTE: a new Session is provided here only for testing - to ensure a clean session
@@ -55,9 +55,11 @@ defineModule module, class AuthPipeline extends Pipeline
       if message = authenticationFailed data
         request.clientFailure data: message: message
       else
-        request.success session: username: data.username
+        request.respondWithMergedSession username: data.username
 
     # in order for this to work in production,
     # it has to be handled client-side
     # and that means it has to be a filter with higher priority than the highest server-side filter.
     get: ({session}) -> session
+
+    setFooSession: (request) -> request.respondWithMergedSession foo: request.data.foo
