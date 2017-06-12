@@ -17,6 +17,13 @@ module.exports = suite: ->
       assert.eq session.data.sessionA, true
       assert.eq session.data.sessionB, true
 
+  test "requests which don't alter the session - don't alter the session nor return it", ->
+    pipelines.myRemote.setSessionA()
+    .then -> pipelines.myRemote.get returnResponseObject: true
+    .then (response) ->
+      assert.eq session.data.sessionA, true
+      assert.doesNotExist response.remoteResponse.session
+
   ###
   Two parallel requests will clober each other's sessions. It has to be this way
   because the both return different signed sessions. The client has no power

@@ -52,7 +52,7 @@ module.exports = suite:
           pipelines.auth.session.data = merge pipelines.auth.session.data, username: "bob"
           pipelines.auth.loggedInAs()
         .then ({username}) ->
-          assert.eq session.data.username, "alice"
+          assert.eq session.data.username, "bob"
           assert.eq username, "alice"
 
       test "clearing the session signature resets the remote session", ->
