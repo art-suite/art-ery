@@ -10,7 +10,7 @@
   objectHasKeys
 } = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
-{success, missing, failure, validStatus} = CommunicationStatus
+{success, missing, validStatus} = CommunicationStatus
 
 # validator must be initialized after Request and Pipeline have bene defined
 _validator = null

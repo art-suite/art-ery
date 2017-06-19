@@ -21,7 +21,7 @@ ArtEry = require 'art-ery'
   arrayWithout
 } = Foundation
 
-{missing, failure, success, pending} = CommunicationStatus
+{missing, success, pending} = CommunicationStatus
 
 {FluxModel} = Flux
 

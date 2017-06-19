@@ -13,7 +13,7 @@
 } = require 'art-standard-lib'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
-{success, missing, failure, clientFailure} = require 'art-communication-status'
+{success, missing, serverFailure, clientFailure, clientFailureNotAuthorized} = require 'art-communication-status'
 {config} = require './Config'
 
 ###
@@ -196,7 +196,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       Promise.resolve @
     else
       message = message() if isFunction message
-      @clientFailure data: message: "#{@requestPipelineAndType}: requirement: #{message || ""}"
+      @clientFailure data: message: message || "requirement not met"
       .then (response) -> response.toPromise()
 
   # returns rejecting promise if test is true
@@ -296,13 +296,14 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         error.info.response
       else throw error
 
-  success:        (responseProps) -> @toResponse success, responseProps
-  missing:        (responseProps) -> @toResponse missing, responseProps
-  failure:        (responseProps) -> @toResponse failure, responseProps
-  clientFailure:  (responseProps) -> @toResponse clientFailure, responseProps
+  success:                    (responseProps) -> @toResponse success, responseProps
+  missing:                    (responseProps) -> @toResponse missing, responseProps
+  clientFailure:              (responseProps) -> @toResponse clientFailure, responseProps
+  clientFailureNotAuthorized: (responseProps) -> @toResponse clientFailureNotAuthorized, responseProps
+  failure:                    (responseProps) -> @toResponse failure, responseProps
   # NOTE: there is no serverFailure method because you should always use just 'failure'.
   # This is because you may be running on the client or the server. If running on the client, it isn't a serverFailure.
-  # If status == "failure" in the server's response, the client will convert that status to serverFailure automatically.
+  # If status == "failure", the ArtEry HTTP server will convert that status to serverFailure automatically.
 
   ##########################
   # PRIVATE

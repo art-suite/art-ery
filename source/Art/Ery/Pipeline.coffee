@@ -31,7 +31,7 @@ PipelineRegistry = require './PipelineRegistry'
 } = Foundation
 {normalizeFieldProps} = Validator
 
-{success, missing, failure} = CommunicationStatus
+{success, missing} = CommunicationStatus
 
 ###
 TODO:

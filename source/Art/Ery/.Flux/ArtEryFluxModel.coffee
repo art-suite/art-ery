@@ -28,7 +28,7 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
   isPlainObject
 } = Neptune.Art.Foundation
 
-{missing, failure, success, pending} = CommunicationStatus
+{missing, success, pending} = CommunicationStatus
 
 
 defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxModel

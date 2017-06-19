@@ -1,5 +1,5 @@
-{log} = require 'art-foundation'
-{Response, Request, Pipeline, Session, success, failure} = Neptune.Art.Ery
+{log} = require 'art-standard-lib'
+{Response, Request, Pipeline, Session} = Neptune.Art.Ery
 
 module.exports = suite: ->
   test 'singleton', ->

@@ -4,7 +4,7 @@ Response = require './Response'
 {config} = require './Config'
 
 {toPlainObjects, Validator, toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
-{success, failure} = CommunicationStatus
+{success} = CommunicationStatus
 {normalizeFields} = Validator
 
 ###

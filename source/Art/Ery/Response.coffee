@@ -1,7 +1,7 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
 {pureMerge, Promise, BaseObject, object, isPlainArray, objectKeyCount, arrayWith, inspect, ErrorWithInfo, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
-{success, missing, failure} = CommunicationStatus
+{success, missing} = CommunicationStatus
 
 responseValidator = new Validator
   request:  w "required", instanceof: Request

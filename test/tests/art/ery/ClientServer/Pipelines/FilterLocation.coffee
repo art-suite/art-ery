@@ -1,6 +1,6 @@
 {defineModule, log, isString, present, CommunicationStatus, arrayWith} = require 'art-foundation'
 {Response, Request, Pipeline, Session, config} = require 'art-ery'
-{success, failure, missing} = CommunicationStatus
+{success, missing} = CommunicationStatus
 
 isPresentString = (s) -> isString(s) && present s
 
