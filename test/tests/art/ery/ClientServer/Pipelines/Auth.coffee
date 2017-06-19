@@ -38,3 +38,9 @@ defineModule module, class Auth extends Pipeline
       request.subrequest "myRemote", "hello" # request.session.username
 
     setFooSession: (request) -> request.withMergedSession foo: request.data.foo
+
+    getRestrictedResource: (request) ->
+      if request.session.username
+        secretSauce: "thousand island dressing"
+      else
+        request.clientFailureNotAuthorized()

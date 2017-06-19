@@ -1,6 +1,6 @@
 {objectWithout, present, merge, isString, log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
 {missing, Pipeline, pipelines, session} = Neptune.Art.Ery
-{clientFailure} = CommunicationStatus
+{clientFailureNotAuthorized, clientFailure} = CommunicationStatus
 
 module.exports = suite:
   authenticate:
@@ -76,3 +76,13 @@ module.exports = suite:
           assert.doesNotExist session.data.username
           assert.doesNotExist response
 
+      test "unauthorized access", ->
+        assert.rejects pipelines.auth.getRestrictedResource()
+        .then (error) ->
+          assert.eq error.info.response.status, clientFailureNotAuthorized
+
+      test "authorized access", ->
+        pipelines.auth.authenticate data: username: "alice", password: "alice"
+        .then -> pipelines.auth.getRestrictedResource()
+        .then ({secretSauce}) ->
+          assert.isString secretSauce
