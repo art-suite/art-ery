@@ -34,8 +34,21 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxModel
   @abstractClass()
 
-  # OUT: singleton for new AnonymousArtErtFluxModel class
-  @createModel: (name, pipeline, aliases) ->
+
+  ###
+  ALIASES
+    both pipelines and models will have the same set of aliases
+    This skips the aliases in pipelines and calls createModel only once
+    which will in turn create all the model aliases.
+    It's important that all the model aliases are the same model-instance object.
+
+  OUT: singleton for new AnonymousArtErtFluxModel class
+  ###
+  @createModel: (pipeline) ->
+    {aliases} = pipeline
+    name = pipeline.getName()
+    return if models[name]
+    log "create FluxModel for pipeline: #{name}"
     createWithPostCreate class AnonymousArtErtFluxModel extends @applyMixins pipeline, ArtEryFluxModel
       @_name: upperCamelCase name
       @keyFields pipeline.keyFields if pipeline.keyFields
@@ -50,17 +63,9 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
 
     BaseClass
 
-  @defineModelsForAllPipelines: ->
-    for name, pipeline of ArtEry.pipelines
-      if aliases = pipeline.aliases
-        # both pipelines and models will have the same set of aliases
-        # This skips the aliases in pipelines and calls createModel only once
-        # which will in turn create all the model aliases.
-        # It's important that all the model aliases are the same model-instance object.
-        name = pipeline.getName()
-        @createModel name, pipeline, aliases unless models[name]
-      else
-        @createModel name, pipeline
+  @defineModelsForAllPipelines: =>
+    # for name, pipeline of ArtEry.pipelines when name == pipeline.getName()
+    #   @createModel pipeline
 
   @pipeline: (@_pipeline) -> @_pipeline
   @getter "pipeline"

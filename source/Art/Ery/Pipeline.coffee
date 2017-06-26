@@ -55,6 +55,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     @_defineQueryHandlers()
     @_defineClientHandlerMethods()
     @_initFields()
+    Neptune.Art.Ery.Flux?.ArtEryFluxModel.createModel @getSingleton()
     super
 
   @instantiateFilter: instantiateFilter = (filter) ->
