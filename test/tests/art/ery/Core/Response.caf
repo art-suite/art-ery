@@ -1,6 +1,5 @@
-{log, merge, CommunicationStatus} = require 'art-foundation'
-{Response, Request, Pipeline} = Neptune.Art.Ery
-{success, failure, missing} = CommunicationStatus
+
+import &ArtSuite
 
 newRequest = (options)->
   new Request merge
@@ -11,11 +10,11 @@ newRequest = (options)->
 
 newResponse = (responseOptions, requestOptions)->
   new Response merge
-    status: success
+    status: responseOptions?.status || success
     request: newRequest requestOptions
     responseOptions
 
-module.exports = suite:
+suite:
   "new Response validation":
     invalid: ->
       test "without request or status ", ->
@@ -129,3 +128,111 @@ module.exports = suite:
         status: "success"
         props: foo: 123
         newResponse(props: foo: 123).plainObjectsResponse
+
+  withTransformedRecords:
+    oneRecord: ->
+      test "success" ->
+        newResponse data: foo: :bar
+        .withTransformedRecords (record) ->
+          merge record, baz: :bam
+        .then (response) ->
+          assert.eq response.status, success
+          assert.eq response.data, foo: "bar", baz: "bam"
+
+      test "null" ->
+        newResponse data: foo: :bar
+        .withTransformedRecords (record) -> null
+        .then (response) ->
+          assert.eq response.status, missing
+
+      test "clientFailure" ->
+        newResponse data: foo: :bar
+        .withTransformedRecords (record, response) -> response.clientFailure()
+        .then (response) ->
+          assert.eq response.status, clientFailure
+
+      test "clientFailureNotAuthorized" ->
+        newResponse data: foo: :bar
+        .withTransformedRecords (record, response) -> response.clientFailureNotAuthorized()
+        .then (response) ->
+          assert.eq response.status, clientFailureNotAuthorized
+
+    manyRecords: ->
+      test "success" ->
+        newResponse data: []
+          id: 123 name: :shane
+          id: 456 name: :george
+        .withTransformedRecords (record) ->
+          merge record, baz: :bam
+        .then (response) ->
+          assert.eq response.status, success
+          assert.eq response.data, []
+            id: 123, name: "shane",  baz: "bam"
+            id: 456, name: "george", baz: "bam"
+
+      test "null" ->
+        newResponse data: []
+          id: 123 name: :shane
+          id: 456 name: :george
+          id: 789 name: :bob
+        .withTransformedRecords (record) ->
+          record if record.name != :george
+        .then (response) ->
+          assert.eq response.status, success
+          assert.eq response.data, []
+            id: 123 name: "shane"
+            id: 789 name: :bob
+
+      test "clientFailure" ->
+        newResponse data: []
+          id: 123 name: :shane
+          id: 456 name: :george
+          id: 789 name: :bob
+        .withTransformedRecords (record, response) ->
+          if record.name != :george
+            record
+          else
+            newResponse status: clientFailure
+        .then (response) ->
+          assert.eq response.status, success
+          assert.eq response.data, []
+            id: 123 name: "shane"
+            id: 789 name: :bob
+
+      test "clientFailureNotAuthorized" ->
+        newResponse data: []
+          id: 123 name: :shane
+          id: 456 name: :george
+          id: 789 name: :bob
+        .withTransformedRecords (record, response) ->
+          if record.name != :george
+            record
+          else
+            newResponse status: clientFailureNotAuthorized
+        .then (response) ->
+          assert.eq response.status, success
+          assert.eq response.data, []
+            id: 123 name: "shane"
+            id: 789 name: :bob
+
+      test "serverFailure" ->
+        newResponse data: []
+          id: 123 name: :shane
+          id: 456 name: :george
+          id: 789 name: :bob
+        .withTransformedRecords (record, response) ->
+          if record.name != :george
+            record
+          else
+            newResponse status: serverFailure
+        .then (response) ->
+          assert.eq response.status, serverFailure
+
+    nonRecords: ->
+      test "success" ->
+        newResponse data: null
+        .withTransformedRecords (record) ->
+          merge record, baz: :bam
+        .then (response) ->
+          assert.eq response.status, success
+          assert.ok !response.data?

@@ -1,6 +1,7 @@
 {
   log, arrayWith
-  defineModule, merge, isJsonType, isString, isPlainObject, inspect
+  defineModule, merge, isJsonType, isString, isPlainObject, isArray
+  inspect
   inspectedObjectLiteral
   toInspectedObjects
   formattedInspect
@@ -10,10 +11,13 @@
   isFunction
   objectWithDefinedValues
   objectWithout
+  array
+  isPromise
+  compactFlatten
 } = require 'art-standard-lib'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
-{success, missing, serverFailure, clientFailure, clientFailureNotAuthorized} = require 'art-communication-status'
+{isClientFailure, success, missing, serverFailure, clientFailure, clientFailureNotAuthorized} = require 'art-communication-status'
 {config} = require './Config'
 
 ###
@@ -255,6 +259,67 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   respondWithSession:        (session) -> @success {session}
   respondWithMergedSession:  (session) -> @success session: merge @session, session
+
+  ###
+  IN:
+    singleRecordTransform: (record, requestOrResponse) ->
+      IN:
+        record: a plain object
+        requestOrResponse: this
+      OUT: See EFFECT below
+        (can return a Promise in all situations)
+
+  EFFECT:
+    if isPlainObject @data
+      called once: singleRecordTransform @data
+      if singleRecordTransform returns:
+        null:         >> return status: missing
+        plainObject:  >> return @withData data
+        response:     >> return response
+
+      See singleRecordTransform.OUT above for results
+
+    if isArray @data
+      Basically:
+        @withData array record in @data with singleRecordTransform record
+
+      But, each value returned from singleRecordTransform:
+        null:                              omitted from array results
+        response.status is clientFailure*: omitted from array results
+        plainObject:                       returned in array results
+        if any error:
+            exception thrown
+            rejected promise
+            response.status is not success and not clientFailure
+          then a failing response is returned
+
+  ###
+  withTransformedRecords: (singleRecordTransform) ->
+    if isPlainObject @data then @next singleRecordTransform @data, @
+    else if isArray @data
+      firstFailure = null
+      transformedRecords = array @data, (record) =>
+        Promise.then => singleRecordTransform record, @
+        .catch (error) =>
+          if response error?.info?.response
+            response
+          else
+            throw error
+        .then (out) ->
+          if out?.status && out instanceof RequestResponseBase
+            if isClientFailure out.status
+              out._clearErrorStack?()
+              null
+            else
+              firstFailure ||= out
+          else
+            out
+
+      Promise.all transformedRecords
+      .then (records) =>
+        firstFailure || @withData compactFlatten records
+
+    else Promise.resolve @
 
   ###
   next is used right after a filter or a handler.

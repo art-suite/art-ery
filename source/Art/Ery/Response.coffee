@@ -72,6 +72,11 @@ module.exports = class Response extends require './RequestResponseBase'
 
     @session ||= @request.session
 
+
+    if @status != success
+      @_captureErrorStack()
+
+
   isResponse:     true
 
   # OUT: @
@@ -155,5 +160,20 @@ module.exports = class Response extends require './RequestResponseBase'
       isSuccessful = true
 
     if isSuccessful
-          Promise.resolve if returnResponseObject then @ else data
-    else  Promise.reject  new ErrorWithInfo "#{@pipeline.getName()}.#{@type} request status: #{@status}, data: #{@data?.message || formattedInspect @data}", response: @
+      Promise.resolve if returnResponseObject then @ else data
+    else Promise.reject @_getRejectionError()
+
+  _getRejectionError: ->
+    @_preparedRejectionError ||= new ErrorWithInfo "#{@pipeline.getName()}.#{@type} request status: #{@status}, data: #{@data?.message || formattedInspect @data}",
+      response: @
+      status: @status
+
+  ###
+  EFFECT:
+    If we create the ErrorWithInfo when the error-response is created
+    we are much more likely to capture the correct stack-trace for the
+    events that lead to the error.
+
+  TODO: We may only want to do this when artPromiseDebug=true or dev=true
+  ###
+  _captureErrorStack: -> @_getRejectionError()

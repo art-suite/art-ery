@@ -1,0 +1,10 @@
+&ArtFlux/Core
+require '../index.coffee'
+{ArtEryFluxModel} = &Flux
+
+&ArtTestbench/Testing
+.init
+  defineTests: ->
+    tests = &Tests
+    ArtEryFluxModel.defineModelsForAllPipelines()
+    tests
