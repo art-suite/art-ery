@@ -64,8 +64,8 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
     BaseClass
 
   @defineModelsForAllPipelines: =>
-    # for name, pipeline of ArtEry.pipelines when name == pipeline.getName()
-    #   @createModel pipeline
+    for name, pipeline of ArtEry.pipelines when name == pipeline.getName()
+      @createModel pipeline
 
   @pipeline: (@_pipeline) -> @_pipeline
   @getter "pipeline"
