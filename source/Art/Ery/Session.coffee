@@ -1,7 +1,11 @@
-Foundation = require 'art-foundation'
 {EventedMixin} = require 'art-events'
 {config} = require './Config'
-{isPlainObject, Promise, BaseObject, merge, inspect, isString, isObject, log, Validator, plainObjectsDeepEq, JsonStore} = Foundation
+{
+  isPlainObject, Promise, BaseObject, merge, inspect, isString, isObject, log, plainObjectsDeepEq
+  isBrowser
+} = require 'art-standard-lib'
+{Validator} = require 'art-validator'
+{JsonStore} = require 'art-foundation'
 
 module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   jsonStore = new JsonStore
@@ -30,8 +34,6 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
     @loadSession()
 
   loadSession: ->
-    if config.location == "server"
-      throw new Error "INTERNAL ERROR: Attempt to access the global session Serverside."
     @_sessionLoadPromise ||= if @jsonStoreKey
       jsonStore.getItem @jsonStoreKey
       .then (data) =>
@@ -40,7 +42,11 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
       Promise.resolve()
 
   @getter "sessionLoadPromise",
-    loadedDataPromise: -> @loadSession().then => @data
+    loadedDataPromise: ->
+      if config.location == "server"
+        throw new Error "INTERNAL ERROR: Attempt to access the global session Serverside."
+      @loadSession().then => @data
+
     sessionSignature: -> @_data?.signature
 
     inspectedObjects: -> @_data
@@ -52,3 +58,5 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
       @jsonStoreKey && jsonStore.setItem @jsonStoreKey, v
 
   reset: -> @data = {}
+
+  @singleton.loadSession() if isBrowser
