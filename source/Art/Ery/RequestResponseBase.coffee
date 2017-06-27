@@ -14,6 +14,7 @@
   array
   isPromise
   compactFlatten
+  present
 } = require 'art-standard-lib'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
@@ -63,12 +64,17 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     requestProps:       -> @request.requestProps
     requestData:        -> @request.requestData
     isRootRequest:      -> @request.isRootRequest
-    key:                -> @request.key
+    key:                -> @request.key || @responseData?.id
     pipeline:           -> @request.pipeline
     parentRequest:      -> @request.parentRequest
     type:               -> @request.type
     originatedOnServer: -> @request.originatedOnServer
     context:            -> @request.context
+    requestString: ->
+      str = "#{@pipelineName}.#{@type}"
+      str += "[#{formattedInspect @key}]" if @key
+      str
+
     requestPathArray: (into) ->
       localInto = into || []
       {parentRequest} = @
@@ -166,6 +172,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   cachedSubrequest: (pipelineName, type, key) ->
     throw new Error "key must be a string (#{formattedInspect {key}})" unless isString key
     @_getPipelineTypeCache(pipelineName, type)[key] ||= @subrequest pipelineName, type, {key}
+
+  setGetCache: ->
+    if @status == success && present(@key) && @responseData?
+      @_getPipelineTypeCache(@pipelineName, "get")[@key] = Promise.then => @responseData
 
   cachedGet: cachedGet = (pipelineName, key) -> @cachedSubrequest pipelineName, "get", key
   cachedPipelineGet: cachedGet # depricated(?) alias

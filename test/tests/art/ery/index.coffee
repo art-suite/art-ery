@@ -3,6 +3,8 @@
 
 module.exports = require './namespace'
 module.exports
+.addModules
+  MemStorePipeline: require './MemStorePipeline'
 require './Both'
 require './ClientServer'
 require './Core'

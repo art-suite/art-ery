@@ -76,6 +76,7 @@ module.exports = class Response extends require './RequestResponseBase'
     if @status != success
       @_captureErrorStack()
 
+    @setGetCache() if @type == "create" || @type == "get"
 
   isResponse:     true
 
@@ -96,6 +97,7 @@ module.exports = class Response extends require './RequestResponseBase'
     isSuccessful:       -> @_status == success
     isMissing:          -> @_status == missing
     notSuccessful:      -> @_status != success
+    description: -> "#{@requestString} response: #{@status}"
     propsForClone: ->
       {
         @request

@@ -1,0 +1,47 @@
+import &ArtStandardLib, Neptune.Art.Ery
+
+suite: ->
+  test "basic" ->
+    class User extends UpdateAfterMixin &MemStorePipeline
+
+      @updateAfter
+        create: post: ({data}) ->
+          key:  data.userId
+          data: lastPostId: data.id
+
+    class Post extends UpdateAfterMixin &MemStorePipeline
+
+    pipelines.user.create data: name: :alice
+    .then (user) ->
+      pipelines.post.create data: userId: user.id, message: "hi!"
+      .then (post) ->
+        assert.eq pipelines.post.store[post.id].id, post.id
+        assert.eq pipelines.user.store[user.id].lastPostId, post.id
+
+  test "double update" ->
+    class User extends UpdateAfterMixin &MemStorePipeline
+
+      @updateAfter
+        create: post: ({data}) ->
+          key:  data.userId
+          data: lastPostId: data.id
+
+        create: comment: ({data}) ->
+          key:  data.userId
+          data: lastCommentId: data.id
+
+    class Post extends UpdateAfterMixin &MemStorePipeline
+    class Comment extends UpdateAfterMixin &MemStorePipeline
+
+    pipelines.user.create data: name: :alice
+    .then (user) ->
+      Promise.all []
+        pipelines.post.create data: userId: user.id, message: "hi!"
+        pipelines.comment.create data: userId: user.id, message: "hi!"
+      .then ([post, comment]) ->
+        storedUser = pipelines.user.store[user.id]
+        assert.eq pipelines.post.store[post.id].id, post.id
+        assert.eq pipelines.comment.store[comment.id].id, comment.id
+        assert.eq storedUser.lastPostId, post.id
+        assert.eq storedUser.lastCommentId, comment.id
+        assert.eq 2, storedUser.updateCount

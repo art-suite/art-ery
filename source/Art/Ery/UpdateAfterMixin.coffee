@@ -109,6 +109,17 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
   ###
   emptyArray = []
   @handleRequestAfterEvent: (request) ->
+    # request.rootRequest.on completion: ->
+    #   Promise.all compactFlatten request.context.updateRequestPropsPromises
+    #   .then ([resolvedUpdateRequestProps]) =>
+    #     promises = for key, props of @_mergeUpdateProps resolvedUpdateRequestProps
+    #       log UpdateAfterMixin: update:
+    #         request: request.description
+    #         "#{@getPipelineName()}.update": props
+    #       request.subrequest @getPipelineName(), "update", {props}
+
+    #     Promise.all promises
+
     {pipelineName, requestType} = request
 
     updateRequestPropsPromises = for updateRequestPropsFunction in @getUpdatePropsFunctions()[pipelineName]?[requestType] || emptyArray
@@ -123,6 +134,9 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
     ])
     .then ([resolvedUpdateRequestProps]) =>
       promises = for key, props of @_mergeUpdateProps resolvedUpdateRequestProps
+        # log UpdateAfterMixin: update:
+        #   request: request.description
+        #   "#{@getPipelineName()}.update": props
         request.subrequest @getPipelineName(), "update", {props}
 
       Promise.all promises

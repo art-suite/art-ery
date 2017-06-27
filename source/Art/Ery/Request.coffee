@@ -86,6 +86,7 @@ module.exports = class Request extends require './RequestResponseBase'
     requestData:    -> @_props.data
     requestProps:   -> @_props
     requestOptions: -> throw new Error "DEPRICATED: use props"
+    description: -> "#{@requestString} request"
 
   ##############################
   # MISC
