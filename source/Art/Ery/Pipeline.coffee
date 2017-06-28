@@ -276,22 +276,22 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       (?=\?|$)
       ///i
 
-    prioritizedFilters: ->
-      @_prioritizedFilters ||= Pipeline.sortFiltersByPriority @filters
+    groupedFilters: ->
+      @_groupedFilters ||= Pipeline.groupFilters @filters
 
-    beforeFilters: -> @_beforeFilters ||= @prioritizedFilters.slice().reverse()
-    afterFilters: -> @prioritizedFilters
+    beforeFilters: -> @_beforeFilters ||= @groupedFilters.slice().reverse()
+    afterFilters: -> @groupedFilters
     status: -> "OK"
 
   # use a stable sort
-  @sortFiltersByPriority: (filters) ->
-    priorityLevels = []
-    for {priority} in filters
-      pushIfNotPresent priorityLevels, priority
+  @groupFilters: (filters) ->
+    groupLevels = []
+    for {group} in filters
+      pushIfNotPresent groupLevels, group
 
     sortedFilters = []
-    for priorityLevel in priorityLevels.sort()
-      for filter in filters when priorityLevel == filter.priority
+    for groupLevel in groupLevels.sort()
+      for filter in filters when groupLevel == filter.group
         sortedFilters.push filter
     sortedFilters
 

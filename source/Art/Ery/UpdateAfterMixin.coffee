@@ -156,7 +156,7 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
   ###
   @filter
     name: "UpdateAfterMixinFilter"
-    priority: "high"
+    group: "outter"
     filterFailures: true
 
     before: all: (request) ->
