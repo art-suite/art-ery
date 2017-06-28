@@ -400,16 +400,16 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
     # status = responseProps.status if isString responseProps?.status
 
-    if status != success && config.verbose
-      log.error RequestResponseBase_toResponse:
-        arguments: {status, responseProps}
-        config: verbose: true
-        request: {
-          @requestPath
-          @requestProps
-          @session
-        }
-        error: Promise.reject new Error
+    # if status != success && config.verbose
+    #   log.error RequestResponseBase_toResponse:
+    #     arguments: {status, responseProps}
+    #     config: verbose: true
+    #     request: {
+    #       @requestPath
+    #       @requestProps
+    #       @session
+    #     }
+    #     error: Promise.reject new Error
 
     Promise.resolve responseProps
     .then (responseProps = {}) =>

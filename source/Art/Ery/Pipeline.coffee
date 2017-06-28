@@ -28,6 +28,7 @@ PipelineRegistry = require './PipelineRegistry'
   escapeRegExp
   ErrorWithInfo
   formattedInspect
+  pushIfNotPresent
 } = Foundation
 {normalizeFieldProps} = Validator
 
@@ -275,9 +276,24 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       (?=\?|$)
       ///i
 
-    beforeFilters: -> @_beforeFilters ||= @filters.slice().reverse()
-    afterFilters: -> @filters
+    prioritizedFilters: ->
+      @_prioritizedFilters ||= Pipeline.sortFiltersByPriority @filters
+
+    beforeFilters: -> @_beforeFilters ||= @prioritizedFilters.slice().reverse()
+    afterFilters: -> @prioritizedFilters
     status: -> "OK"
+
+  # use a stable sort
+  @sortFiltersByPriority: (filters) ->
+    priorityLevels = []
+    for {priority} in filters
+      pushIfNotPresent priorityLevels, priority
+
+    sortedFilters = []
+    for priorityLevel in priorityLevels.sort()
+      for filter in filters when priorityLevel == filter.priority
+        sortedFilters.push filter
+    sortedFilters
 
   getBeforeFilters: (request) -> filter for filter in @beforeFilters when filter.getBeforeFilter request
   getAfterFilters:  (request) -> filter for filter in @afterFilters  when filter.getAfterFilter request
@@ -412,16 +428,20 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###
   _applyAfterFilters: (response) ->
     Promise.try =>
-      return response if response.notSuccessful
       filters = @getAfterFilters response
       filterIndex = 0
 
-      applyNextFilter = (partiallyAfterFilteredReponse)->
-        if partiallyAfterFilteredReponse.notSuccessful || filterIndex >= filters.length
-          Promise.resolve partiallyAfterFilteredReponse
+      applyNextFilter = (previousResponse)->
+        if filterIndex >= filters.length
+          # done!
+          previousResponse
         else
-          filters[filterIndex++].processAfter partiallyAfterFilteredReponse
-          .then (result) -> applyNextFilter result
+          filter = filters[filterIndex++]
+          p = if previousResponse.notSuccessful && !filter.filterFailures
+            Promise.resolve previousResponse
+          else
+            filter.processAfter previousResponse
+          p.then (nextResponse) -> applyNextFilter nextResponse
 
       applyNextFilter response
 

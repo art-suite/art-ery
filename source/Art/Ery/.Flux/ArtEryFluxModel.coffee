@@ -48,7 +48,7 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
     {aliases} = pipeline
     name = pipeline.getName()
     return if models[name]
-    log "create FluxModel for pipeline: #{name}"
+    # log "create FluxModel for pipeline: #{name}"
     createWithPostCreate class AnonymousArtErtFluxModel extends @applyMixins pipeline, ArtEryFluxModel
       @_name: upperCamelCase name
       @keyFields pipeline.keyFields if pipeline.keyFields

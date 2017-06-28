@@ -104,7 +104,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
 
   constructor: (options = {}) ->
     super
-    {@serverSideOnly, @location, @clientSideOnly, @name, fields} = options
+    {@serverSideOnly, @location, @clientSideOnly, @name, fields, @priority, @filterFailures} = options
     @name ||= @class.getName()
     @_location ||= @class._location || "server"
     @shouldFilter()
@@ -112,8 +112,44 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     @after options.after
     @before options.before
 
-  @property "name"
-  @property "location"
+  @property "name location filterFailures"
+
+  ###
+  Filter Priority
+
+  I don't love the way this is implemented. Priority isn't really quite the
+  right concept: Is it higher priority to go First or Last?
+
+  Well, right now, 'high' priority means the filter goes:
+    before all lower-priority before-filters AND
+    after all lower-priority after-filters
+  In otherwords, farthest away from the handler.
+
+  'low' means the opposite - closest to the handler.
+
+  Which doesn't seem 100% obvious :).
+
+  What I really want is the ability to specifiy priority for before and after separtely.
+  Maybe something like:
+    wayBefore:  create: ->
+    justBefore: create: ->
+    justAfter:  create: ->
+    wayAfter:   create: ->
+
+  But, for right now, UpdateAfterMixin just needs 'high' priority under
+  the above definitions, so it's good enough.
+  ###
+  @priorityLevels:
+    high: 1
+    low:  -1
+
+  @setter priority: (v) ->
+    @_priority = if v?
+      throw new Error "invalid Filter priority: #{v}" unless value = Filter.priorityLevels[v]
+      value
+    else
+      0
+  @getter "priority"
 
   shouldFilter: (processingLocation) ->
     switch @location

@@ -138,13 +138,14 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
           props
 
   @_applyAllUpdates: (response) ->
+    log UpdateAfterMixin: _applyAllUpdates: response.requestPath
     {updateRequestsByToUpdatePipeline} = response.context
     if updateRequestsByToUpdatePipeline
       Promise.deepAll updateRequestsByToUpdatePipeline
       .then (resolvedUpdateRequestsByToUpdatePipeline) =>
         Promise.all array resolvedUpdateRequestsByToUpdatePipeline, (updatePropsList, toUpdatePipelineName) =>
-          mergedUpdatePropsList = @_mergeUpdateProps(updatePropsList)
-          Promise.all array mergedUpdatePropsList, (props) =>
+          Promise.all array @_mergeUpdateProps(updatePropsList), (props) =>
+            log UpdateAfterMixin: "#{toUpdatePipelineName}.update": {props}
             response.subrequest toUpdatePipelineName, "update", {props}
     else
       Promise.resolve()
@@ -155,11 +156,16 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
   ###
   @filter
     name: "UpdateAfterMixinFilter"
+    priority: "high"
+    filterFailures: true
+
     before: all: (request) ->
       request.context.updateAfterMixinDepth = (request.context.updateAfterMixinDepth || 0) + 1
       request
 
     after: all: (request) ->
+      if request.type == "create" && request.pipelineName == "post"
+        log UpdateAfterMixinFilter: after: request.requestPath, context: request.context
       p = if request.context.updateAfterMixinDepth == 1
         UpdateAfterMixin._applyAllUpdates request
       else
