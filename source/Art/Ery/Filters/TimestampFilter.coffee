@@ -2,6 +2,11 @@
 Filter = require '../Filter'
 
 defineModule module, class TimestampFilter extends Filter
+
+  constructor: ->
+    super
+    @group = "outter"
+
   @before
     create: (request) ->
       request.withMergedData m

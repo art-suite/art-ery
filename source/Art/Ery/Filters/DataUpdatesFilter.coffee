@@ -12,13 +12,17 @@ TODO:
   First pass
     - data has already gone through the after-pipeline, so any after-filters can removed fields
       the current user can't see. TODO: create privacy filters
-    - if data is empty, then don't added it to updates. Nothing to add anyway. DONE
+    - if data is empty, then don't add it to updates. Nothing to add anyway. DONE
 ###
 defineModule module, class DataUpdatesFilter extends Filter
 
   # for subrequests, this will still be on the server
   # for root requests, there is work to do on both the client and server
   @location "both"
+
+  constructor: ->
+    super
+    @group = "outter"
 
   getUpdatedUpdates = (response, fields)->
     {key, type, responseData} = response
