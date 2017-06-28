@@ -18,30 +18,70 @@ suite: ->
         assert.eq pipelines.post.store[post.id].id, post.id
         assert.eq pipelines.user.store[user.id].lastPostId, post.id
 
-  test "double update" ->
+  test "parallel updates on the same record only cause one update" ->
     class User extends UpdateAfterMixin &MemStorePipeline
 
       @updateAfter
-        create: post: ({data}) ->
-          key:  data.userId
-          data: lastPostId: data.id
+        create:
+          post: ({data}) ->
+            key:  data.userId
+            data: lastPostId: data.id
 
-        create: comment: ({data}) ->
-          key:  data.userId
-          data: lastCommentId: data.id
+          comment: ({data}) ->
+            key:  data.userId
+            data: lastCommentId: data.id
 
-    class Post extends UpdateAfterMixin &MemStorePipeline
+      @handlers
+        postComment: (request) ->
+          {key} = request
+          Promise.all []
+            request.subrequest :post    :create data: userId: key, message: "hi!"
+            request.subrequest :comment :create data: userId: key, message: "hi!"
+
+    class Post    extends UpdateAfterMixin &MemStorePipeline
     class Comment extends UpdateAfterMixin &MemStorePipeline
 
     pipelines.user.create data: name: :alice
     .then (user) ->
-      Promise.all []
-        pipelines.post.create data: userId: user.id, message: "hi!"
-        pipelines.comment.create data: userId: user.id, message: "hi!"
+      pipelines.user.postComment key: user.id
       .then ([post, comment]) ->
-        storedUser = pipelines.user.store[user.id]
         assert.eq pipelines.post.store[post.id].id, post.id
         assert.eq pipelines.comment.store[comment.id].id, comment.id
-        assert.eq storedUser.lastPostId, post.id
-        assert.eq storedUser.lastCommentId, comment.id
-        assert.eq 2, storedUser.updateCount
+        assert.eq
+          pipelines.user.store[user.id]
+          name:           :alice
+          id:             user.id
+          lastPostId:     post.id
+          lastCommentId:  comment.id
+          updateCount:    1
+
+  test "two updates" ->
+    class User extends UpdateAfterMixin &MemStorePipeline
+
+      @updateAfter
+        create:
+          message: ({data}) ->
+            []
+              key: data.fromUserId, data: lastMessageSentId:      data.id
+              key: data.toUserId,   data: lastMessageReceivedId:  data.id
+
+    class Message extends UpdateAfterMixin &MemStorePipeline
+
+    Promise.all []
+      pipelines.user.create data: name: :alice
+      pipelines.user.create data: name: :bill
+    .then ([alice, bill]) ->
+      pipelines.message.create data: fromUserId: alice.id, toUserId: bill.id
+      .then (message) ->
+        assert.eq
+          pipelines.user.store
+          [alice.id]:
+            name:                   :alice
+            id:                     alice.id
+            lastMessageSentId:      message.id
+            updateCount:            1
+          [bill.id]:
+            name:                   :bill
+            id:                     bill.id
+            lastMessageReceivedId:  message.id
+            updateCount:            1

@@ -2,6 +2,7 @@
   defineModule, log, merge, Promise
   object, deepMerge, compactFlatten
   formattedInspect
+  array
 } = require 'art-foundation'
 
 Pipeline = require './Pipeline'
@@ -20,37 +21,70 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
   # Class Declaration API
   #######################
   ###
+  updateAfter vs afterEvent
+
+  afterEvent is more basic, gives you more control, but lacks the special features
+  updateAfter can deliver.
+
+  afterEvent:
+    Invokes the specified function when the AfterEvent fires for the specified
+    type and pipeline. The return results is resolved if it is a promise, but unless
+    the promise is rejected or an error is thrown, the result is ignored.
+
+    That's it. That's all afterEvent does.
+
+    SEE: AfterEventsFilter
+
+  updateAfter:
+    The specified function should return a propsObject or array-of-propsObjects
+    (optionally via a promise).
+    After the rootRequest(*) completes, all updateAfter props are aggregated and
+    deep-merged (for the same pipeline+key) and then update is called for each
+    unique pipeline+key pair.
+
+    If any of the updates fail, the rootRequest fails.
+    If any of the updatePropsFunctions fail, the triggering-request fails.
+
+  updateAfter's key benefit:
+    If you update the same record more than once for the same rootRequest via
+    updateAfter functions, there will only be one 'update' request invoked.
+
+  (*) Technically the update requests due to updateAfters are triggered
+    after the root-most request on a pipeline that mixed in UpdateAfterMixin,
+    not strictly the rootRequest. If you use the UpdateAfterMixin on all your
+    pipelines, it will therefor always be the rootRequest.
+  ###
+
+  ###
+  updateAfter:
+    declare records in THIS pipeilne that should be updated AFTER
+    requests complete against another pipeline (or this one).
 
   IN: eventMap looks like:
-    requestType: pipelineName: updateItemPropsFunction
+    requestType: triggeringPipelineName: updateItemPropsFunction
 
     updateItemPropsFunction: (response) -> updateItemProps
     IN: response is the ArtEry request-response for the request-in-progress on
-      the specified pipelineName.
-      (response.pipelineName should always == pipelineName)
+      the specified triggeringPipelineName.
+      (response.pipelineName == the specified triggeringPipelineName)
 
-    OUT: plainObject OR an array (with arbitrary array-nesting) of plainObjects
-      The plainObjects are all merged to form one or more AWS updateItem calls.
-      They should follow the art-aws streamlined UpdateItem API.
-      In general, they should be of the form:
-        key: string or object # the DynamoDb item's primary key
-        # and one or more of:
-        set/item:             (field -> value map)
-        add:                  (field -> value to add map)
-        setDefault/defaults:  (field -> value to set if no value present)
-
-      SEE: art-aws/.../UpdateItem for more
+    OUT: props object OR an array (compactFlattened) of props objects
+      props-objects:
+        Must have 'key' set to a string
+        All same-key props-objects are deepMerged in the order they are listed.
+          (i.e. last has priority)
 
   EXAMPLE:
-    class User extends DynamoDbPipeline
+    class User extends UpdateAfterMixin Pipeline
       @updateAfter
-        create: post: ({data:{userId, createdAt}}) ->
-          key:  userId
-          data: lastPostCreatedAt: createdAt
-          add:  postCount: 1
+        # Increment postCount for all visible posts created by a user.
+        create: post: ({data:{userId, createdAt, invisible}}) ->
+          if !invisible
+            key:  userId
+            data: lastPostCreatedAt: createdAt
+            add:  visiblePostCount: 1
 
   ###
-
   @updateAfter: (eventMap) ->
     throw new Error "keyFields must be 'id'" unless @getKeyFieldsString() == "id"
     for requestType, requestTypeMap of eventMap
@@ -59,13 +93,13 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
         @_addUpdateAfterFunction pipelineName, requestType, updateRequestPropsFunction
 
   ###
-  Add your own event handler after other pipeline's successful requests.
+  afterEvent: Add your own event handler after other pipeline's successful requests.
   If you return a promise:
     The original request won't complete (or succeed) until your returned promise resolves.
     If your promise is rejected, the original request is rejected.
 
   IN: eventMap looks like:
-    requestType: pipelineName: (response) -> (ignored)
+    requestType: pipelineName: (response) -> (ignored except for errors)
   ###
   @afterEvent: (eventMap) ->
     for requestType, requestTypeMap of eventMap
@@ -103,40 +137,50 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
         else
           props
 
+  @_applyAllUpdates: (response) ->
+    {updateRequestsByToUpdatePipeline} = response.context
+    if updateRequestsByToUpdatePipeline
+      Promise.deepAll updateRequestsByToUpdatePipeline
+      .then (resolvedUpdateRequestsByToUpdatePipeline) =>
+        Promise.all array resolvedUpdateRequestsByToUpdatePipeline, (updatePropsList, toUpdatePipelineName) =>
+          mergedUpdatePropsList = @_mergeUpdateProps(updatePropsList)
+          Promise.all array mergedUpdatePropsList, (props) =>
+            response.subrequest toUpdatePipelineName, "update", {props}
+    else
+      Promise.resolve()
+
   ###
-  Executes all @updatePropsFunctions appropriate for the current request.
-  Then merge them together so we only have one update per unique record-id.
+  UpdateAfterMixinFilter provides the functionality of only triggering
+  updates when the rootRequest(*) completes.
   ###
-  emptyArray = []
+  @filter
+    name: "UpdateAfterMixinFilter"
+    before: all: (request) ->
+      request.context.updateAfterMixinDepth = (request.context.updateAfterMixinDepth || 0) + 1
+      request
+
+    after: all: (request) ->
+      p = if request.context.updateAfterMixinDepth == 1
+        UpdateAfterMixin._applyAllUpdates request
+      else
+        Promise.resolve()
+      p.then ->
+        request.context.updateAfterMixinDepth--
+        request
+
   @handleRequestAfterEvent: (request) ->
-    # request.rootRequest.on completion: ->
-    #   Promise.all compactFlatten request.context.updateRequestPropsPromises
-    #   .then ([resolvedUpdateRequestProps]) =>
-    #     promises = for key, props of @_mergeUpdateProps resolvedUpdateRequestProps
-    #       log UpdateAfterMixin: update:
-    #         request: request.description
-    #         "#{@getPipelineName()}.update": props
-    #       request.subrequest @getPipelineName(), "update", {props}
+    {pipelineName: triggeringPipelineName, requestType} = request
+    toUpdatePipeline = @singleton
+    toUpdatePipelineName = toUpdatePipeline.pipelineName
 
-    #     Promise.all promises
+    # Add all update-props functions to the context
+    ((request.context.updateRequestsByToUpdatePipeline ||= {})[toUpdatePipelineName]||=[]).push array(
+      @getUpdatePropsFunctions()[triggeringPipelineName]?[requestType]
+      (updateRequestPropsFunction) => updateRequestPropsFunction.call toUpdatePipeline, request
+    )
 
-    {pipelineName, requestType} = request
-
-    updateRequestPropsPromises = for updateRequestPropsFunction in @getUpdatePropsFunctions()[pipelineName]?[requestType] || emptyArray
-      Promise.then => updateRequestPropsFunction.call @singleton, request
-
-    afterEventPromises = for afterEventFunction in @getAfterEventFunctions()[pipelineName]?[requestType] || emptyArray
-      Promise.then => afterEventFunction.call @singleton, request
-
-    Promise.all([
-      Promise.all updateRequestPropsPromises
-      Promise.all afterEventPromises
-    ])
-    .then ([resolvedUpdateRequestProps]) =>
-      promises = for key, props of @_mergeUpdateProps resolvedUpdateRequestProps
-        # log UpdateAfterMixin: update:
-        #   request: request.description
-        #   "#{@getPipelineName()}.update": props
-        request.subrequest @getPipelineName(), "update", {props}
-
-      Promise.all promises
+    # invoke and wait for any afterEvent functions
+    Promise.deepAll array(
+      @getAfterEventFunctions()[triggeringPipelineName]?[requestType]
+      (afterEventFunction) => afterEventFunction.call toUpdatePipeline, request
+    )
