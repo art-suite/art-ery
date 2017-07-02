@@ -168,8 +168,6 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
       request
 
     after: all: (request) ->
-      if request.type == "create" && request.pipelineName == "post"
-        log UpdateAfterMixinFilter: after: request.requestPath, context: request.context
       p = if request.context.updateAfterMixinDepth == 1
         UpdateAfterMixin._applyAllUpdates request
       else
