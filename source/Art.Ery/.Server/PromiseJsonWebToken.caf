@@ -1,0 +1,11 @@
+import &StandardImport
+jsonwebtoken = &jsonwebtoken
+
+class PromiseJsonWebToken
+  @sign: (payload, secretOrPrivateKey, options) ->
+    Promise.withCallback (callback) ->
+      jsonwebtoken.sign payload, secretOrPrivateKey, options, callback
+
+  @verify: (token, secretOrPrivateKey, options) ->
+    Promise.withCallback (callback) ->
+      jsonwebtoken.verify token, secretOrPrivateKey, options, callback

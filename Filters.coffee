@@ -1,1 +1,1 @@
-module.exports = require './source/Art/Ery/Filters'
+module.exports = require './source/Art.Ery/Filters'

@@ -1,0 +1,39 @@
+import
+  &StandardImport
+  &ArtErySessionManager
+
+class ArtEryHandler extends &ArtExpressServer.PromiseHandler
+
+  canHandleRequest: (request) ->
+    {url} = request
+    find pipeline, pipelineName in pipelines when pipeline.restPathRegex.test url
+
+  handleApiRequest: (request, requestData) ->
+    {pipeline, type, key} = @_findPipelineForRequest request
+
+    processRequest =
+
+    verifySession requestData.session
+    .catch -> null
+    .then (session) ->
+      pipeline._processRequest Request.createFromRemoteRequestProps {session: session || {}, pipeline, type, key, requestData}
+      .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+
+
+  ######################
+  # PRIVATE
+  ######################
+
+  httpMethodsToArtEryRequestTypes =
+    get:    :get
+    post:   :create
+    put:    :update
+    delete: :delete
+
+  _findPipelineForRequest: (request) ->
+    {url, method} = request
+    find pipeline, pipelineName in pipelines
+      if match = url.match pipeline.restPathRegex
+        [__, type, key] = match
+        type ||= httpMethodsToArtEryRequestTypes[method.toLocaleLowerCase()]
+        type && {} pipeline, type, key

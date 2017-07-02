@@ -1,0 +1,51 @@
+import &StandardImport
+PromiseJsonWebToken = &PromiseJsonWebToken
+
+class ArtErySessionManager
+  @verifySession: (session) ->
+    ##
+      IN: plainObjectsRequest:
+        session:         # encrypted session string
+        query: session:  # encrypted session string
+      OUT:
+        promise.then (verifiedSession) ->
+        promise.catch -> # session was invalid
+
+    unless sessionSignature = session
+      Promise.resolve({})
+    else
+      PromiseJsonWebToken.verify sessionSignature, config.server.privateSessionKey
+      .then (session) -> session
+
+  ##
+    NOTE: sessions expire after 30 days of inactivity; expiration is renewed every request.
+      TODO:
+      1) for your app, have a server-backend session record that can be manually expired
+         and store it's id in the session object
+      2) have a short-term expiration value you set in the session (5m - 1h)
+      3) check server-backend session for manual expiration after every short-term expiration
+      *) Use an ArtEry filter to do this. I'll probably write one and include it in ArtEry.Filters soon.
+        BUT it won't be tied to a specific backend; you'll still have to do that part yourself.
+
+  @signSession: (oldSession, responseData) =>
+    if @_shouldReturnNewSignedSession oldSession, newSession = responseData.session || oldSession
+      PromiseJsonWebToken.sign
+        objectWithout newSession, :exp :iat
+        config.server.privateSessionKey
+        expiresIn: "30 days"
+      .then (signature) -> merge responseData, session: merge newSession, {signature}
+    else
+      objectWithout responseData, :session
+
+  @iatAgeInDays: iatAgeInDays = (iat) ->
+    Date.now() / 1000 - iat
+    / 60 * 60 * 24
+
+  ####################
+  # PRIVATE
+  ####################
+  @_shouldReturnNewSignedSession: (oldSession, newSession) ->
+    {iat} = oldSession if oldSession
+    !iat                          # the last session wasn't signed
+    || 1 < iatAgeInDays iat       # OR the session is more than 1 day old
+    || !eq oldSession, newSession # OR the session changed

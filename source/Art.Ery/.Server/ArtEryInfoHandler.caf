@@ -1,0 +1,10 @@
+import &StandardImport
+
+class ArtEryInfoHandler extends &ArtExpressServer.PromiseHandler
+
+  @getter
+    handleUrlRegex: -> @_exactDefaultHandlerRegex ||= /// ^ \/ #{config.apiRoot} \/? $
+
+  handleApiRequest: (request, requestData) ->
+    Art.Ery.Api:
+      object pipeline from pipelines with pipeline.getApiReport {} # server

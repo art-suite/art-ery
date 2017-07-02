@@ -1,0 +1,4 @@
+&ArtStandardLib.merge
+  &ArtStandardLib
+  &ArtCommunicationStatus
+  require '..'
