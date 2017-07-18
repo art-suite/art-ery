@@ -148,6 +148,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     }
 
   subrequest: (pipelineName, type, requestOptions) ->
+    requestOptions = key: requestOptions if isString requestOptions
     pipelineName = pipelineName.pipelineName || pipelineName
     subrequest = @createSubRequest pipelineName, type, requestOptions
 
