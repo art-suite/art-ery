@@ -24,7 +24,7 @@ defineModule module, class UserOwnedFilter extends Filter
     # ensure updates don't modify the userId
     # ensure the current user can only update their own records
     # (unless request.originatedOnServer)
-    update: (request) ->
+    update: ownerOnlyFilter = (request) ->
       {key} = request
 
       request.requireServerOriginOr !request.data?.userId || isOwner(request), "to change a record's owner #{ownershipInfo request}"
@@ -38,3 +38,4 @@ defineModule module, class UserOwnedFilter extends Filter
           .then (currentRecord) ->
             request.requireServerOriginOr isOwner(request, currentRecord), "to update a record you do not own #{ownershipInfo request}"
 
+    delete: ownerOnlyFilter
