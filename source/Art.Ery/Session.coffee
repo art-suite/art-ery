@@ -44,7 +44,7 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   @getter "sessionLoadPromise",
     loadedDataPromise: ->
       if config.location == "server"
-        throw new Error "INTERNAL ERROR: Attempt to access the global session Serverside."
+        throw new Error "INTERNAL ERROR: Attempted to access the global session serverside. HINT: Use 'session: {}' for no-session requests."
       @loadSession().then => @data
 
     sessionSignature: -> @_data?.signature
