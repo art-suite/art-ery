@@ -46,7 +46,7 @@
     "start": "webpack-dev-server --hot --inline --progress",
     "test": "nn -s;mocha -u tdd --compilers coffee:coffee-script/register",
     "testInBrowser": "webpack-dev-server --progress",
-    "testServer": "coffee ./TestServer.coffee"
+    "testServer": "caf ./TestServer.caf"
   },
   "version": "1.65.1"
 }

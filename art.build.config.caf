@@ -5,7 +5,7 @@
 target: node: true
 package:
   scripts:
-    testServer: "" coffee ./TestServer.coffee
+    testServer: "" caf ./TestServer.caf
 
   description:
     ""
