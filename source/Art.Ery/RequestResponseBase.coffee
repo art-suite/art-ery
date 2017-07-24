@@ -211,7 +211,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       Promise.resolve @
     else
       message = message() if isFunction message
-      @clientFailure data: message: message || "requirement not met"
+      @clientFailure data: message: "requirement not met: #{message || 'see stack trace'}"
       .then (response) -> response.toPromise()
 
   # returns rejecting promise if test is true
