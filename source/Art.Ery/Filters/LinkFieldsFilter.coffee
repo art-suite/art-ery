@@ -1,6 +1,9 @@
-{timeout, array, isPlainObject, formattedInspect, each, wordsArray, log, Validator, defineModule, merge, isString, shallowClone, isPlainArray, Promise} = require 'art-foundation'
+{
+  timeout, array, isPlainObject, formattedInspect, each, wordsArray, log, defineModule, merge, isString, shallowClone, isPlainArray, Promise
+} = require 'art-standard-lib'
 Filter = require '../Filter'
-{normalizeFieldProps} = Validator
+{normalizeFieldProps} = require 'art-validation'
+{missing} = require 'art-communication-status'
 
 defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   @location "server"
@@ -76,11 +79,13 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
             else if requestIncludeProp
               response.cachedPipelineGet pipelineName, id
 
+        .catch (response) ->
+          unless response.status == missing
+            log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
+          # continue anyway
+          null
         .then (value) ->
           linkedData[fieldName] = value if value?
-        .catch (response) ->
-          log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
-          # continue anyway
     Promise.all promises
     .then -> linkedData
 
