@@ -18,7 +18,7 @@
 } = require 'art-standard-lib'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
-{isClientFailure, success, missing, serverFailure, clientFailure, clientFailureNotAuthorized} = require 'art-communication-status'
+{failure, isClientFailure, success, missing, serverFailure, clientFailure, clientFailureNotAuthorized} = require 'art-communication-status'
 {config} = require './Config'
 
 ###
