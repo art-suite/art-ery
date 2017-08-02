@@ -8,6 +8,5 @@ module.exports
   ArtEryHandler:        require './ArtEryHandler'       
   ArtEryInfoHandler:    require './ArtEryInfoHandler'   
   ArtErySessionManager: require './ArtErySessionManager'
-  Main:                 require './Main'                
   PromiseJsonWebToken:  require './PromiseJsonWebToken' 
   StandardImport:       require './StandardImport'      
