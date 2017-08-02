@@ -18,8 +18,12 @@ class ArtErySessionManager
       .then (session) -> session
 
   ##
-    NOTE: sessions expire after 30 days of inactivity; expiration is renewed every request.
-      TODO:
+    NOTE:
+      Sessions expire after 30 days of inactivity.
+      Expiration is renewed on any request when the
+      expiration-date was set more than 1 day ago.
+
+    TODO:
       1) for your app, have a server-backend session record that can be manually expired
          and store it's id in the session object
       2) have a short-term expiration value you set in the session (5m - 1h)
