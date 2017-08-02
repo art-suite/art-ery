@@ -3,7 +3,7 @@
   object, deepMerge, compactFlatten
   formattedInspect
   array
-} = require 'art-foundation'
+} = require 'art-standard-lib'
 
 Pipeline = require './Pipeline'
 KeyFieldsMixin = require './KeyFieldsMixin'
@@ -49,15 +49,20 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
     If you update the same record more than once for the same rootRequest via
     updateAfter functions, there will only be one 'update' request invoked.
 
+    Exception/Feature: afterUpdates can trigger other afterUpdates, but they
+    are always processed in a depth-first manner: all current afterUpdates
+    are aggregated until no more are requested, then they are all processed,
+    possibly triggering the next tier of afterUpdates.
+
   (*) Technically the update requests due to updateAfters are triggered
     after the root-most request on a pipeline that mixed in UpdateAfterMixin,
     not strictly the rootRequest. If you use the UpdateAfterMixin on all your
-    pipelines, it will therefor always be the rootRequest.
+    pipelines, it will always be the rootRequest.
   ###
 
   ###
   updateAfter:
-    declare records in THIS pipeilne that should be updated AFTER
+    declare records in THIS pipeline that should be updated AFTER
     requests complete against another pipeline (or this one).
 
   IN: eventMap looks like:
