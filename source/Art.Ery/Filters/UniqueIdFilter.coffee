@@ -31,7 +31,7 @@ defineModule module, class UniqueIdFilter extends Filter
     The new Ids' length will be different from the old ids, and therefor,
     are guaranteed not to collide with them.
   ###
-  log2_62 = Math.log2 62
+  log2_62 = Math.log(62) / Math.log(2)
   constructor: (options)->
     super
     @bits = options?.bits || 70
