@@ -1,6 +1,6 @@
 import &StandardImport
 
-start: (options) =>
+start: (options = {}) =>
   ##
     IN: options
       SEE: ArtExpressServer's start() options
