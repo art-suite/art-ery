@@ -1,4 +1,4 @@
-{defineModule, log, Validator, m} = require 'art-foundation'
+{defineModule, log, Validator, m, toSeconds} = require 'art-standard-lib'
 Filter = require '../Filter'
 
 defineModule module, class TimestampFilter extends Filter
@@ -10,18 +10,18 @@ defineModule module, class TimestampFilter extends Filter
   @before
     create: (request) ->
       request.withMergedData m
-        createdAt: now = Date.now()
-        updatedAt: now
+        createdAt: toSeconds now = Date.now()
+        updatedAt: toSeconds now
         # use existing values, if present
         request.data if request.originatedOnServer
 
 
     update: (request) ->
       request.withMergedData
-        updatedAt: Date.now()
+        updatedAt: toSeconds Date.now()
         # use existing values, if present
         request.data if request.originatedOnServer
 
   @fields
-    createdAt: "timestamp"
-    updatedAt: "timestamp"
+    createdAt: "secondsTimestamp"
+    updatedAt: "secondsTimestamp"

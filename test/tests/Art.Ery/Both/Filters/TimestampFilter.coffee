@@ -9,8 +9,8 @@ module.exports = suite: ->
     createWithPostCreate class MyPipeline extends SimplePipeline
       @filter TimestampFilter
 
-    assert.eq MyPipeline.singleton.fields.createdAt, FieldTypes.timestamp
-    assert.eq MyPipeline.singleton.fields.updatedAt, FieldTypes.timestamp
+    assert.eq MyPipeline.singleton.fields.createdAt, FieldTypes.secondsTimestamp
+    assert.eq MyPipeline.singleton.fields.updatedAt, FieldTypes.secondsTimestamp
 
   test "create", ->
     createWithPostCreate class MyPipeline extends SimplePipeline
