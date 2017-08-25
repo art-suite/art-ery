@@ -66,10 +66,13 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   includeLinkedFields: (response, data) ->
     {requestData, requestProps:{postIncludeLinkedFieldData}} = response
 
-    if response.requestProps
-      {include} = response.requestProps
-
-    requestIncludeProp = if include == undefined then response.isRootRequest else !!include
+    # Right now we are going to always include unless explicitly set to false.
+    # I like the semantic that we only auto-include root requests, but OBVIOUSLY,
+    # that needs to apply to recursive-gets DUE TO AUTO-INCLUDE!
+    # Which means we effectively need a special cachedPipelineGet for "auto-include-gets".
+    # That's a little ugly, so I'm just doing the expedient solution - that is forward compatible.
+    # It's just less efficient until I find a better way to implement this.
+    requestIncludeProp = (response.rootRequest.props.include != false && response.requestProps.include != false)
 
     linkedData = shallowClone data
     promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
