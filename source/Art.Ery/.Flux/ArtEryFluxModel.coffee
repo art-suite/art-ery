@@ -135,16 +135,16 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
   ###
   dataUpdated: (key, data) ->
     oldData = @fluxStoreGet(key)?.data
-    data = merge oldData, data
+    mergedData = merge oldData, data
 
-    @updateFluxStore key, (oldFluxRecord) -> merge oldFluxRecord, {data}
+    @updateFluxStore key, (oldFluxRecord) -> merge oldFluxRecord, data: merge oldFluxRecord.data, data
 
     each @_queryModels, (queryModel) =>
       oldQueryKey = oldData && queryModel.dataToKeyString oldData
-      queryKey    = queryModel.dataToKeyString data
+      queryKey    = queryModel.dataToKeyString mergedData
 
       queryModel.dataDeleted oldQueryKey, oldData if oldQueryKey && oldQueryKey != queryKey
-      queryModel.dataUpdated queryKey, data       if queryKey
+      queryModel.dataUpdated queryKey, mergedData if queryKey
 
   dataDeleted: (key, dataOrKey) ->
     @updateFluxStore key, status: missing
