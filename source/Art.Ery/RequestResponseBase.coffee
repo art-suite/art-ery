@@ -306,11 +306,17 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   ###
   withTransformedRecords: (singleRecordTransform) ->
-    if isPlainObject @data then @next singleRecordTransform @data, @
+    if isPlainObject @data
+      Promise.resolve if @data.id?
+        @next singleRecordTransform @data, @
+      else
+        @
     else if isArray @data
       firstFailure = null
       transformedRecords = array @data, (record) =>
-        Promise.then => singleRecordTransform record, @
+        Promise.then =>
+          if record.id then singleRecordTransform record, @
+          else record
         .catch (error) =>
           if response error?.info?.response
             response
