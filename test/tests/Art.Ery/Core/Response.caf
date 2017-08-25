@@ -132,27 +132,35 @@ suite:
   withTransformedRecords:
     oneRecord: ->
       test "success" ->
+        newResponse data: foo: :bar, id: :xyz
+        .withTransformedRecords (record) ->
+          merge record, baz: :bam
+        .then (response) ->
+          assert.eq response.status, success
+          assert.eq response.data, foo: "bar", baz: "bam", id: :xyz
+
+      test "only transforms if id is present" ->
         newResponse data: foo: :bar
         .withTransformedRecords (record) ->
           merge record, baz: :bam
         .then (response) ->
           assert.eq response.status, success
-          assert.eq response.data, foo: "bar", baz: "bam"
+          assert.eq response.data, foo: "bar"
 
       test "null" ->
-        newResponse data: foo: :bar
+        newResponse data: foo: :bar, id: :xyz
         .withTransformedRecords (record) -> null
         .then (response) ->
           assert.eq response.status, missing
 
       test "clientFailure" ->
-        newResponse data: foo: :bar
+        newResponse data: foo: :bar, id: :xyz
         .withTransformedRecords (record, response) -> response.clientFailure()
         .then (response) ->
           assert.eq response.status, clientFailure
 
       test "clientFailureNotAuthorized" ->
-        newResponse data: foo: :bar
+        newResponse data: foo: :bar, id: :xyz
         .withTransformedRecords (record, response) -> response.clientFailureNotAuthorized()
         .then (response) ->
           assert.eq response.status, clientFailureNotAuthorized
