@@ -66,7 +66,10 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   includeLinkedFields: (response, data) ->
     {requestData, requestProps:{postIncludeLinkedFieldData}} = response
 
-    requestIncludeProp = !!response.rootRequest.props.include || response.requestProps.include
+    if response.requestProps
+      {include} = response.requestProps
+
+    requestIncludeProp = if include == undefined then response.isRootRequest else !!include
 
     linkedData = shallowClone data
     promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
@@ -106,4 +109,4 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
       else if isPlainObject data
         @includeLinkedFields response, data
       else
-        data
+        @

@@ -50,7 +50,7 @@ module.exports = suite:
 
   include: ->
 
-    test "with and without include: 'auto'", ->
+    test "with and without include: true and false", ->
       createWithPostCreate class User extends SimplePipeline
         ;
 
@@ -65,18 +65,21 @@ module.exports = suite:
         pipelines.postPipeline.create data: user: user, message: "hi there!"
       .then (post) ->
         assert.eq post, {userId: "0", id: "0", message: "hi there!", user: name: "George", id: "0"}, "create response"
-        pipelines.postPipeline.get key: "0", props: include: "auto"
+
+      # test include == true
+      .then ->
+        pipelines.postPipeline.get key: "0", props: include: true
       .then (post) ->
         assert.eq post,
           {userId: "0", id: "0", message: "hi there!", user: name: "George", id: "0"}
           "with include-auto"
 
-      # then test w/o auto
+      # test include == false
       .then ->
-        pipelines.postPipeline.get key: "0"
+        pipelines.postPipeline.get key: "0", props: include: false
       .then (post) ->
         assert.eq post,
-          {userId: "0", id: "0", message: "hi there!"},
+          {userId: "0", id: "0", message: "hi there!"}
           "without include-auto"
 
     test "included fields works on record-array-results", ->
