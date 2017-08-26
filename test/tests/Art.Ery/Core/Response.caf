@@ -139,10 +139,30 @@ suite:
           assert.eq response.status, success
           assert.eq response.data, foo: "bar", baz: "bam", id: :xyz
 
-      test "only transforms if id is present" ->
+      test "using when and with: only transforms if id is present API1" ->
         newResponse data: foo: :bar
-        .withTransformedRecords (record) ->
-          merge record, baz: :bam
+        .withTransformedRecords
+          with: (record) -> merge record, baz: :bam
+          # default when uses isRecord - which tests for id? by default
+        .then (response) ->
+          assert.eq response.status, success
+          assert.eq response.data, foo: "bar"
+
+      test "using when and with: only transforms if id is present API2" ->
+        newResponse data: foo: :bar
+        .withTransformedRecords
+          with: (record) -> merge record, baz: :bam
+          when: ({id}) -> id?
+        .then (response) ->
+          assert.eq response.status, success
+          assert.eq response.data, foo: "bar"
+
+      test "using when and with: only transforms if id is present API3" ->
+        newResponse data: foo: :bar
+        .withTransformedRecords
+          (record) -> merge record, baz: :bam
+          (record) -> record?.id?
+
         .then (response) ->
           assert.eq response.status, success
           assert.eq response.data, foo: "bar"

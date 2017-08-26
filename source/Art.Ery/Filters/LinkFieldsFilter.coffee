@@ -104,12 +104,5 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   # Idealy, we'd also use the bulkGet feature
   @after
     all: (response) ->
-      {data} = response
-      response.withData if isPlainArray data
-        # TODO: use bulkGet for efficiency
-        Promise.all array data, (record) => @includeLinkedFields response, record
-
-      else if isPlainObject data
-        @includeLinkedFields response, data
-      else
-        @
+      response.withTransformedRecords (record) =>
+        @includeLinkedFields response, record

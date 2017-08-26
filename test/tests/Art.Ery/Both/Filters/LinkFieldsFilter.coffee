@@ -89,6 +89,7 @@ module.exports = suite:
       userId1 = null
       userId2 = null
       createWithPostCreate class PostPipeline extends SimplePipeline
+        isRecord: ({message}) -> message?
         @handler
           getSampleData: (request) ->
             [

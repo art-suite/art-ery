@@ -80,6 +80,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     else
       throw new Error "override toKeyString or dataToKeyString for non-string-keys like: #{formattedInspect key}"
 
+  # override if desired
+  # used by Request/Response.withTransformedRecords
+  isRecord: (data) -> data?.id
+
   ###########################
   # Declarative API
   ###########################

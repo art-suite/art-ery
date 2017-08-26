@@ -273,12 +273,20 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   ###
   IN:
-    singleRecordTransform: (record, requestOrResponse) ->
-      IN:
-        record: a plain object
-        requestOrResponse: this
-      OUT: See EFFECT below
-        (can return a Promise in all situations)
+    withFunction, whenFunction
+    OR: object:
+      with: withFunction
+      when: whenFunction
+
+  withFunction: (record, requestOrResponse) ->
+    IN:
+      record: a plain object
+      requestOrResponse: this
+    OUT: See EFFECT below
+      (can return a Promise in all situations)
+
+  whenFunction: (record, requestOrResponse) -> t/f
+    withFunction is only applied if whenFunction returns true
 
   EFFECT:
     if isPlainObject @data
@@ -305,17 +313,22 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
           then a failing response is returned
 
   ###
-  withTransformedRecords: (singleRecordTransform) ->
+  defaultWhenTest = (data, request) -> request.pipeline.isRecord data
+  withTransformedRecords: (withFunction, whenFunction = defaultWhenTest) ->
+    if isPlainObject options = withFunction
+      withFunction = options.with
+      whenFunction = options.when || defaultWhenTest
+
     if isPlainObject @data
-      Promise.resolve if @data.id?
-        @next singleRecordTransform @data, @
+      Promise.resolve if whenFunction @data, @
+        @next withFunction @data, @
       else
         @
     else if isArray @data
       firstFailure = null
       transformedRecords = array @data, (record) =>
         Promise.then =>
-          if record.id then singleRecordTransform record, @
+          if whenFunction record, @ then withFunction record, @
           else record
         .catch (error) =>
           if response error?.info?.response
