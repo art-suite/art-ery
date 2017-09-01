@@ -32,6 +32,7 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
 
   ###########################################
   # Class API
+  # TODO: use Declarable
   ###########################################
   @getKeyFields:        -> @_keyFields
   @getKeyFieldsString:  -> @_keyFieldsString
@@ -49,6 +50,11 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
   @getter
     keyFieldsString:  -> @class._keyFieldsString
     keyFields:        -> @class._keyFields
+
+  isRecord: (data) ->
+    for keyField in @keyFields
+      return false unless data[keyField]?
+    true
 
   # Overrides FluxModel's implementation
   dataToKeyString: (a) ->
