@@ -39,12 +39,15 @@ defineModule module, class Tools
 
     linkFields = {}
     otherFields = {}
+    addValidationFilter = false
     for k, v of fields
       {link} = v = normalizeFieldProps v
 
       if link
         linkFields[k] = v
+        otherFields[k] = "object"
       else
+        addValidationFilter = true
         otherFields[k] = v
 
     [
@@ -52,7 +55,7 @@ defineModule module, class Tools
       new TimestampFilter
       new LinkFieldsFilter fields: linkFields if hasProperties linkFields
       new UserOwnedFilter if userOwned
-      new ValidationFilter fields: otherFields if hasProperties otherFields
+      new ValidationFilter fields: otherFields, exclusive: true if addValidationFilter
       new AfterEventsFilter
       new DataUpdatesFilter
     ]

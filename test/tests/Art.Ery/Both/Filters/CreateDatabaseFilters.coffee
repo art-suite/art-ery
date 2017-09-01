@@ -4,7 +4,7 @@ SimplePipeline = require '../SimplePipeline'
 
 SimplePipelineWithKeys = KeyFieldsMixin SimplePipeline
 
-module.exports = suite: createDatabaseFilters: ->
+module.exports = suite: ->
 
   test "fields are set correctly", ->
     {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
@@ -21,6 +21,9 @@ module.exports = suite: createDatabaseFilters: ->
       userId
       fooId
       barId
+      user
+      foo
+      bar
       message
       "
 
@@ -93,4 +96,5 @@ module.exports = suite: createDatabaseFilters: ->
       updatedAt
       userId
       myField
+      user
       "
