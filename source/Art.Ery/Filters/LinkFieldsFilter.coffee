@@ -96,8 +96,8 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
     .then -> linkedData
 
   @before
-    create: (request) -> @_validate "preCreate", @preprocessRequest request
-    update: (request) -> @_validate "preUpdate", @preprocessRequest request
+    create: (request) -> @preprocessRequest(request).then (request) => @_validate "validateCreate", request
+    update: (request) -> @preprocessRequest(request).then (request) => @_validate "validateUpdate", request
 
   # to support 'include' for query results, just alter this to be an 'after-all-requests'
   # and have it detect is data is an array

@@ -63,7 +63,7 @@ IN:
 module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
-    responseValidator.preCreateSync options, context: "Art.Ery.Response options", logErrors: true
+    responseValidator.validate options, context: "Art.Ery.Response options", logErrors: true
     {@request, @status, @props = {}, @session, @remoteRequest, @remoteResponse, @handledBy, @replaceSession} = options
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions

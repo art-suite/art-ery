@@ -17,29 +17,33 @@ defineModule module, class ValidationFilter extends Filter
 
   constructor: (options) ->
     super
+    # NOTE - not using Validator's 'exclusive' feature because we need to test
+    #   unexpected fields against pipeline.fields not the options.fields that were passed in.
     @_exclusive = options?.exclusive
     @_validator = new Validator @fields
 
   @before
-    create: (request) -> @_validate "preCreate", request
-    update: (request) -> @_validate "preUpdate", request
+    create: (request) -> @_validate "validateCreate", request
+    update: (request) -> @_validate "validateUpdate", request
 
   _validate: (method, request) ->
-    Promise.resolve request
-    .then (request) =>
-      @_validator[method] request.data, context: "#{request.pipeline?.getName() || "no pipeline?"} #{@class.getName()}"
-      .then (data) =>
-        rejection = if @_exclusive
-          {fields} = request.pipeline
-          unexpectedFields = null
-          for k, v of data when !fields[k]
-            (unexpectedFields ||= []).push k
-          if unexpectedFields
-            Promise.reject
-              message: "unexpected fields: #{unexpectedFields.join ', '}"
-              info: unexpected: unexpectedFields
-        rejection || data
+    Promise.then =>
+      data = @_validator[method] request.data, context: "#{request.pipeline?.getName() || "no pipeline?"} #{@class.getName()}"
 
-      .then (data) -> request.withData data
-      .catch ({message, info}) -> request.clientFailure data: merge {message}, info
+      rejection = if @_exclusive
+        {fields} = request.pipeline
+        unexpectedFields = null
+        for k, v of data when !fields[k]
+          (unexpectedFields ||= []).push k
+
+        if unexpectedFields
+          Promise.reject
+            message: "unexpected fields: #{unexpectedFields.join ', '}"
+            info: unexpected: unexpectedFields
+
+      rejection || request.withData data
+
+    .catch ({message, info}) ->
+      log {request}
+      request.clientFailure data: merge {message}, info
 

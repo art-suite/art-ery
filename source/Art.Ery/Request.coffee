@@ -71,7 +71,7 @@ module.exports = class Request extends require './RequestResponseBase'
     key = @_props.key || options.key
     options.key = @_props.key = @pipeline.toKeyString key if key?
 
-    requestConstructorValidator().preCreateSync options, context: "Art.Ery.Request options", logErrors: true
+    requestConstructorValidator().validate options, context: "Art.Ery.Request options", logErrors: true
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
