@@ -47,6 +47,13 @@ module.exports = suite:
 
       (new MyPipeline).create data: merge userIdObject, foo: "hi"
 
+    test "no data", ->
+      session.data = userIdObject
+      createWithPostCreate class MyPipeline extends SimplePipeline
+        @filter new UserOwnedFilter userCreatableFields: foo: true
+
+      (new MyPipeline).create()
+
     test "fail", ->
       session.data = userIdObject
       createWithPostCreate class MyPipeline extends SimplePipeline

@@ -39,15 +39,15 @@ defineModule module, class UserOwnedFilter extends Filter
 
   requireCanSetFields: requireCanSetFields = (request, allowedFields) ->
     unless request.originatedOnServer
-      for k,v of request.data when !allowedFields[k]
-        return Promise.resolve request.clientFailureNotAuthorized "not allowed to #{request.type} field: #{k}"
+      for k, v of request.data when !allowedFields[k]
+        return Promise.resolve request.clientFailureNotAuthorized "not allowed to #{request.type} field: #{k}. allowedFields: #{Object.keys(allowedFields).join ', '}"
     Promise.resolve request
 
   @before
     # ensure we are setting userId to session.userId and session.userId is set
     # (unless reuest.originatedOnServer)
     create: (request) ->
-      request.withMergedData userId: request.data.userId || request.session.userId
+      request.withMergedData userId: request.data?.userId || request.session.userId
       .then (requestWithUserId) ->
         requestWithUserId.requireServerOriginOr isOwner(requestWithUserId), "to create a record you do not own #{ownershipInfo request}"
       .then (request) => requireCanSetFields request, @userCreatableFields
