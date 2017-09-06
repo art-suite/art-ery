@@ -17,8 +17,8 @@ module.exports = suite:
           post: link: "post"
 
       assert.eq trimFields(MyPipeline.getFields()),
-        userId:  dataType: 'string', fieldType: "trimmedString", pipelineName: "user", required: true
-        postId:  dataType: 'string', fieldType: "trimmedString", pipelineName: "post"
+        userId:  dataType: 'string', fieldType: "trimmedString", pipelineName: "user", required: true, maxLength: 1024
+        postId:  dataType: 'string', fieldType: "trimmedString", pipelineName: "post", maxLength: 1024
 
     test "linked objects get converted to ids for writing", ->
       createWithPostCreate class MyPipeline extends SimplePipeline

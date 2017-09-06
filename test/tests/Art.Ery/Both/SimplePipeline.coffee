@@ -63,7 +63,7 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
     @_store = {}
     @_nextUniqueKey = 0
 
-  @getter
+  @getter "store",
     nextUniqueKey: ->
       @_nextUniqueKey++ while @_store[@_nextUniqueKey]
       (@_nextUniqueKey++).toString()

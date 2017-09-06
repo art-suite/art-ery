@@ -14,26 +14,26 @@ module.exports = suite: ->
         bar:    link: "user"
         message: "present trimmedString"
 
-    assert.eq Object.keys(myPipeline.fields), w "
-      id
-      createdAt
-      updatedAt
-      userId
-      fooId
-      barId
-      user
-      foo
+    assert.eq Object.keys(myPipeline.fields).sort(), w "
       bar
+      barId
+      createdAt
+      foo
+      fooId
+      id
       message
+      updatedAt
+      user
+      userId
       "
 
     assert.eq (array myPipeline.filters, (v) -> v.name), w "
-      UniqueIdFilter
-      TimestampFilter
       LinkFieldsFilter
       ValidationFilter
       AfterEventsFilter
       DataUpdatesFilter
+      UniqueIdFilter
+      TimestampFilter
       "
 
   test "create", ->
@@ -58,20 +58,20 @@ module.exports = suite: ->
       @filter createDatabaseFilters
         userOwned: true
 
-    assert.eq Object.keys(myPipeline.fields), w "
-      id
+    assert.eq Object.keys(myPipeline.fields).sort(), w "
       createdAt
+      id
       updatedAt
       userId
       "
 
     assert.eq (array myPipeline.filters, (v) -> v.name), w "
-      UniqueIdFilter
-      TimestampFilter
       LinkFieldsFilter
-      UserOwnedFilter
       AfterEventsFilter
       DataUpdatesFilter
+      UniqueIdFilter
+      TimestampFilter
+      UserOwnedFilter
       "
 
   test "userOwned and another field", ->
@@ -81,20 +81,20 @@ module.exports = suite: ->
         myField: "strings"
 
     assert.eq (array myPipeline.filters, (v) -> v.name), w "
-      UniqueIdFilter
-      TimestampFilter
       LinkFieldsFilter
-      UserOwnedFilter
       ValidationFilter
       AfterEventsFilter
       DataUpdatesFilter
+      UniqueIdFilter
+      TimestampFilter
+      UserOwnedFilter
       "
 
-    assert.eq Object.keys(myPipeline.fields), w "
-      id
+    assert.eq Object.keys(myPipeline.fields).sort(), w "
       createdAt
-      updatedAt
-      userId
+      id
       myField
+      updatedAt
       user
+      userId
       "

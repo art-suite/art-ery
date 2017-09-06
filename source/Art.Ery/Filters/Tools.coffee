@@ -30,6 +30,7 @@ defineModule module, class Tools
     if userOwned
       fields.user = "required link"
       if isString userOwned
+        log.error "DEPRICATED"
         fields.user = "#{fields.user} #{userOwned}"
       fields = objectWithout fields, "userOwned"
 
@@ -51,11 +52,11 @@ defineModule module, class Tools
         otherFields[k] = v
 
     [
-      new UniqueIdFilter uniqueIdProps unless present(PipelineClass?._keyFieldsString) && PipelineClass._keyFieldsString != "id"
-      new TimestampFilter
       new LinkFieldsFilter fields: linkFields if hasProperties linkFields
-      new UserOwnedFilter if userOwned
       new ValidationFilter fields: otherFields, exclusive: true if addValidationFilter
       new AfterEventsFilter
       new DataUpdatesFilter
+      new UniqueIdFilter uniqueIdProps unless present(PipelineClass?._keyFieldsString) && PipelineClass._keyFieldsString != "id"
+      new TimestampFilter
+      new UserOwnedFilter userOwned if userOwned
     ]
