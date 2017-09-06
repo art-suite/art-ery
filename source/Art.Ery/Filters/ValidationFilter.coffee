@@ -28,7 +28,8 @@ defineModule module, class ValidationFilter extends Filter
 
   _validate: (method, request) ->
     Promise.then =>
-      data = @_validator[method] request.data, context: "#{request.pipeline?.getName() || "no pipeline?"} #{@class.getName()}"
+      validatedData = @_validator[method] request.data, context: "#{request.pipeline?.getName() || "no pipeline?"} #{@class.getName()}"
+      data = validatedData if request.location != "client"
 
       rejection = if @_exclusive
         {fields} = request.pipeline
