@@ -73,6 +73,19 @@ module.exports = suite:
           assert.eq response.remoteResponse.handledBy, beforeFilter: "handleByFilter"
           assert.eq response.handledBy, "POST http://localhost:8085/api/myRemote-handledByFilterRequest"
 
+      test "privateRequestOkAsSubRequest", ->
+        pipelines.myRemote.privateRequestOkAsSubRequest()
+
+      test "myPrivateRequestType", ->
+        assert.rejects pipelines.myRemote.myPrivateRequestType()
+        .then (rejectsWith) ->
+          assert.eq rejectsWith.info.response.status, missing
+
+      test "non-existant request type", ->
+        request = pipelines.myRemote.createRequest "nonExistantRequestType", {}
+        pipelines.myRemote._processRequest request
+        .then (response) -> assert.eq response.status, missing
+
     "custom props": ->
 
       test "simulatePropsInput", ->

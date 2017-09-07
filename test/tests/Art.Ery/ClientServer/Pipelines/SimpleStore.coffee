@@ -8,6 +8,8 @@ defineModule module, class SimpleStore extends KeyFieldsMixin Pipeline
     super
     @db = {}
 
+  @publicRequestTypes "reset get create update delete"
+
   @handlers
     reset: ({data}) ->
       @db = data

@@ -9,6 +9,8 @@ defineModule module, class ClientFailures extends Pipeline
     before: beforeFilterClientFailure: (request) -> request.require false, "beforeFilterClientFailure allways fails"
     after: afterFilterClientFailure:   (request) -> request.require false, "afterFilterClientFailure allways fails"
 
+  @publicRequestTypes "handlerClientFailure afterFilterClientFailure beforeFilterClientFailure"
+
   @handlers
     handlerClientFailure:       (request) -> request.require false, "handlerClientFailure allways fails"
     afterFilterClientFailure:   -> true

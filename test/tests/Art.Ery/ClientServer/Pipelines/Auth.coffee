@@ -16,6 +16,8 @@ defineModule module, class Auth extends Pipeline
     return "password not present" unless isPresentString password
     return "username and password don't match" unless username == password
 
+  @publicRequestTypes "authenticate loggedInAs hello setFooSession getRestrictedResource"
+
   @handlers
     authenticate: (request) ->
       {data} = request

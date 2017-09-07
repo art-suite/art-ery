@@ -26,6 +26,20 @@ defineModule module, class MyRemote extends Pipeline
     before: filterClientFailure: (request) ->
       request.require false, "filter allways fails"
 
+  @publicRequestTypes "
+    get
+    hello
+    simulateServerFailure
+    simulateClientFailure
+    simulatePropsInput
+    simulatePropsOutput
+    handledByFilterRequest
+    setSessionA
+    setSessionB
+    handlerClientFailure
+    privateRequestOkAsSubRequest
+    "
+
   @handlers
     get: ({key, data}) -> "#{data?.greeting || 'Hello'} #{key || 'World'}!"
 
@@ -47,3 +61,9 @@ defineModule module, class MyRemote extends Pipeline
     setSessionB: (request) -> request.withMergedSession sessionB: true
 
     handlerClientFailure: (request) -> request.require false, "handler allways fails"
+
+    myPrivateRequestType: (request) ->
+      request.requireServerOrigin().then -> "myPrivateRequestType success"
+
+    privateRequestOkAsSubRequest: (request) ->
+      request.subrequest request.pipeline, "myPrivateRequestType"

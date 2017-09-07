@@ -34,6 +34,8 @@ defineModule module, class DataUpdatesFilterPipeline extends require './SimpleSt
       query: ({key}) -> array @db, when: (v, k) -> v.email == key
       dataToKeyString: ({email}) -> email
 
+  @publicRequestTypes "subrequestTest"
+
   @handlers
     subrequestTest: (request) ->
       {key, data, type} = request.data

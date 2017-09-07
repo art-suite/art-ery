@@ -9,13 +9,16 @@ class ArtEryHandler extends &ArtExpressServer.PromiseHandler
     find pipeline, pipelineName in pipelines when pipeline.restPathRegex.test url
 
   handleApiRequest: (request, requestData) ->
-    {pipeline, type, key} = @_findPipelineForRequest request
+    if found = @_findPipelineForRequest request
+      {pipeline, type, key} = found
 
-    verifySession requestData.session
-    .catch -> null
-    .then (session) ->
-      pipeline._processRequest Request.createFromRemoteRequestProps {session: session || {}, pipeline, type, key, requestData}
-      .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+      verifySession requestData.session
+      .catch -> null
+      .then (session) ->
+        pipeline._processRequest Request.createFromRemoteRequestProps {session: session || {}, pipeline, type, key, requestData}
+        .then ({plainObjectsResponse}) -> signSession session, plainObjectsResponse
+    else
+      Promise.resolve null # missing
 
   ######################
   # PRIVATE
@@ -29,8 +32,15 @@ class ArtEryHandler extends &ArtExpressServer.PromiseHandler
 
   _findPipelineForRequest: (request) ->
     {url, method} = request
-    find pipeline, pipelineName in pipelines
-      if match = url.match pipeline.restPathRegex
-        [__, type, key] = match
-        type ||= httpMethodsToArtEryRequestTypes[method.toLocaleLowerCase()]
-        type && {} pipeline, type, key
+
+    if found = find pipeline, pipelineName in pipelines
+        if match = url.match pipeline.restPathRegex
+          {match, pipeline}
+
+      {match, pipeline} = found
+      [__, type, key] = match
+      type ||= httpMethodsToArtEryRequestTypes[method.toLocaleLowerCase()]
+      if config.verbose && type && !pipeline.publicRequestTypes[type]
+        log.warn "" ArtEryHandler blocked request: '#{pipeline.name}.#{type}': #{if type in pipeline.requestTypes then "not in publicRequestTypes" else "not a valid request-type"}
+
+      pipeline.publicRequestTypes[type] && {} pipeline, type, key

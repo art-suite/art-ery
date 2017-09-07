@@ -29,6 +29,7 @@ PipelineRegistry = require './PipelineRegistry'
   ErrorWithInfo
   formattedInspect
   pushIfNotPresent
+  w
 } = Foundation
 {normalizeFieldProps} = Validator
 
@@ -87,6 +88,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   ###########################
   # Declarative API
   ###########################
+
   @extendableProperty
     queries: {}
     filters: []
@@ -94,6 +96,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     clientApiMethodList: []
     fields: {}
     fluxModelMixins: []
+    publicRequestTypes: {}
+
+  @publicRequestTypes: (v) ->
+    @extendPublicRequestTypes object (w v), -> true
 
   ###
   @fluxModelMixin adds a mixin to fluxModelMixins
@@ -343,13 +349,15 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       out
 
     apiReport: (options = {}) ->
-      {server} = options
-      object @requestTypes, (type) =>
-        {method, url} = Request.getRestClientParamsForArtEryRequest
-          server: @remoteServer || server
-          type: type
-          restPath: @restPath
-        "#{method.toLocaleUpperCase()}": url
+      {server, publicOnly} = options
+      object @requestTypes,
+        when: publicOnly && (type) => @getPublicRequestTypes()[type]
+        with: (type) =>
+          {method, url} = Request.getRestClientParamsForArtEryRequest
+            server: @remoteServer || server
+            type: type
+            restPath: @restPath
+          "#{method.toLocaleUpperCase()}": url
 
   ###################
   # PRIVATE

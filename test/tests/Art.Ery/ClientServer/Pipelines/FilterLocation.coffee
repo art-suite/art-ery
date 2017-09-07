@@ -29,6 +29,8 @@ defineModule module, class FilterLocation extends Pipeline
     before: filterTest: (request) -> requestWithLog request, @name
     after:  filterTest: (request) -> requestWithLog request, @name
 
+  @publicRequestTypes "filterTest"
+
   @handlers
     filterTest: (request) ->
       request.success data: customLog: arrayWith request.data?.customLog, "[handler@#{request.location}]"
