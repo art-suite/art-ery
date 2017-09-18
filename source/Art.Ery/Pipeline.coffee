@@ -26,7 +26,6 @@ PipelineRegistry = require './PipelineRegistry'
   peek
   inspectedObjectLiteral
   escapeRegExp
-  ErrorWithInfo
   formattedInspect
   pushIfNotPresent
   w

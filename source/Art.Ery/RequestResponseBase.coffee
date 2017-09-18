@@ -6,7 +6,6 @@
   toInspectedObjects
   formattedInspect
   Promise
-  ErrorWithInfo
   object
   isFunction
   objectWithDefinedValues
@@ -139,7 +138,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     pipeline = ArtEry.pipelines[pipelineName]
     throw new Error "Pipeline not registered: #{formattedInspect pipelineName}" unless pipeline
 
-    new ArtEry.Request merge {originatedOnServer: true}, requestOptions, {
+    new ArtEry.Request merge {originatedOnServer: requestOptions?.originatedOnServer ? true}, requestOptions, {
       type
       pipeline
       @session
@@ -186,7 +185,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     return Promise.resolve null unless key?
     @cachedGet pipelineName, key
     .catch (error) ->
-      if error.info.response.status == missing
+      if error.status == missing
         Promise.resolve null
       else throw error
 
@@ -201,8 +200,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   OUT:
     Success: promise.then (request) ->
     Failure: promise.catch (error) ->
-      error.info.response # failing response
-      error.info.response.data.message.match message # if message res provided
+      error.props.response # failing response
+      error.props.response.data.message.match message # if message res provided
 
   Success if test is true
   ###
@@ -331,7 +330,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
           if whenFunction record, @ then withFunction record, @
           else record
         .catch (error) =>
-          if response error?.info?.response
+          if response = error?.props?.response
             response
           else
             throw error
@@ -387,8 +386,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     # send response-errors back through the 'resolved' promise path
     # We allow them to be thrown in order to skip parts of code, but they should be returned normally
     , (error) =>
-      if error.info?.response?.isResponse
-        error.info.response
+      if error.props?.response?.isResponse
+        error.props.response
       else throw error
 
   success:                    (responseProps) -> @toResponse success, responseProps

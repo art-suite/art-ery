@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{pureMerge, Promise, BaseObject, object, isPlainArray, objectKeyCount, arrayWith, inspect, ErrorWithInfo, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
+{pureMerge, Promise, BaseObject, object, isPlainArray, objectKeyCount, arrayWith, inspect, RequestError, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
 {success, missing} = CommunicationStatus
 
 responseValidator = new Validator
@@ -133,7 +133,7 @@ module.exports = class Response extends require './RequestResponseBase'
         if returnNullIfMissing
           promise.resolve null
         else
-          promise.reject new ErrorWithInfo
+          promise.reject new RequestError
 
     returnResponseObject: true [default: false]
       if true, the response object is returned, otherwise, just the data field is returned.
@@ -166,13 +166,19 @@ module.exports = class Response extends require './RequestResponseBase'
     else Promise.reject @_getRejectionError()
 
   _getRejectionError: ->
-    @_preparedRejectionError ||= new ErrorWithInfo "#{@pipeline.getName()}.#{@type} request status: #{@status}, data: #{@data?.message || formattedInspect @data}",
+    @_preparedRejectionError ||= new RequestError {
+      sourceLib: "ArtEry " + @pipelineName
+      @requestData
+      @type
+      @key
+      @status
+      @data
       response: @
-      status: @status
+    }
 
   ###
   EFFECT:
-    If we create the ErrorWithInfo when the error-response is created
+    If we create the RequestError when the error-response is created
     we are much more likely to capture the correct stack-trace for the
     events that lead to the error.
 
