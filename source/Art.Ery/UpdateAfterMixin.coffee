@@ -113,14 +113,14 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
         @_addAfterEventFunction pipelineName, requestType, afterEventFunction
 
   @deleteAfter: (eventMap) ->
-    pipelineClass = @
+    pipelineName = @getPipelineName()
     @afterEvent object eventMap, (requestTypeMap) ->
-      object requestTypeMap, (getPropsFunction, pipelineName) ->
+      object requestTypeMap, (getPropsFunction, otherPipelineName) ->
         (response) ->
           Promise.resolve getPropsFunction response
           .then (props) ->
             log keyDUDE: props
-            pipelineClass.singleton.delete props
+            response.subrequest pipelineName, "delete", props
 
   ########################
   # PRIVATE
