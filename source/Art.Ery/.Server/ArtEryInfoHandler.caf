@@ -6,5 +6,6 @@ class ArtEryInfoHandler extends &ArtExpressServer.PromiseHandler
     handleUrlRegex: -> @_exactDefaultHandlerRegex ||= /// ^ \/ #{config.apiRoot} \/? $
 
   handleApiRequest: (request, requestData) ->
+    reports = object pipeline from pipelines with pipeline.getApiReport publicOnly: true
     Art.Ery.Api:
-      object pipeline from pipelines with pipeline.getApiReport publicOnly: true
+      object report from reports when 0 < objectKeyCount report
