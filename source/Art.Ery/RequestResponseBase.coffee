@@ -230,8 +230,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   ###
   requireServerOriginOr: (testResult, message) ->
     @require testResult || @originatedOnServer, ->
-      message = "to #{message}" unless message.match /\s*to\s/
-      "originatedOnServer required #{message || ''}"
+      message = "to #{message}" unless message?.match /\s*to\s/
+      "originatedOnServer required #{message ? ''}"
 
   ###
   Success if either NOT testResult or @originatedOnServer are true.
