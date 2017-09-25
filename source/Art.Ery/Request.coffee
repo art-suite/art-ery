@@ -131,11 +131,11 @@ module.exports = class Request extends require './RequestResponseBase'
     update: "put"
     delete: "delete"
 
-  @getRestClientParamsForArtEryRequest: getRestClientParamsForArtEryRequest = ({server, restPath, type, key, data}) ->
+  @getRestClientParamsForArtEryRequest: getRestClientParamsForArtEryRequest = ({session, server, restPath, type, key, data}) ->
     urlKeyClause = if present key then "/#{key}" else ""
     server ||= ""
-
-    url = if method = restMap[type]
+    hasSessionData = objectHasKeys session
+    url = if (method = restMap[type]) && (method != "get" || !hasSessionData)
       "#{server}#{restPath}#{urlKeyClause}"
     else
       method = "post"
@@ -158,15 +158,17 @@ module.exports = class Request extends require './RequestResponseBase'
       (remoteRequestData||={}).props   = props if 0 < objectHasKeys props
       (remoteRequestData||={}).data    = data  if 0 < objectHasKeys data
 
-      getRestClientParamsForArtEryRequest
+      getRestClientParamsForArtEryRequest {
         restPath: pipeline.restPath
         server:
           switch pipeline.remoteServer
             when true, ".", "/" then ""
             else pipeline.remoteServer
-        type:     type
-        key:      key
-        data:     remoteRequestData
+        type
+        key
+        session
+        data:           remoteRequestData
+      }
 
   @createFromRemoteRequestProps: (options) ->
     {session, pipeline, type, key, requestData} = options

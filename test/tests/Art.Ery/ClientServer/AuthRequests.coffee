@@ -45,6 +45,12 @@ module.exports = suite:
         .then -> pipelines.auth.hello()
         .then (res) -> assert.eq res, "Hello, Bill!", "myRemote call via auth call"
 
+      test "get with session", ->
+        pipelines.auth.authenticate data: username: "Bill", password: "Bill"
+        .then -> pipelines.auth.get()
+        .then (username) ->
+          assert.eq username, "Bill"
+
       test "altering the local session without changing the signature has no effect on the remote session", ->
         pipelines.auth.authenticate data: username: "alice", password: "alice"
         .then ->
