@@ -68,7 +68,7 @@ module.exports = suite:
         .then (data) -> assert.eq data, "Hello Alice!"
 
       # this test doesn't even contain data...
-      test "remoteResponse only contains status, session and data", ->
+      test "remoteResponse only contains status, session and props", ->
         pipelines.myRemote.handledByFilterRequest returnResponseObject: true
         .then (response) ->
 
