@@ -119,7 +119,6 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
         (response) ->
           Promise.resolve getPropsFunction response
           .then (props) ->
-            log keyDUDE: props
             response.subrequest pipelineName, "delete", props
 
   ########################
