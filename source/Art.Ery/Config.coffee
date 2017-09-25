@@ -30,6 +30,10 @@ defineModule module, class Config extends Configurable
     # increase logging level with interesting stuff
     verbose: false
 
+    # If true, @beforeFilterLog, @handledBy, @afterFilterLog are returned
+    # Don't use in production :).
+    returnProcessingInfoToClient: false
+
 
     ###
       generating a secury HMAC privateSessionKey:

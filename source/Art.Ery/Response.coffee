@@ -2,6 +2,7 @@ Foundation = require 'art-foundation'
 Request = require './Request'
 {pureMerge, Promise, BaseObject, object, isPlainArray, objectKeyCount, arrayWith, inspect, RequestError, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
 {success, missing} = CommunicationStatus
+{config} = require './Config'
 
 responseValidator = new Validator
   request:  w "required", instanceof: Request
@@ -111,13 +112,16 @@ module.exports = class Response extends require './RequestResponseBase'
       }
     propsForResponse: -> @propsForClone
 
-    plainObjectsResponse: ->
-      object {@status, @props, @session, @beforeFilterLog, @handledBy, @afterFilterLog},
+    plainObjectsResponse: (fields) ->
+      object fields || {@status, @props, @session, @beforeFilterLog, @handledBy, @afterFilterLog},
         when: (v) ->
           switch
             when isPlainObject v then objectKeyCount(v) > 0
             when isPlainArray  v then v.length > 0
             else v != undefined
+
+    responseForRemoteRequest: ->
+      @getPlainObjectsResponse unless config.returnProcessingInfoToClient then {@status, @props, @session}
 
     # DEPRICATED
     # message:            -> @data?.message

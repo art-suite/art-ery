@@ -1,4 +1,4 @@
-{log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
+{log, createWithPostCreate, RestClient, CommunicationStatus, objectKeyCount} = require 'art-foundation'
 {Pipeline, pipelines, session} = Neptune.Art.Ery
 {ApplicationState} = ArtFlux = Neptune.Art.Flux
 {clientFailure, missing, serverFailure} = CommunicationStatus
@@ -67,10 +67,21 @@ module.exports = suite:
         pipelines.myRemote.get key: "Alice"
         .then (data) -> assert.eq data, "Hello Alice!"
 
-      test "handledByFilterRequest", ->
+      # this test doesn't even contain data...
+      test "remoteResponse only contains status, session and data", ->
         pipelines.myRemote.handledByFilterRequest returnResponseObject: true
         .then (response) ->
-          assert.eq response.remoteResponse.handledBy, beforeFilter: "handleByFilter"
+
+          # there is always a session field
+          assert.isString response.remoteResponse.status
+          switch objectKeyCount response.remoteResponse
+            when 1
+              true #ok
+            when 2
+              # the only other field allowed is session
+              assert.isPlainObject response.remoteResponse.session
+            else
+              assert.ok false, "only expecting 1 or 2 keys, got: #{Object.keys(response.remoteResponse).join ', '}"
           assert.eq response.handledBy, "POST http://localhost:8085/api/myRemote-handledByFilterRequest"
 
       test "privateRequestOkAsSubRequest", ->
