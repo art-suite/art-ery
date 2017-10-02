@@ -38,89 +38,73 @@ Art.Ery.location values:
   "client"
   "both" - this is the "serverless" mode, it's all run client-side, but it includes both client-side and server-side filters.
 
-SBD: Just realized that location == "client" still means "server" for server-side subrequests.
-  Maybe 'client' should be 'requester' instead of 'client'?
-  'requester' and 'server'?
+SBD:
+  location: 'client' filters WILL run server-side for server-initiated requests.
+  Maybe 'client' should be 'requester' instead of 'client'? 'requester' and 'server'?
 ###
 
 defineModule module, class Filter extends require './ArtEryBaseObject'
-  @_location: "server" # 'server', 'client' or 'both'
-  @location: (@_location) ->
-
-  ################
-  # class inheritable props
-  ################
-  @extendableProperty
-    beforeFilters: {}
-    afterFilters: {}
-    fields: {}
 
   ############################
   # Class Declaration API
   ############################
-  @fields: (fields) ->
-    @extendFields normalizeFields fields
+  @extendableProperty
+    ###
+    @after: foo: (request) ->
+      IN: Request instance
+      OUT: return a Promise returning one of the list below OR just return one of the list below:
+        Request instance
+        Response instance
+        anythingElse -> toResponse anythingElse
+
+      To reject a request:
+      - throw an error
+      - return a rejected promise
+      - or create a Response object with the appropriate fields
+    ###
+    before: {}
+
+    ###
+    @before: foo: (response) ->
+      IN: Request instance
+      OUT: return a Promise returning one of the list below OR just return one of the list below:
+        Request instance
+        Response instance
+        anythingElse -> toResponse anythingElse
+
+      To reject a request:
+      - throw an error
+      - return a rejected promise
+      - or create a Response object with the appropriate fields
+
+    ###
+    after: {}
 
   ###
-  IN: requestType, requestFilter
-  IN: map from requestTypes to requestFilters
-
-  requestFilter: (request) ->
-    IN: Request instance
-    OUT: return a Promise returning one of the list below OR just return one of the list below:
-      Request instance
-      Response instance
-      anythingElse -> toResponse anythingElse
-
-    To reject a request:
-    - throw an error
-    - return a rejected promise
-    - or create a Response object with the appropriate fields
+  fields
   ###
-  @before: (a, b) -> @extendBeforeFilters a, b if a
-  before: (a, b) -> @extendBeforeFilters a, b if a
+  @extendableProperty
+    fields: {}
+  , extend: (oldFields, addFields) ->
+    merge oldFields, normalizeFields addFields
+
+  # If true, any after-filters will process both successful AND failed responses
+  # By defailt, after-filters will only filter successful responses.
+  @extendableProperty filterFailures: false
 
   ###
-  IN: requestType, responseFilter
-  IN: map from requestTypes to responseFilter
-
-  responseFilter: (response) ->
-    IN: Response instance
-    OUT: return a Promise returning one of the list below OR just return one of the list below:
-      Response instance
-      anythingElse -> toResponse anythingElse
-
-    To reject a request:
-    - throw an error
-    - return a rejected promise
-    - or create a Response object with the appropriate fields
+  location: determine if the filter will run on the 'server', 'client' or 'both'.
   ###
-  @after: (a, b) -> @extendAfterFilters a, b if a
-  after: (a, b) -> @extendAfterFilters a, b if a
+  @locationNames: locationNames =
+    server: true
+    client: true
+    both: true
 
-  #################################
-  # class instance methods
-  #################################
-
-  constructor: (options = {}) ->
-    super
-    {@serverSideOnly, @location, @clientSideOnly, @name, fields, @group, filterFailures} = options
-    @_filterFailures = filterFailures
-    @name ||= @class.getName()
-    @_location ||= @class._location || "server"
-    @shouldFilter()
-    @extendFields normalizeFields fields if fields
-    @after options.after
-    @before options.before
-
-  @property "name location"
-
-  @getter
-    filterFailures: -> @_filterFailures || @class.getFilterFailures()
-
-  # future: use @declarable once it's improved
-  @filterFailures: -> @_filterFailures = true
-  @classGetter "filterFailures"
+  @extendableProperty
+    location: "server"
+  , extend: (__, v) ->
+    throw new Error "invalid location: #{v}" unless locationNames[v]
+    v
 
   ###
   Filter Groups: default: "middle"
@@ -136,15 +120,6 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       outter afterFilter
     loggers afterFilter
 
-  Questions:
-    Do we want to specify groups for before and after separtely?
-      Maybe something like:
-        wayBefore:  create: ->
-        justBefore: create: ->
-        justAfter:  create: ->
-        wayAfter:   create: ->
-
-    Will we ever need more than one level of 'outter' and 'inner'?
   ###
   @groupNames:
     loggers: 2
@@ -152,25 +127,54 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     middle: 0
     inner:  -1
 
-  @setter group: (v) ->
-    @_group = if v?
+  @extendableProperty
+    group: @groupNames.middle
+  , extend: (__, v) ->
+    if v?
       throw new Error "invalid Filter group: #{v}" unless value = Filter.groupNames[v]
       value
     else
       0
-  @getter "group"
+
+  #################################
+  # class instance methods
+  #################################
+
+  constructor: (options = {}) ->
+    super
+    {
+      @serverSideOnly
+      @clientSideOnly
+      @name = @class.getName()
+
+
+      # declarables
+      location, fields, group, filterFailures
+      after
+      before
+    } = options
+
+    # declarables
+    @filterFailures = filterFailures
+    @group          = group
+    @location       = location
+    @fields         = fields
+    @after          = after
+    @before         = before
+
+  @property "name"
 
   shouldFilter: (processingLocation) ->
     switch @location
       when "server" then processingLocation != "client"
       when "client" then processingLocation != "server"
-      when "both" then true
-      else throw new Error "Filter #{@getName()}: invalid filter location: #{@location}"
+      when "both"   then true
+      else throw new Error "Filter #{@getName()}: invalid filter location: #{location}"
 
   toString: -> @getName()
 
-  getBeforeFilter: ({requestType, location}) -> @shouldFilter(location) && (@beforeFilters[requestType] || @beforeFilters.all)
-  getAfterFilter:  ({requestType, location}) -> @shouldFilter(location) && (@afterFilters[requestType]  || @afterFilters.all)
+  getBeforeFilter: ({requestType, location}) -> @shouldFilter(location) && (@before[requestType] || @before.all)
+  getAfterFilter:  ({requestType, location}) -> @shouldFilter(location) && (@after[requestType]  || @after.all)
 
   processBefore:  (request) -> @_processFilter request, @getBeforeFilter request
   processAfter:   (request) -> @_processFilter request, @getAfterFilter  request
@@ -180,10 +184,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       "#{@getNamespacePath()}(#{@name})":
         toInspectedObjects @props
 
-    props: ->
-      {
-        @location
-      }
+    props: -> {@location}
 
   ###
   OUT:
