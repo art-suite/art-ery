@@ -104,7 +104,8 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
 
   constructor: (options = {}) ->
     super
-    {@serverSideOnly, @location, @clientSideOnly, @name, fields, @group, @filterFailures} = options
+    {@serverSideOnly, @location, @clientSideOnly, @name, fields, @group, filterFailures} = options
+    @_filterFailures = filterFailures
     @name ||= @class.getName()
     @_location ||= @class._location || "server"
     @shouldFilter()
@@ -112,19 +113,28 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     @after options.after
     @before options.before
 
-  @property "name location filterFailures"
+  @property "name location"
+
+  @getter
+    filterFailures: -> @_filterFailures || @class.getFilterFailures()
+
+  # future: use @declarable once it's improved
+  @filterFailures: -> @_filterFailures = true
+  @classGetter "filterFailures"
 
   ###
   Filter Groups: default: "middle"
 
   Filter sequence, based on groups:
-    outter beforeFilter
-      middle beforeFilter
-        inner beforeFilter
-          handler
-        inner afterFilter
-      middle afterFilter
-    outter afterFilter
+    loggers beforeFilter
+      outter beforeFilter
+        middle beforeFilter
+          inner beforeFilter
+            handler
+          inner afterFilter
+        middle afterFilter
+      outter afterFilter
+    loggers afterFilter
 
   Questions:
     Do we want to specify groups for before and after separtely?
@@ -137,6 +147,7 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
     Will we ever need more than one level of 'outter' and 'inner'?
   ###
   @groupNames:
+    loggers: 2
     outter: 1
     middle: 0
     inner:  -1
