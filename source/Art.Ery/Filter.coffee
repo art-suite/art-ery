@@ -147,20 +147,14 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       @clientSideOnly
       @name = @class.getName()
 
-
       # declarables
-      location, fields, group, filterFailures
-      after
-      before
+      @location
+      @fields
+      @group
+      @filterFailures
+      @after
+      @before
     } = options
-
-    # declarables
-    @filterFailures = filterFailures
-    @group          = group
-    @location       = location
-    @fields         = fields
-    @after          = after
-    @before         = before
 
   @property "name"
 
