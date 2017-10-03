@@ -12,7 +12,6 @@ module.exports = suite: ->
   test "client location", ->
     pipelines.filterLocation.filterTest returnResponseObject: true
     .then (response) ->
-      assert.eq response.handledBy, "POST http://localhost:8085/api/filterLocation-filterTest"
       assert.eq response.data.customLog, [
         "bothFilter@client"
         "clientFilter@client"
@@ -24,6 +23,7 @@ module.exports = suite: ->
         "clientFilter@client"
         "bothFilter@client"
       ]
+      assert.eq response.handledBy, "POST http://localhost:8085/api/filterLocation-filterTest"
 
   test "both location", ->
     {location} = config
@@ -32,7 +32,6 @@ module.exports = suite: ->
     pipelines.filterLocation.filterTest returnResponseObject: true
     .then (response) ->
       config.location = location
-      assert.eq response.handledBy, handler: "filterTest"
       assert.eq response.data.customLog, [
         "serverFilter@both"
         "bothFilter@both"
@@ -42,3 +41,4 @@ module.exports = suite: ->
         "bothFilter@both"
         "serverFilter@both"
       ]
+      assert.eq response.handledBy, "filterTest-handler"

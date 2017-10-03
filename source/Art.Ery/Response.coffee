@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{pureMerge, Promise, BaseObject, object, isPlainArray, objectKeyCount, arrayWith, inspect, RequestError, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
+{pureMerge, Promise, BaseObject, compactFlatten, object, peek, isPlainArray, objectKeyCount, arrayWith, inspect, RequestError, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
 {success, missing, failure, serverFailure, clientFailure} = CommunicationStatus
 {config} = require './Config'
 
@@ -44,10 +44,6 @@ IN:
     Available for inspecting what exactly went over-the-wire.
     Otherwise ignored by Response
 
-  handledBy:
-    Available for inspecting what code actually handled the request.
-    Otherwise ignored by Response
-
   replaceSession: false
     If true, then the current session will be replace instead of merged
     with the new one. If no new session is provided, the old session
@@ -65,7 +61,7 @@ module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.validate options, context: "Art.Ery.Response options", logErrors: true
-    {@request, @status, @props = {}, @session, @remoteRequest, @remoteResponse, @handledBy, @replaceSession} = options
+    {@request, @status, @props = {}, @session, @remoteRequest, @remoteResponse, @replaceSession} = options
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
@@ -81,28 +77,25 @@ module.exports = class Response extends require './RequestResponseBase'
 
   isResponse:     true
 
-  # OUT: @
-  handled: (_handledBy) ->
-    return @ unless @isSuccessful
-    @handledBy = _handledBy
-    @
-
-  @property "request props session replaceSession remoteResponse remoteRequest handledBy"
+  @property "request props session replaceSession remoteResponse remoteRequest"
   @setter "status"
 
   @getter
     status: ->
-      if @_status == failure
-        switch @currentLocation
+      if @failed
+        switch @location
           when "server" then return serverFailure
           when "client" then return clientFailure
       @_status
+
+    failed: -> @_status == failure
 
     data:               -> @_props.data
     responseData:       -> @_props.data
     responseProps:      -> @_props
 
     beforeFilterLog:    -> @request.filterLog || []
+    handledBy:          -> !@failed && peek @request.filterLog
     afterFilterLog:     -> @filterLog || []
     isSuccessful:       -> @_status == success
     isMissing:          -> @_status == missing
@@ -115,7 +108,6 @@ module.exports = class Response extends require './RequestResponseBase'
         @props
         @session
         @filterLog
-        @handledBy
         @remoteRequest
         @remoteResponse
         @errorProps
@@ -123,7 +115,7 @@ module.exports = class Response extends require './RequestResponseBase'
     propsForResponse: -> @propsForClone
 
     plainObjectsResponse: (fields) ->
-      object fields || {@status, @props, @session, @beforeFilterLog, @handledBy, @afterFilterLog},
+      object fields || {@status, @props, @session, @beforeFilterLog, @afterFilterLog},
         when: (v) ->
           switch
             when isPlainObject v then objectKeyCount(v) > 0

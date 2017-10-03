@@ -1,4 +1,4 @@
-{defineModule, Promise} = require 'art-standard-lib'
+{ErrorWithInfo, defineModule, Promise, isJsonType, log} = require 'art-standard-lib'
 RequestResponseBase = require './RequestResponseBase'
 
 defineModule module, class RequestHandler extends require './ArtEryBaseObject'
@@ -11,23 +11,19 @@ defineModule module, class RequestHandler extends require './ArtEryBaseObject'
     .catch -> internal errors only
   ###
   applyHandler: (request, handlerFunction) ->
+    # pass-through if no filter
+    return Promise.resolve request unless handlerFunction
 
     Promise.then =>
-      if handlerFunction
-        request.addFilterLog @
-        handlerFunction.call @, request
-      else
-        # pass-through if no filter
-        request
+      request.addFilterLog @
+      handlerFunction.call @, request
 
     .then (data) =>
-      return data if data instanceof RequestResponseBase
-      if !data?               then request.missing()
-      else if isJsonType data then request.success {data}
+      unless data?                                then request.missing()
+      else if data instanceof RequestResponseBase then data
+      else if isJsonType data                     then request.success {data}
       else
-        log.error invalidXYZ: data
-        throw new Error "invalid response data passed to RequestResponseBaseNext"
-        # TODO: should return an inspected version of Data IFF the server is in debug-mode
+        throw new ErrorWithInfo "invalid response data passed to RequestResponseBaseNext", {data}
 
     # send response-errors back through the 'resolved' promise path
     # We allow them to be thrown in order to skip parts of code, but they should be returned normally

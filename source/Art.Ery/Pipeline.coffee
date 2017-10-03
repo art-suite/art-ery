@@ -40,7 +40,7 @@ TODO:
   DONT put it in Flux/
     WHY? Server-side, we won't include Flux/
 ###
-defineModule module, class Pipeline extends require './ArtEryBaseObject'
+defineModule module, class Pipeline extends require './RequestHandler'
 
   @register: ->
     @singletonClass()
@@ -235,6 +235,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
   @classGetter
     pipelineName: -> @_pipelineName || decapitalize @getName()
 
+  getLogName: (requestType) -> "#{requestType}-handler"
   @getter "options",
     pipelineName: -> @class.getPipelineName()
     tableNamePrefix: -> @class._tableNamePrefix || config.tableNamePrefix
@@ -420,25 +421,20 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     promise.catch -> always means an internal failure
   ###
-  handleRequest: handleRequest = (requestOrResponse) ->
-    if requestOrResponse.isResponse
-      return requestOrResponse
-    else
-      request = requestOrResponse
+  handleRequest: handleRequest = (request) ->
+    if request.isResponse
+      throw new Error "HARD DEPRICATED"
 
     if @location == "client" && @remoteServer
       request.sendRemoteRequest @remoteServer
 
-    else if handler = @handlers[request.type]
-      p = Promise.then => handler.call @, request
-      request.next p
-      .then (response) =>
-        response.handled handler: requestOrResponse.type
-
     else
-      message = "no Handler for request type: #{request.type}"
-      log.error message, request: request
-      request.missing data: {message}
+      @applyHandler request, @handlers[request.type]
+      .then (response) =>
+        unless response.isResponse
+          response.failure "#{@pipelineName}.#{request.type} request was not handled"
+        else
+          response
 
   _applyHandler: handleRequest
 
@@ -477,6 +473,11 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
   _processRequest: (request) ->
     @filterChain.handleRequest request
+    .then (response) ->
+      unless response.isResponse
+        log.error "not response!":response
+      response
+
     # @_applyBeforeFilters @_normalizeRequest request
     # .then (requestOrResponse)  => @_applyHandler requestOrResponse
     # .then (response)           => @_applyAfterFilters response

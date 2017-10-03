@@ -1,4 +1,4 @@
-{defineModule, log} = require 'art-foundation'
+{defineModule, log, merge} = require 'art-foundation'
 {Pipeline, TimestampFilter, DataUpdatesFilter} = require 'art-ery'
 
 defineModule module, class MyRemote extends Pipeline
@@ -12,6 +12,7 @@ defineModule module, class MyRemote extends Pipeline
   @filter
     name: "FakeTimestampFilter"
     after: all: (response) ->
+      log FakeTimestampFilter: {response}
       {type} = response
       out = null
       if type == "create" || type == "update"
@@ -57,8 +58,8 @@ defineModule module, class MyRemote extends Pipeline
 
     handledByFilterRequest: ->
 
-    setSessionA: (request) -> request.withMergedSession sessionA: true
-    setSessionB: (request) -> request.withMergedSession sessionB: true
+    setSessionA: (request) -> request.respondWithMergedSession sessionA: true
+    setSessionB: (request) -> request.respondWithMergedSession sessionB: true
 
     handlerClientFailure: (request) -> request.require false, "handler allways fails"
 

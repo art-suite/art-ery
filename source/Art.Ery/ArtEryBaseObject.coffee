@@ -7,4 +7,3 @@ defineModule module, class ArtEryBaseObject extends BaseClass
   @abstractClass()
   @getter
     pipelines: -> ArtEry.pipelines
-    currentLocation: -> config.location

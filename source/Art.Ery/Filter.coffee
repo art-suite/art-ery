@@ -198,6 +198,7 @@ defineModule module, class Filter extends require './RequestHandler'
             response
 
   @getter
+    logName:  -> @getName()
     inspectedObjects: ->
       "#{@getNamespacePath()}(#{@name})":
         toInspectedObjects @props

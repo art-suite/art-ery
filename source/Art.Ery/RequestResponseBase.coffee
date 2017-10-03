@@ -44,7 +44,12 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   @property "filterLog errorProps"
 
-  addFilterLog: (filter) -> @_filterLog = arrayWith @_filterLog, "#{filter}"
+  addFilterLog: (filter) ->
+    @_filterLog = arrayWith @_filterLog, if isString filter
+      filter
+    else
+      filter.getLogName @type
+    @
 
   @getter
     location:           -> @pipeline.location

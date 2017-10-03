@@ -186,5 +186,6 @@ module.exports = class Request extends require './RequestResponseBase'
   sendRemoteRequest: ->
     RestClient.restJsonRequest remoteRequest = @remoteRequestProps
     .catch ({info: {status, response}}) => merge response, {status}
-    .then (remoteResponse)              => @toResponse remoteResponse.status, merge remoteResponse, {remoteRequest, remoteResponse}
-    .then (response)                    => response.handled "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"
+    .then (remoteResponse) =>
+      @addFilterLog "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"
+      .toResponse remoteResponse.status, merge remoteResponse, {remoteRequest, remoteResponse}
