@@ -7,9 +7,9 @@ module.exports = suite:
       filterLog = []
       createWithPostCreate class MyPipeline extends Pipeline
         @handlers create: (request) -> foo: 1, bar: 2
-        @filter after: create: (response) -> filterLog.push "myFilter1"; response
-        @filter after: create: (response) -> filterLog.push "myFilter2"; throw new Error "internal oops"
-        @filter after: create: (response) -> filterLog.push "myFilter3"; response
+        @filter name: "myFilter1", after: create: (response) -> filterLog.push "myFilter1"; response
+        @filter name: "myFilter2", after: create: (response) -> filterLog.push "myFilter2"; throw new Error "internal oops"
+        @filter name: "myFilter3", after: create: (response) -> filterLog.push "myFilter3"; response
 
       p = new MyPipeline
       assert.rejects p.create()

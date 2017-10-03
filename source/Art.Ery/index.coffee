@@ -13,6 +13,7 @@ module.exports
   PipelineQuery:       require './PipelineQuery'      
   PipelineRegistry:    require './PipelineRegistry'   
   Request:             require './Request'            
+  RequestHandler:      require './RequestHandler'     
   RequestResponseBase: require './RequestResponseBase'
   Response:            require './Response'           
   Session:             require './Session'            

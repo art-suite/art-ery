@@ -40,9 +40,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   constructor: (options) ->
     super
-    {@filterLog} = options
+    {@filterLog, @errorProps} = options
 
-  @property "filterLog"
+  @property "filterLog errorProps"
 
   addFilterLog: (filter) -> @_filterLog = arrayWith @_filterLog, "#{filter}"
 
@@ -388,7 +388,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     , (error) =>
       if error.props?.response?.isResponse
         error.props.response
-      else throw error
+      else
+        @failure {error}
 
   success:                    (responseProps) -> @toResponse success, responseProps
   missing:                    (responseProps) -> @toResponse missing, responseProps

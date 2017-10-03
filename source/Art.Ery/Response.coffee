@@ -1,7 +1,7 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
 {pureMerge, Promise, BaseObject, object, isPlainArray, objectKeyCount, arrayWith, inspect, RequestError, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
-{success, missing} = CommunicationStatus
+{success, missing, failure, serverFailure, clientFailure} = CommunicationStatus
 {config} = require './Config'
 
 responseValidator = new Validator
@@ -87,8 +87,17 @@ module.exports = class Response extends require './RequestResponseBase'
     @handledBy = _handledBy
     @
 
-  @property "request status props session replaceSession remoteResponse remoteRequest handledBy"
+  @property "request props session replaceSession remoteResponse remoteRequest handledBy"
+  @setter "status"
+
   @getter
+    status: ->
+      if @_status == failure
+        switch @currentLocation
+          when "server" then return serverFailure
+          when "client" then return clientFailure
+      @_status
+
     data:               -> @_props.data
     responseData:       -> @_props.data
     responseProps:      -> @_props
@@ -109,6 +118,7 @@ module.exports = class Response extends require './RequestResponseBase'
         @handledBy
         @remoteRequest
         @remoteResponse
+        @errorProps
       }
     propsForResponse: -> @propsForClone
 
@@ -178,6 +188,8 @@ module.exports = class Response extends require './RequestResponseBase'
       @status
       @data
       response: @
+      message:  @errorProps?.exception?.message
+      stack:    @errorProps?.exception?.stack
     }
 
   ###

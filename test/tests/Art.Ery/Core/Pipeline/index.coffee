@@ -7,6 +7,5 @@ module.exports
   Aliases:        require './Aliases'       
   CustomRequests: require './CustomRequests'
   Failures:       require './Failures'      
-  Filters:        require './Filters'       
   Handlers:       require './Handlers'      
   Subrequests:    require './Subrequests'   

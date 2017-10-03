@@ -1,0 +1,158 @@
+import &StandardImport
+
+suite:
+  basic: ->
+    test :before ->
+      class MyPipeline extends Pipeline
+        @handlers helloWorld: ({data}) -> "Hello #{data}."
+
+        @filter
+          before: helloWorld: (request) ->
+            request.withData upperCamelCase request.data
+
+      pipelines.myPipeline.helloWorld data: "frank"
+      .then (result) ->
+        assert.eq result, "Hello Frank."
+
+
+    test :after ->
+      class MyPipeline extends Pipeline
+        @handlers helloWorld: ({data}) -> "Hello #{data}."
+
+        @filter
+          after: helloWorld: (request) ->
+            request.withData request.data + " How are you?"
+
+      pipelines.myPipeline.helloWorld data: "frank"
+      .then (result) ->
+        assert.eq result, "Hello frank. How are you?"
+
+  order: ->
+    test :two ->
+      class MyPipeline extends Pipeline
+        @handlers helloWorld: ({data}) -> "Hello #{data}."
+
+        @filter
+          before: helloWorld: (r) -> r.withData r.data + :A
+          after:  helloWorld: (r) -> r.withData r.data + :A
+
+        @filter
+          before: helloWorld: (r) -> r.withData r.data + :B
+          after:  helloWorld: (r) -> r.withData r.data + :B
+
+      pipelines.myPipeline.helloWorld data: "frank"
+      .then (result) ->
+        assert.eq result, "Hello frankBA.AB"
+
+  query: ->
+    test "query handlers with after-all filter" ->
+      class Post extends Pipeline
+        @query postByUserId: (request) -> [] request.key, 1, 2, 3
+        @filter
+          after: all: (response) ->
+            response.withData array a from response.data with "#{a} #{a}"
+
+      assert.eq Post.post.clientApiMethodList, [] "postByUserId"
+      Post.post.postByUserId key: :foo
+      .then (results) ->
+        assert.eq results, [] "foo foo" "1 1" "2 2" "3 3"
+
+  filterLogs: ->
+    test "basic", ->
+      class MyPipeline extends Pipeline
+        @handlers foo: (request) -> merge request.data, myHandlerRan: true
+
+        @filter
+          name: "MyBeforeFooFilter"
+          before: foo: (request) -> request.withMergedData myBeforeFooFilterRan: true
+
+        @filter
+          name: "MyAfterFooFilter"
+          after: foo: (response) -> response.withMergedData myAfterFooFilterRan: true
+
+      p = new MyPipeline
+      p.foo returnResponseObject: true
+      .then (response) ->
+        assert.eq ["MyBeforeFooFilter"],  array a in response.beforeFilterLog with a.toString()
+        assert.eq response.handledBy, handler: "foo"
+        assert.eq ["MyAfterFooFilter"],   array a in response.afterFilterLog  with a.toString()
+        assert.eq
+          response.data
+          myHandlerRan: true
+          myBeforeFooFilterRan: true
+          myAfterFooFilterRan: true
+
+  location: ->
+    test "before filters by location", ->
+      class MyPipeline extends Pipeline
+        @handlers foo: (request) -> merge request.data, myHandlerRan: true
+
+        @filter
+          location: "client"
+          name: "beforeFooClient"
+          before: foo: (request) -> request
+
+        @filter
+          location: "both"
+          name: "beforeFooBoth"
+          before: foo: (request) -> request
+
+        @filter
+          location: "server"
+          name: "beforeFooServer"
+          before: foo: (request) -> request
+
+      assert.eq ["both", "client"],           array f in pipelines.myPipeline.getBeforeFilters requestType: "foo", location: "client" with f.location
+      assert.eq ["server", "both"],           array f in pipelines.myPipeline.getBeforeFilters requestType: "foo", location: "server" with f.location
+      assert.eq ["server", "both", "client"], array f in pipelines.myPipeline.getBeforeFilters requestType: "foo", location: "both"   with f.location
+
+    test "after filters by location", ->
+      class MyPipeline extends Pipeline
+        @handlers foo: (request) -> merge request.data, myHandlerRan: true
+
+        @filter
+          location: "client"
+          name: "afterFooClient"
+          after: foo: (request) -> request
+
+        @filter
+          location: "both"
+          name: "afterFooBoth"
+          after: foo: (request) -> request
+
+        @filter
+          location: "server"
+          name: "afterFooServer"
+          after: foo: (request) -> request
+
+      assert.eq ["client", "both"],           array f in pipelines.myPipeline.getAfterFilters requestType: "foo", location: "client" with f.location
+      assert.eq ["both", "server"],           array f in pipelines.myPipeline.getAfterFilters requestType: "foo", location: "server" with f.location
+      assert.eq ["client", "both", "server"], array f in pipelines.myPipeline.getAfterFilters requestType: "foo", location: "both"   with f.location
+
+
+  filterFailures: ->
+    test :basic ->
+      class MyPipeline extends Pipeline
+        @handlers foo: (request) -> throw new Error "simulated error on foo request"
+
+        @filter
+          name: :FilterWithoutFilterFailures
+          # filterFailures: true
+          after: foo: (response) ->
+            response.success data: "not me"
+
+        @filter
+          name: :FilterWithFilterFailures
+          filterFailures: true
+          after: foo: (response) ->
+            # log FilterWithFilterFailures: response
+            response.success data: "me!"
+
+
+      assert.eq false, pipelines.myPipeline.filters[0].filterFailures
+      assert.eq true, pipelines.myPipeline.filters[1].filterFailures
+
+      pipelines.myPipeline.foo()
+      .then (result)->
+        assert.eq result, "me!"
+

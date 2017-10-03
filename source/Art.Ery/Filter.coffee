@@ -43,7 +43,7 @@ SBD:
   Maybe 'client' should be 'requester' instead of 'client'? 'requester' and 'server'?
 ###
 
-defineModule module, class Filter extends require './ArtEryBaseObject'
+defineModule module, class Filter extends require './RequestHandler'
 
   ############################
   # Class Declaration API
@@ -156,7 +156,16 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
       @before
     } = options
 
+    @_nextHandler = null
+
   @property "name"
+
+  @getter "nextHandler"
+
+  @setter
+    nextHandler: (v)->
+      throw new Error unless @_nextHandler == null
+      @_nextHandler = v
 
   shouldFilter: (processingLocation) ->
     switch @location
@@ -170,8 +179,23 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
   getBeforeFilter: ({requestType, location}) -> @shouldFilter(location) && (@before[requestType] || @before.all)
   getAfterFilter:  ({requestType, location}) -> @shouldFilter(location) && (@after[requestType]  || @after.all)
 
-  processBefore:  (request) -> @_processFilter request, @getBeforeFilter request
-  processAfter:   (request) -> @_processFilter request, @getAfterFilter  request
+  processBefore:  (request) -> @applyHandler request, @getBeforeFilter request
+  processAfter:   (request) -> @applyHandler request, @getAfterFilter  request
+
+  handleRequest: (request) ->
+    @processBefore request
+    .then (request) =>
+      if request.isResponse
+        request
+      else
+        (
+          @nextHandler?.handleRequest(request) ||
+          request.missing "no Handler for request type: #{request.type}"
+        ).then (response) =>
+          if response.isSuccessful || @filterFailures
+            @processAfter response
+          else
+            response
 
   @getter
     inspectedObjects: ->
@@ -179,19 +203,3 @@ defineModule module, class Filter extends require './ArtEryBaseObject'
         toInspectedObjects @props
 
     props: -> {@location}
-
-  ###
-  OUT:
-    promise.then (request or response) ->
-      NOTE: response may be failing
-    .catch -> internal errors only
-  ###
-  _processFilter: (requestOrResponse, filterFunction) ->
-
-    requestOrResponse.next Promise.then =>
-      if filterFunction
-        requestOrResponse.addFilterLog @
-        filterFunction.call @, requestOrResponse
-      else
-        # pass-through if no filter
-        requestOrResponse

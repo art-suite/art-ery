@@ -1,13 +1,3 @@
-Foundation = require 'art-foundation'
-Response = require './Response'
-Request = require './Request'
-Filter = require './Filter'
-Session = require './Session'
-{config} = require './Config'
-Filters = require './Filters'
-PipelineQuery = require './PipelineQuery'
-
-PipelineRegistry = require './PipelineRegistry'
 
 {
   each
@@ -19,7 +9,6 @@ PipelineRegistry = require './PipelineRegistry'
   isPlainArray
   decapitalize
   defineModule
-  Validator
   mergeInto
   arrayToTruthMap
   lowerCamelCase
@@ -29,10 +18,19 @@ PipelineRegistry = require './PipelineRegistry'
   formattedInspect
   pushIfNotPresent
   w
-} = Foundation
-{normalizeFieldProps} = Validator
+} = require 'art-standard-lib'
+{normalizeFieldProps} = require 'art-validation'
+{success, missing} = require 'art-communication-status'
 
-{success, missing} = CommunicationStatus
+Response = require './Response'
+Request = require './Request'
+Filter = require './Filter'
+Session = require './Session'
+{config} = require './Config'
+Filters = require './Filters'
+PipelineQuery = require './PipelineQuery'
+
+PipelineRegistry = require './PipelineRegistry'
 
 ###
 TODO:
@@ -292,6 +290,16 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
     afterFilters: -> @groupedFilters
     status: -> "OK"
 
+    filterChain: ->
+      return @_filterChain if @_filterChain
+      @_filterChain = if @filters.length > 0
+        for i in [@filters.length-2..0] by -1
+          @filters[i+1].nextHandler = @filters[i]
+        @filters[0].nextHandler = @
+        peek(@filters)
+      else
+        @
+
   # use a stable sort
   @groupFilters: (filters) ->
     groupLevels = []
@@ -400,6 +408,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     applyNextFilter request
 
+
   ###
   IN:
     request OR response
@@ -411,24 +420,27 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
 
     promise.catch -> always means an internal failure
   ###
-  _applyHandler: (requestOrResponse) ->
-    Promise.try =>
-      if requestOrResponse.isResponse
-        return requestOrResponse
-      else
-        request = requestOrResponse
+  handleRequest: handleRequest = (requestOrResponse) ->
+    if requestOrResponse.isResponse
+      return requestOrResponse
+    else
+      request = requestOrResponse
 
-      if @location == "client" && @remoteServer
-        request.sendRemoteRequest @remoteServer
+    if @location == "client" && @remoteServer
+      request.sendRemoteRequest @remoteServer
 
-      else if handler = @handlers[request.type]
-        request.next handler.call @, request
-        .then (response) => response.handled handler: requestOrResponse.type
+    else if handler = @handlers[request.type]
+      p = Promise.then => handler.call @, request
+      request.next p
+      .then (response) =>
+        response.handled handler: requestOrResponse.type
 
-      else
-        message = "no Handler for request type: #{request.type}"
-        log.error message, request: request
-        request.missing data: {message}
+    else
+      message = "no Handler for request type: #{request.type}"
+      log.error message, request: request
+      request.missing data: {message}
+
+  _applyHandler: handleRequest
 
   ###
   OUT:
@@ -448,6 +460,7 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
           previousResponse
         else
           filter = filters[filterIndex++]
+          log {filter, filterFailures: filter.filterFailures}
           p = if previousResponse.notSuccessful && !filter.filterFailures
             Promise.resolve previousResponse
           else
@@ -463,9 +476,10 @@ defineModule module, class Pipeline extends require './ArtEryBaseObject'
       request
 
   _processRequest: (request) ->
-    @_applyBeforeFilters @_normalizeRequest request
-    .then (requestOrResponse)  => @_applyHandler requestOrResponse
-    .then (response)           => @_applyAfterFilters response
+    @filterChain.handleRequest request
+    # @_applyBeforeFilters @_normalizeRequest request
+    # .then (requestOrResponse)  => @_applyHandler requestOrResponse
+    # .then (response)           => @_applyAfterFilters response
 
   ###
   IN:
