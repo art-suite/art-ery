@@ -14,6 +14,18 @@ suite:
       .then (result) ->
         assert.eq result, "Hello Frank."
 
+    test :all ->
+      class MyPipeline extends Pipeline
+        @handlers helloWorld: ({data}) -> "Hello #{data}."
+
+        @filter
+          before: all: (request) ->
+            request.withData upperCamelCase request.data
+
+      pipelines.myPipeline.helloWorld data: "frank"
+      .then (result) ->
+        assert.eq result, "Hello Frank."
+
 
     test :after ->
       class MyPipeline extends Pipeline
@@ -27,22 +39,50 @@ suite:
       .then (result) ->
         assert.eq result, "Hello frank. How are you?"
 
-  order: ->
-    test :two ->
-      class MyPipeline extends Pipeline
-        @handlers helloWorld: ({data}) -> "Hello #{data}."
+  order:
+    basic: ->
+      test :two ->
+        class MyPipeline extends Pipeline
+          @handlers helloWorld: ({data}) -> "Hello #{data}."
 
-        @filter
-          before: helloWorld: (r) -> r.withData r.data + :A
-          after:  helloWorld: (r) -> r.withData r.data + :A
+          @filter
+            before: helloWorld: (r) -> r.withData r.data + :A
+            after:  helloWorld: (r) -> r.withData r.data + :A
 
-        @filter
-          before: helloWorld: (r) -> r.withData r.data + :B
-          after:  helloWorld: (r) -> r.withData r.data + :B
+          @filter
+            before: helloWorld: (r) -> r.withData r.data + :B
+            after:  helloWorld: (r) -> r.withData r.data + :B
 
-      pipelines.myPipeline.helloWorld data: "frank"
-      .then (result) ->
-        assert.eq result, "Hello frankBA.AB"
+        pipelines.myPipeline.helloWorld data: "frank"
+        .then (result) ->
+          assert.eq result, "Hello frankBA.AB"
+
+    groups: ->
+      test :grouped ->
+        class MyPipeline extends Pipeline
+          @handlers myAction: -> :-
+
+          @filter name: :filterA  group: :outter    after: myAction: (r) -> r.withData "" #{r.data}A
+          @filter name: :filterB  group: :inner     after: myAction: (r) -> r.withData "" #{r.data}B
+          @filter name: :filterC  group: :middle    after: myAction: (r) -> r.withData "" #{r.data}C
+          @filter name: :filterD  group: :loggers   after: myAction: (r) -> r.withData "" #{r.data}D
+
+        pipelines.myPipeline.myAction()
+        .then (result) ->
+          assert.eq result, "-BCAD"
+
+      test :ungrouped ->
+        class MyPipeline extends Pipeline
+          @handlers myAction: -> :-
+
+          @filter name: :filterA  after: myAction: (r) -> r.withData "" #{r.data}A
+          @filter name: :filterB  after: myAction: (r) -> r.withData "" #{r.data}B
+          @filter name: :filterC  after: myAction: (r) -> r.withData "" #{r.data}C
+          @filter name: :filterD  after: myAction: (r) -> r.withData "" #{r.data}D
+
+        pipelines.myPipeline.myAction()
+        .then (result) ->
+          assert.eq result, "-ABCD"
 
   query: ->
     test "query handlers with after-all filter" ->
@@ -154,4 +194,6 @@ suite:
       pipelines.myPipeline.foo()
       .then (result)->
         assert.eq result, "me!"
+
+  groups: ->
 

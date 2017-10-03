@@ -131,7 +131,7 @@ defineModule module, class Filter extends require './RequestHandler'
     group: @groupNames.middle
   , extend: (__, v) ->
     if v?
-      throw new Error "invalid Filter group: #{v}" unless value = Filter.groupNames[v]
+      throw new Error "invalid Filter group: #{v}" unless (value = Filter.groupNames[v])?
       value
     else
       0

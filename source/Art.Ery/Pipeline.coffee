@@ -293,11 +293,12 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
     filterChain: ->
       return @_filterChain if @_filterChain
-      @_filterChain = if @filters.length > 0
-        for i in [@filters.length-2..0] by -1
-          @filters[i+1].nextHandler = @filters[i]
-        @filters[0].nextHandler = @
-        peek(@filters)
+      filters = @groupedFilters
+      @_filterChain = if filters.length > 0
+        for i in [filters.length-2..0] by -1
+          filters[i+1].nextHandler = filters[i]
+        filters[0].nextHandler = @
+        peek filters
       else
         @
 
