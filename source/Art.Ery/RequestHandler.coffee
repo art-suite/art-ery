@@ -36,3 +36,18 @@ defineModule module, class RequestHandler extends require './ArtEryBaseObject'
           source:
             this: @
             function: handlerFunction
+
+    ###
+    IN:
+      request OR response
+
+      if response, it is immediately returned
+    OUT:
+      promise.then -> response
+        response may or maynot be successful, but it is always returned via the promise-success path
+
+      promise.catch -> always means an internal failure
+
+    OVERRIDE THIS
+    ###
+    # handleRequest: (request) ->

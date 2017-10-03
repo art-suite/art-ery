@@ -367,6 +367,26 @@ defineModule module, class Pipeline extends require './RequestHandler'
             restPath: @restPath
           "#{method.toLocaleUpperCase()}": url
 
+
+  ###################
+  # RequestHandler API
+  ###################
+  # SEE RequestHandler
+  handleRequest: (request) ->
+    if request.isResponse
+      throw new Error "HARD DEPRICATED"
+
+    if @location == "client" && @remoteServer
+      request.sendRemoteRequest @remoteServer
+
+    else
+      @applyHandler request, @handlers[request.type]
+      .then (response) =>
+        unless response.isResponse
+          response.failure "#{@pipelineName}.#{request.type} request was not handled"
+        else
+          response
+
   ###################
   # PRIVATE
   ###################
@@ -386,85 +406,6 @@ defineModule module, class Pipeline extends require './RequestHandler'
       throw new Error "pipelineQuery has no query" unless isFunction pipelineQuery.query
       @extendHandlers k, pipelineQuery.query
 
-  ###
-  OUT:
-    promise.then -> request OR response
-      requests are always 'successful-so-far'
-      responses may or maynot be successful, but they are always returned via the promise-success path
-
-    promise.catch -> always means an internal failure
-  ###
-  _applyBeforeFilters: (request) ->
-    filters = @getBeforeFilters request
-    filterIndex = 0
-
-    applyNextFilter = (partiallyBeforeFilteredRequest) =>
-      if partiallyBeforeFilteredRequest.isResponse || filterIndex >= filters.length
-        Promise.resolve partiallyBeforeFilteredRequest
-      else
-        (filter = filters[filterIndex++]).processBefore partiallyBeforeFilteredRequest
-        .then (result) =>
-          result.handled beforeFilter: filter.getName() if result.isResponse && result.isSuccessful
-          applyNextFilter result
-
-    applyNextFilter request
-
-
-  ###
-  IN:
-    request OR response
-
-    if response, it is immediately returned
-  OUT:
-    promise.then -> response
-      response may or maynot be successful, but it is always returned via the promise-success path
-
-    promise.catch -> always means an internal failure
-  ###
-  handleRequest: handleRequest = (request) ->
-    if request.isResponse
-      throw new Error "HARD DEPRICATED"
-
-    if @location == "client" && @remoteServer
-      request.sendRemoteRequest @remoteServer
-
-    else
-      @applyHandler request, @handlers[request.type]
-      .then (response) =>
-        unless response.isResponse
-          response.failure "#{@pipelineName}.#{request.type} request was not handled"
-        else
-          response
-
-  _applyHandler: handleRequest
-
-  ###
-  OUT:
-    promise.then -> response
-      response may or maynot be successful, but it is always returned via the promise-success path
-
-    promise.catch -> always means an internal failure
-  ###
-  _applyAfterFilters: (response) ->
-    Promise.try =>
-      filters = @getAfterFilters response
-      filterIndex = 0
-
-      applyNextFilter = (previousResponse)->
-        if filterIndex >= filters.length
-          # done!
-          previousResponse
-        else
-          filter = filters[filterIndex++]
-          log {filter, filterFailures: filter.filterFailures}
-          p = if previousResponse.notSuccessful && !filter.filterFailures
-            Promise.resolve previousResponse
-          else
-            filter.processAfter previousResponse
-          p.then (nextResponse) -> applyNextFilter nextResponse
-
-      applyNextFilter response
-
   _normalizeRequest: (request) ->
     if isPlainObject request
       new Request merge request, pipeline: @
@@ -477,10 +418,6 @@ defineModule module, class Pipeline extends require './RequestHandler'
       unless response.isResponse
         log.error "not response!":response
       response
-
-    # @_applyBeforeFilters @_normalizeRequest request
-    # .then (requestOrResponse)  => @_applyHandler requestOrResponse
-    # .then (response)           => @_applyAfterFilters response
 
   ###
   IN:
