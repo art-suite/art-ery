@@ -100,7 +100,7 @@ module.exports = class Response extends require './RequestResponseBase'
     isSuccessful:       -> @_status == success
     isMissing:          -> @_status == missing
     notSuccessful:      -> @_status != success
-    description: -> "#{@requestString} response: #{@status}"
+    description: -> "#{@requestString}: #{@status}"
     propsForClone: ->
       {
         @request

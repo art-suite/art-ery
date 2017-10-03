@@ -79,6 +79,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       str += "[#{formattedInspect @key}]" if @key
       str
 
+    description: -> @requestString
+
     requestPathArray: (into) ->
       localInto = into || []
       {parentRequest} = @
