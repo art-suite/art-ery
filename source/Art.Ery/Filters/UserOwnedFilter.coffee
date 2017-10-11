@@ -1,4 +1,5 @@
-{log, object, w, Validator, defineModule, isPlainObject, isString, each} = require 'art-foundation'
+{log, object, w, defineModule, isPlainObject, isString, each, Promise} = require 'art-standard-lib'
+{Validator} = require 'art-validation'
 Filter = require '../Filter'
 
 defineModule module, class UserOwnedFilter extends Filter
