@@ -148,7 +148,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     new ArtEry.Request merge {originatedOnServer: requestOptions?.originatedOnServer ? true}, requestOptions, {
       type
       pipeline
-      @session
+      session: requestOptions?.session || @session
       parentRequest: @request
       @context
     }
