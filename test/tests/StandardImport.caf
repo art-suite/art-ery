@@ -1,4 +1,4 @@
 &ArtStandardLib.merge
   &ArtStandardLib
-  &source/Ery
+  &source/ArtEry
   &ArtCommunicationStatus

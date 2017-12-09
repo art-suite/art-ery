@@ -107,5 +107,5 @@ defineModule module, class UserOwnedFilter extends Filter
           filteredRecord = object record,
             when: (v, k) -> allowedFields[k]
             with: (v, k) -> keyCount++; v
-          log {filteredRecord, record, type: response.type}
+          # log {filteredRecord, record, type: response.type}
           if keyCount > 0 then filteredRecord
