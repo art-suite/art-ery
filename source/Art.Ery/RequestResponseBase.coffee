@@ -76,7 +76,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     context:            -> @request.context
     requestString: ->
       str = "#{@pipelineName}.#{@type}"
-      str += "[#{formattedInspect @key}]" if @key
+      str += "(#{formattedInspect key:@key})" if @key
       str
 
     description: -> @requestString
