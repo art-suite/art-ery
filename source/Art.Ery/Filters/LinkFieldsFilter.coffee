@@ -8,6 +8,35 @@ Filter = require '../Filter'
 defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   @location "server"
 
+  ###
+  IN:
+    fields:
+      # object mapping the linked fields (not the ID fields for those linked fileds)
+      # EX:
+      user:
+          # any art-validation legal field description
+          # Additional options:
+          autoCreate:   true/false
+            if set, when request-type == "create"
+              if this field is set with an object without and id
+                then it will FIRST create the linked-to-object
+                then it will set the id-field with the linked-to-object
+
+            if this field is set with an object WITH an id
+              (I think this applies to both create and update request-types)
+              will automatically set the id-field to the matching id
+
+          pipelineName: string
+            override the default pipelineName
+            default: field-name (in this example: 'user')
+
+          include: true/false
+            if true, then when returning instances of this object, it will also
+            fetch the linked field's object. In this case, it will set 'user' to
+            the value returned from: pipelines.user.get userId
+            (This is how it is actually fetched: request.cachedPipelineGet 'user', userId)
+
+  ###
   constructor: (options) ->
 
     fields = {}
