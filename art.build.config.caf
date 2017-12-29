@@ -27,3 +27,4 @@ webpack:
   targets:
     index: {}
     test: {}
+    TestServer: {}

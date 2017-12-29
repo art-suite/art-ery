@@ -1,4 +1,4 @@
-{defineModule, log, Validator, merge, Promise} = require 'art-foundation'
+{defineModule, pluralize, log, Validator, merge, Promise} = require 'art-foundation'
 Filter = require '../Filter'
 
 ###
@@ -28,7 +28,8 @@ defineModule module, class ValidationFilter extends Filter
 
   _validate: (method, request) ->
     Promise.then =>
-      validatedData = @_validator[method] request.data, context: "#{request.pipeline?.getName() || "no pipeline?"} #{@class.getName()}"
+      context = "#{request.pipeline.getClass().getName()} Pipeline #{@class.getName()}"
+      validatedData = @_validator[method] request.data, {context}
       data = validatedData if request.location != "client"
 
       rejection = if @_exclusive
@@ -39,7 +40,7 @@ defineModule module, class ValidationFilter extends Filter
 
         if unexpectedFields
           Promise.reject
-            message: "unexpected fields: #{unexpectedFields.join ', '}"
+            message: "#{context} failed. #{pluralize unexpectedFields.length, "unexpected field"}: #{unexpectedFields.join ', '}"
             info: unexpected: unexpectedFields
 
       rejection || request.withData data
