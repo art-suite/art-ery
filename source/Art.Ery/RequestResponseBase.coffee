@@ -173,6 +173,31 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
     promise
 
+  nonblockingSubrequest: (pipelineName, type, requestOptions) ->
+    @subrequest pipelineName, type, requestOptions
+    .then (result) =>
+      if config.verbose
+        log ArtEry: RequestResponseBase: nonblockingSubrequest: {
+          status: "success"
+          pipelineName
+          type
+          requestOptions
+          parentRequest: {@pipelineName, @type, @key}
+          result
+        }
+
+    .catch (error) =>
+      log ArtEry: RequestResponseBase: nonblockingSubrequest: {
+        status: "failure"
+        pipelineName
+        type
+        requestOptions
+        parentRequest: {@pipelineName, @type, @key}
+        error
+      }
+
+    Promise.resolve()
+
   _getPipelineTypeCache: (pipelineName, type) ->
     (@requestCache[pipelineName] ||= {})[type] ||= {}
 
