@@ -197,3 +197,26 @@ suite:
 
   groups: ->
 
+
+  regressions: ->
+    test "can share filter instances" ->
+      class MyFilter extends Filter
+        @after foo: (response) ->
+          response.withMergedData myFiltered: true
+
+      instance = new MyFilter
+
+      class MyPipeline1 extends Pipeline
+        @handlers foo: (request) -> fooed: true
+        @filter instance
+
+      class MyPipeline2 extends Pipeline
+        @handlers foo: (request) -> fooed: true
+        @filter instance
+
+      Promise.all([
+        pipelines.myPipeline1.foo()
+        pipelines.myPipeline2.foo()
+      ]).then ([foo1, foo2]) ->
+        assert.eq foo1, {}
+        assert.eq foo1, foo2
