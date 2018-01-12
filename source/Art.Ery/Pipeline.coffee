@@ -18,6 +18,7 @@
   formattedInspect
   pushIfNotPresent
   w
+  currentSecond
 } = require 'art-standard-lib'
 {normalizeFieldProps} = require 'art-validation'
 {success, missing} = require 'art-communication-status'
@@ -294,6 +295,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
     filterChain: ->
       return @_filterChain if @_filterChain
       filters = @groupedFilters
+
       @_filterChain = if filters.length > 0
         for i in [filters.length-2..0] by -1
           filters[i+1].nextHandler = filters[i]
@@ -414,18 +416,39 @@ defineModule module, class Pipeline extends require './RequestHandler'
       request
 
   _processRequest: (request) ->
+    startTime = currentSecond()
     @filterChain.handleRequest request
     .then (response) ->
       unless response.isResponse
         log.error "not response!":response
+
+      response.wallTime = wallTime = response.wallTime = currentSecond() - startTime
+      if 1 < wallTime
+        log.warn ArtEry:
+          slow_request: request.requestString
+          requestProps: request.requestProps
+          wallTimeMs: wallTime * 1000 | 0
       response
 
   ###
   IN:
     type: request type string
     options:
-      # options are passed to new Request
-      # options are passed to response.toResponse
+      # see: response.toPromise options
+      # (copied from toPromise)
+      returnNullIfMissing: true [default: false]
+        if status == missing
+          if returnNullIfMissing
+            promise.resolve null
+          else
+            promise.reject new RequestError
+
+      returnResponse: true [default: false]
+      returnResponseObject: true (alias)
+        if true, the response object is returned, otherwise, just the data field is returned.
+
+      # see: new Request options
+      #...
 
   OUT: response.toPromise options
     (SEE Response#toPromise for valid options)
@@ -441,7 +464,6 @@ defineModule module, class Pipeline extends require './RequestHandler'
   noOptions = {}
   _processClientRequest: (type, options = noOptions) ->
     options = key: options if isString options
-    {returnResponseObject} = options
 
     @createRequest type, options
     .then (request)  => @_processRequest request

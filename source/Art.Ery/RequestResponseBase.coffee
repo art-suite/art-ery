@@ -40,9 +40,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   constructor: (options) ->
     super
+    @_wallTime = 0
     {@filterLog, @errorProps} = options
 
-  @property "filterLog errorProps"
+  @property "filterLog errorProps wallTime"
 
   addFilterLog: (filter) ->
     @_filterLog = arrayWith @_filterLog, if isString filter
@@ -76,8 +77,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     context:            -> @request.context
     requestString: ->
       str = "#{@pipelineName}.#{@type}"
-      str += "(#{formattedInspect key:@key})" if @key
-      str
+      if @key
+        str + " #{formattedInspect @key}"
+      else
+        str
 
     description: -> @requestString
 

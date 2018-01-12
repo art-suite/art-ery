@@ -38,7 +38,7 @@ IN:
   data: JSON value
     data is an alias for @props.data
     EFFECT: replaces @props.data
-    NOTE: for clientRequest, @props.data is the value returned unless returnResponseObject is requested
+    NOTE: for clientRequest, @props.data is the value returned unless returnResponse/returnResponseObject is requested
 
   remoteRequest: remoteResponse:
     Available for inspecting what exactly went over-the-wire.
@@ -141,14 +141,15 @@ module.exports = class Response extends require './RequestResponseBase'
         else
           promise.reject new RequestError
 
-    returnResponseObject: true [default: false]
+    returnResponse: true [default: false]
+    returnResponseObject: true (alias)
       if true, the response object is returned, otherwise, just the data field is returned.
 
   OUT:
-    # if response.isSuccessful && returnResponseObject == true
+    # if response.isSuccessful && returnResponse == true
     promise.then (response) ->
 
-    # if response.isSuccessful && returnResponseObject == false
+    # if response.isSuccessful && returnResponse == false
     promise.then (data) ->
 
     # if response.isMissing && returnNullIfMissing == true
@@ -160,15 +161,16 @@ module.exports = class Response extends require './RequestResponseBase'
 
   ###
   toPromise: (options) ->
-    {returnNullIfMissing, returnResponseObject} = options if options
+    {returnNullIfMissing, returnResponse, returnResponseObject} = options if options
     {data, isSuccessful, isMissing} = @
+    returnResponse ||= returnResponseObject
 
     if isMissing && returnNullIfMissing
       data = null
       isSuccessful = true
 
     if isSuccessful
-      Promise.resolve if returnResponseObject then @ else data
+      Promise.resolve if returnResponse then @ else data
     else Promise.reject @_getRejectionError()
 
   _getRejectionError: ->
