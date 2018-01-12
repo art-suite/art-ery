@@ -140,6 +140,10 @@ defineModule module, class Filter extends require './RequestHandler'
   # class instance methods
   #################################
 
+  # NOTE!!! Filter instances must be stateless w.r.t. pipelines
+  #   In other words, the same filter instance can be used on more than one pipeline.
+  #   WHY? So we can inherit filters.
+  #   WHY? So we can define global filters for all, or a subset, of the pipelines
   constructor: (options = {}) ->
     super
     {
@@ -156,16 +160,11 @@ defineModule module, class Filter extends require './RequestHandler'
       @before
     } = options
 
-    @_nextHandler = null
-
   @property "name"
-
-  @getter "nextHandler"
 
   @setter
     nextHandler: (v)->
-      throw new Error unless @_nextHandler == null
-      @_nextHandler = v
+      throw new Error "depricated"
 
   shouldFilter: (processingLocation) ->
     switch @location
@@ -182,14 +181,15 @@ defineModule module, class Filter extends require './RequestHandler'
   processBefore:  (request) -> @applyHandler request, @getBeforeFilter request
   processAfter:   (request) -> @applyHandler request, @getAfterFilter  request
 
-  handleRequest: (request) ->
+  handleRequest: (request, filterChain, currentFilterChainIndex) ->
     @processBefore request
     .then (request) =>
       if request.isResponse
         request
       else
-        (
-          @nextHandler?.handleRequest(request) ||
+        (if nextHandler = filterChain[nextIndex = currentFilterChainIndex + 1]
+          nextHandler.handleRequest request, filterChain, nextIndex
+        else
           request.missing "no Handler for request type: #{request.type}"
         ).then (response) =>
           if response.isSuccessful || @filterFailures

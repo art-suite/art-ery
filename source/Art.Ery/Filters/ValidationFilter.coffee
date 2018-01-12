@@ -46,6 +46,5 @@ defineModule module, class ValidationFilter extends Filter
       rejection || request.withData data
 
     .catch ({message, info}) ->
-      log {request}
       request.clientFailure data: merge {message}, info
 

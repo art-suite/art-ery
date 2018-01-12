@@ -292,17 +292,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
     afterFilters: -> @groupedFilters
     status: -> "OK"
 
-    filterChain: ->
-      return @_filterChain if @_filterChain
-      filters = @groupedFilters
-
-      @_filterChain = if filters.length > 0
-        for i in [filters.length-2..0] by -1
-          filters[i+1].nextHandler = filters[i]
-        filters[0].nextHandler = @
-        peek filters
-      else
-        @
+    filterChain: -> @_filterChain ||= compactFlatten([@, @groupedFilters]).reverse()
 
   # use a stable sort
   @groupFilters: (filters) ->
@@ -417,7 +407,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
   _processRequest: (request) ->
     startTime = currentSecond()
-    @filterChain.handleRequest request
+    @filterChain[0].handleRequest request, @filterChain, 0
     .then (response) ->
       unless response.isResponse
         log.error "not response!":response
