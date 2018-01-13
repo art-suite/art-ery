@@ -413,11 +413,11 @@ defineModule module, class Pipeline extends require './RequestHandler'
         log.error "not response!":response
 
       response.wallTime = wallTime = response.wallTime = currentSecond() - startTime
-      if 1 < wallTime
-        log.warn ArtEry:
-          slow_request: request.requestString
-          requestProps: request.requestProps
-          wallTimeMs: wallTime * 1000 | 0
+      # if 1 < wallTime
+      #   log.warn ArtEry:
+      #     slow_request: request.requestString
+      #     requestProps: request.requestProps
+      #     wallTimeMs: wallTime * 1000 | 0
       response
 
   ###
