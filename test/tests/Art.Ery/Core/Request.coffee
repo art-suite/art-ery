@@ -302,3 +302,71 @@ module.exports = suite:
     test "key", -> assert.eq request.key, "userAbc/postXyz"
     test "keyObject", -> assert.eq request.keyObject, userId: "userAbc", postId: "postXyz"
     test "requestDataWithKey", -> assert.eq request.requestDataWithKey, userId: "userAbc", postId: "postXyz", followerCount: 123
+
+
+  "key and data alias priorities": ->
+    test "key: foo has priority over props: key: bar", ->
+      assert.eq "aliasKey", (newRequest key: "aliasKey").key
+      assert.eq "propsKey", (newRequest props: key: "propsKey").key
+      assert.eq "aliasKey", (newRequest key: "aliasKey", props: key: "propsKey").key
+
+    test "data: foo: 123 has priority over props: data: foo: 456", ->
+      aliasData = aliasData: 123
+      propsData = propsData: 123
+      assert.eq aliasData, (newRequest data: aliasData).data
+      assert.eq propsData, (newRequest props: data: propsData).data
+      assert.eq aliasData, (newRequest data: aliasData, props: data: propsData).data
+
+  withProps:
+    withoutAliases: ->
+      test "withProps", ->
+        request = newRequest props: foo: 1
+        request.withProps bar: 2
+        .then (newRequest) ->
+          assert.neq newRequest, request
+          assert.eq newRequest.props, bar: 2
+
+      test "withMergedProps", ->
+        request = newRequest props: foo: 1
+        request.withMergedProps bar: 2
+        .then (newRequest) ->
+          assert.neq newRequest, request
+          assert.eq newRequest.props, foo: 1, bar: 2
+
+    withAliases: ->
+      test "withProps replaces aliases even if not explicitly set", ->
+        request = newRequest key: "myKey", data: {myField: 1}, props: foo: 1
+        request.withProps bar: 2
+        .then (newRequest) ->
+          assert.neq newRequest, request
+          assert.eq newRequest.key,   undefined
+          assert.eq newRequest.data,  undefined
+          assert.eq newRequest.props, bar: 2
+
+      test "withProps replace aliases", ->
+        request = newRequest key: "myKey", data: {myField: 1}, props: foo: 1
+        request.withProps bar: 2, key: "myKey2", data: {myField2: 2}
+        .then (newRequest) ->
+          assert.neq newRequest, request
+          assert.eq newRequest.key,   "myKey2"
+          assert.eq newRequest.data,  {myField2: 2}
+          assert.eq newRequest.props, bar: 2, key: "myKey2", data: {myField2: 2}
+
+      test "withMergedProps does not replace aliases even if not explicitly set", ->
+        request = newRequest key: "myKey", data: {myField: 1}, props: foo: 1
+        request.withMergedProps bar: 2
+        .then (newRequest) ->
+          assert.neq newRequest, request
+          assert.eq newRequest.key,   request.key
+          assert.eq newRequest.data,  request.data
+          assert.eq newRequest.props, foo: 1, bar: 2, key: "myKey", data: myField: 1
+
+      test "withMergedProps replace aliases", ->
+        request = newRequest key: "myKey", data: {myField: 1}, props: foo: 1
+        request.withMergedProps bar: 2, key: "myKey2", data: {myField2: 2}
+        .then (newRequest) ->
+          assert.neq newRequest, request
+          assert.eq newRequest.key,   "myKey2"
+          assert.eq newRequest.data,  {myField2: 2}
+          assert.eq newRequest.props, foo: 1, bar: 2, key: "myKey2", data: {myField2: 2}
+

@@ -31,7 +31,15 @@ IN: options:
   see requestConstructorValidator for the validated options
   below are special-case options
 
-  # aliases
+  props: {}
+    Any props you want.
+    Common props:
+
+    data: - generaly one record's data or an array of record data
+    key:  - generally the ID for one record OR the complete set of parameters for a get-query
+
+  # aliases - if either data/key are provided in both props and in these aliases,
+  #   these aliases have priority
   data: >> @props.data
   key:  >> @props.key
 
@@ -68,15 +76,14 @@ module.exports = class Request extends require './RequestResponseBase'
     super
     {@type, @pipeline, @session, @parentRequest, @originatedOnServer, @props = {}, @context = {}} = options
 
-    key = @_props.key || options.key
+    key = options.key ? @_props.key
     options.key = @_props.key = @pipeline.toKeyString key if key?
+    @_props.data = options.data if options.data?
 
     requestConstructorValidator().validate options, context: "Art.Ery.Request options", logErrors: true
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
-    @_props.key  = options.key  if options.key?
-    @_props.data = options.data if options.data?
 
   @property "type pipeline session originatedOnServer parentRequest props data key context"
 

@@ -299,6 +299,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   ###
   withData:           (data)    -> Promise.resolve(data).then    (data)    => @_with {data}
   withMergedData:     (data)    -> Promise.resolve(data).then    (data)    => @_with data: merge @data, data
+
+  withProps:          (props)   -> Promise.resolve(props).then   (props)   => @_with {props, key: props.key, data: props.data}
+  withMergedProps:    (props)   -> Promise.resolve(props).then   (props)   => @_with key: props.key, data: props.data, props: merge @props, props
+
   withSession:        (session) -> Promise.resolve(session).then (session) => @_with {session}
   withMergedSession:  (session) -> Promise.resolve(session).then (session) => @_with session: merge @session, session
 
