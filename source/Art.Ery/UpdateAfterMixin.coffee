@@ -112,6 +112,7 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
         AfterEventsFilter.registerPipelineListener @, pipelineName, requestType
         @_addAfterEventFunction pipelineName, requestType, afterEventFunction
 
+  # if getPropsFunction returns null, nothing happens
   @deleteAfter: (eventMap) ->
     pipelineName = @getPipelineName()
     @afterEvent object eventMap, (requestTypeMap) ->
@@ -119,7 +120,7 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
         (response) ->
           Promise.resolve getPropsFunction response
           .then (props) ->
-            response.subrequest pipelineName, "delete", props
+            props && response.subrequest pipelineName, "delete", props
 
   ########################
   # PRIVATE
