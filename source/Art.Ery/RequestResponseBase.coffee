@@ -248,6 +248,15 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       @clientFailure data: message: "requirement not met: #{message || 'see stack trace'}"
       .then (response) -> response.toPromise()
 
+  # all fields must exist
+  requiredFields: (fields, message) ->
+    for k, v of fields when !v?
+      return (
+        @clientFailure data: message: "requirement not met: '#{k}' expected#{if message then " #{message}" else ""}"
+        .then (response) -> response.toPromise()
+      )
+    Promise.resolve fields
+
   # returns rejecting promise if test is true
   # see @require
   rejectIf: (test, message) -> @require !test, message

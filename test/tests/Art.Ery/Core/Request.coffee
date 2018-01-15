@@ -292,6 +292,20 @@ module.exports = suite:
       .then (resolvesWith) ->
         assert.eq request, resolvesWith
 
+    test "requiredFields failure", ->
+      request = newRequest()
+      assert.rejects request.requiredFields bar: 0, foo: undefined
+      .then (rejectsWith) ->
+        {status, data} = rejectsWith.info.response
+        assert.eq status, clientFailure
+        assert.ok data.message.match /foo.*expected/
+
+    test "requiredFields success returns fields", ->
+      request = newRequest()
+      request.requiredFields foo: 1, bar: 2
+      .then (resolvesWith) ->
+        assert.eq resolvesWith, foo: 1, bar: 2
+
   compoundKeys: ->
     request = null
     setup ->
