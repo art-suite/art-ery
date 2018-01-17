@@ -229,7 +229,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   # TODO: when we move LinkFieldsFilter's include-linking to the very-end of a client-initiated request
   #   this will become a simple alias for cacheGet, since all gets will be w/o include.
-  cachedGetWithoutInclude: cachedGet = (pipelineName, key) ->
+  cachedGetWithoutInclude: (pipelineName, key) ->
     throw new Error "cachedGetWithoutInclude: key must be a string (#{formattedInspect {key}})" unless isString key
     # use main get-cache if available
     @_getPipelineTypeCache(pipelineName, "get")[key] ||

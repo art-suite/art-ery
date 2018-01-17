@@ -34,7 +34,7 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
             if true, then when returning instances of this object, it will also
             fetch the linked field's object. In this case, it will set 'user' to
             the value returned from: pipelines.user.get userId
-            (This is how it is actually fetched: request.cachedPipelineGet 'user', userId)
+            (This is how it is actually fetched: request.cachedGet 'user', userId)
 
   ###
   constructor: (options) ->
@@ -98,7 +98,7 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
     # Right now we are going to always include unless explicitly set to false.
     # I like the semantic that we only auto-include root requests, but OBVIOUSLY,
     # that needs to apply to recursive-gets DUE TO AUTO-INCLUDE!
-    # Which means we effectively need a special cachedPipelineGet for "auto-include-gets".
+    # Which means we effectively need a special cachedGet for "auto-include-gets".
     # That's a little ugly, so I'm just doing the expedient solution - that is forward compatible.
     # It's just less efficient until I find a better way to implement this.
     requestIncludeProp = (response.rootRequest.props.include != false && response.requestProps.include != false)
@@ -112,7 +112,7 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
             if linkData = requestData?[fieldName] || postIncludeLinkedFieldData?[fieldName]
               merge {id}, linkData
             else if requestIncludeProp
-              response.cachedPipelineGet pipelineName, id
+              response.cachedGet pipelineName, id
 
         .catch (response) ->
           unless response.status == missing
