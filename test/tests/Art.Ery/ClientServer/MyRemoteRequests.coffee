@@ -82,7 +82,7 @@ module.exports = suite:
               assert.isPlainObject response.remoteResponse.session
             else
               assert.ok false, "only expecting 1 or 2 keys, got: #{Object.keys(response.remoteResponse).join ', '}"
-          assert.eq response.handledBy, "POST http://localhost:8085/api/myRemote-handledByFilterRequest"
+          assert.eq response.handledBy.name, "POST http://localhost:8085/api/myRemote-handledByFilterRequest"
 
       test "privateRequestOkAsSubRequest", ->
         pipelines.myRemote.privateRequestOkAsSubRequest()

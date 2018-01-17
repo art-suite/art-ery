@@ -1,6 +1,6 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{pureMerge, Promise, BaseObject, compactFlatten, object, peek, isPlainArray, objectKeyCount, arrayWith, inspect, RequestError, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
+{currentSecond, objectWithout, arrayWithoutLast, pureMerge, Promise, BaseObject, compactFlatten, object, peek, isPlainArray, objectKeyCount, arrayWith, inspect, RequestError, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
 {success, missing, failure, serverFailure, clientFailure} = CommunicationStatus
 {config} = require './Config'
 
@@ -69,6 +69,7 @@ module.exports = class Response extends require './RequestResponseBase'
 
     @session ||= @request.session
 
+    @_endTime = null
 
     if @status != success
       @_captureErrorStack()
@@ -96,7 +97,32 @@ module.exports = class Response extends require './RequestResponseBase'
 
     beforeFilterLog:    -> @request.filterLog || []
     handledBy:          -> !@failed && peek @request.filterLog
-    afterFilterLog:     -> @filterLog || []
+
+    # I'd like to just call this 'filterLog', but there appears to be a conflict somewhere' (SBD 1/2018)
+    rawRequestLog: -> compactFlatten [@beforeFilterLog, @afterFilterLog]
+    requestLog:          ->
+      {startTime, endTime} = @
+
+      firstTime = lastTime = startTime
+      lastProps = null
+      out = for {name, time} in @rawRequestLog
+        firstTime = lastTime = time unless firstTime?
+
+        lastProps?.deltaMs = (time - lastTime) * 1000 | 0
+
+        lastProps =
+          name: name
+          timeMs: 0
+          wallMs:  (time - firstTime) * 1000 | 0
+        lastTime = time
+        lastProps
+
+      log {startTime, lastTime, @_endTime}
+      lastProps?.deltaMs = (endTime - lastTime) * 1000 | 0
+
+      out
+
+    afterFilterLog:     -> @_filterLog || []
     isSuccessful:       -> @_status == success
     isMissing:          -> @_status == missing
     notSuccessful:      -> @_status != success
@@ -107,7 +133,7 @@ module.exports = class Response extends require './RequestResponseBase'
         @status
         @props
         @session
-        @filterLog
+        filterLog: @_filterLog
         @remoteRequest
         @remoteResponse
         @errorProps

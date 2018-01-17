@@ -1,4 +1,5 @@
 {
+  currentSecond
   log, arrayWith
   defineModule, merge, isJsonType, isString, isPlainObject, isArray
   inspect
@@ -40,16 +41,19 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   constructor: (options) ->
     super
-    @_wallTime = 0
+    @_creationTime = currentSecond()
     {@filterLog, @errorProps} = options
 
-  @property "filterLog errorProps wallTime"
+  @property "filterLog errorProps creationTime"
 
   addFilterLog: (filter) ->
-    @_filterLog = arrayWith @_filterLog, if isString filter
-      filter
-    else
-      filter.getLogName @type
+    @_filterLog = arrayWith @_filterLog,
+      name:
+        if isString filter
+          filter
+        else
+          filter.getLogName @type
+      time: currentSecond()
     @
 
   @getter
@@ -59,6 +63,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     requestDataWithKey: -> merge @requestData, @keyObject
     keyObject:          -> @request.pipeline.toKeyObject @key
     rootRequest:        -> @parentRequest?.rootRequest || @request
+    startTime:          -> @rootRequest.creationTime
+    endTime:            -> @creationTime
+    wallTime:           -> @startTime - @endTime
 
     inspectedObjects: ->
       "#{@class.namespacePath}":
@@ -204,15 +211,32 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   _getPipelineTypeCache: (pipelineName, type) ->
     (@requestCache[pipelineName] ||= {})[type] ||= {}
 
-  cachedSubrequest: (pipelineName, type, key) ->
-    throw new Error "key must be a string (#{formattedInspect {key}})" unless isString key
-    @_getPipelineTypeCache(pipelineName, type)[key] ||= @subrequest pipelineName, type, {key}
+  cachedSubrequest: (pipelineName, cacheType, requestType, options) ->
+    key = if isString options
+      options
+    else
+      options.key
+    throw new Error "cachedSubrequest: key must be a string (#{formattedInspect {key}})" unless isString key
+    @_getPipelineTypeCache(pipelineName, cacheType)[key] ||= @subrequest pipelineName, requestType, options
 
   setGetCache: ->
     if @status == success && present(@key) && @responseData?
       @_getPipelineTypeCache(@pipelineName, "get")[@key] = Promise.then => @responseData
 
-  cachedGet: cachedGet = (pipelineName, key) -> @cachedSubrequest pipelineName, "get", key
+  cachedGet: cachedGet = (pipelineName, key) ->
+    throw new Error "cachedGet: key must be a string (#{formattedInspect {key}})" unless isString key
+    @cachedSubrequest pipelineName, "get", "get", key
+
+  # TODO: when we move LinkFieldsFilter's include-linking to the very-end of a client-initiated request
+  #   this will become a simple alias for cacheGet, since all gets will be w/o include.
+  cachedGetWithoutInclude: cachedGet = (pipelineName, key) ->
+    throw new Error "cachedGetWithoutInclude: key must be a string (#{formattedInspect {key}})" unless isString key
+    # use main get-cache if available
+    @_getPipelineTypeCache(pipelineName, "get")[key] ||
+
+    # if not, get w/o includes
+    @cachedSubrequest pipelineName, "get-no-include", "get", key: key, props: include: false
+
   cachedPipelineGet: cachedGet # depricated(?) alias
 
   # like cachedGet, excepts it success with null if it doesn't exist or if key doesn't exist

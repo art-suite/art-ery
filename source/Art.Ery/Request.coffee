@@ -1,4 +1,5 @@
 {
+  currentSecond
   each
   present, Promise, BaseObject, RestClient, merge,
   inspect, isString, isObject, log, Validator,
@@ -75,6 +76,7 @@ module.exports = class Request extends require './RequestResponseBase'
   constructor: (options) ->
     super
     {@type, @pipeline, @session, @parentRequest, @originatedOnServer, @props = {}, @context = {}} = options
+    @_startTime = null
 
     key = options.key ? @_props.key
     options.key = @_props.key = @pipeline.toKeyString key if key?
@@ -83,7 +85,6 @@ module.exports = class Request extends require './RequestResponseBase'
     requestConstructorValidator().validate options, context: "Art.Ery.Request options", logErrors: true
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
-
 
   @property "type pipeline session originatedOnServer parentRequest props data key context"
 

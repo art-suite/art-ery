@@ -1,4 +1,4 @@
-{log, createWithPostCreate, RestClient} = require 'art-foundation'
+{log, objectWithout, createWithPostCreate, RestClient} = require 'art-foundation'
 {config, missing, Pipeline, pipelines, session} = Neptune.Art.Ery
 
 module.exports = suite: ->
@@ -23,7 +23,8 @@ module.exports = suite: ->
         "clientFilter@client"
         "bothFilter@client"
       ]
-      assert.eq response.handledBy, "POST http://localhost:8085/api/filterLocation-filterTest"
+      assert.eq objectWithout(response.handledBy, "time"),
+        name: "POST http://localhost:8085/api/filterLocation-filterTest"
 
   test "both location", ->
     {location} = config
@@ -41,4 +42,4 @@ module.exports = suite: ->
         "bothFilter@both"
         "serverFilter@both"
       ]
-      assert.eq response.handledBy, "filterTest-handler"
+      assert.eq objectWithout(response.handledBy, "time"), name: "filterTest-handler"
