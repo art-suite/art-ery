@@ -52,9 +52,10 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
     keyFields:        -> @class._keyFields
 
   isRecord: (data) ->
-    for keyField in @keyFields
-      return false unless data[keyField]?
-    true
+    if isPlainObject data
+      for keyField in @keyFields
+        return false unless data[keyField]?
+      true
 
   # Overrides FluxModel's implementation
   dataToKeyString: (a) ->
