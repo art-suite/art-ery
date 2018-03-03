@@ -6,6 +6,24 @@
 } = require 'art-standard-lib'
 {Validator} = require 'art-validation'
 {JsonStore} = require 'art-foundation'
+###
+TODO:
+  rename to SessionManager
+  Art.Ery.session should be the raw session data
+  Art.Ery.sessionManager should be this singleton
+  NOTE: don't break the jsonStore name, though - keep it 'session'
+  NOTE: this will break things which expect Art.Ery.session.data to be the session data
+
+  rename: "data" should become "session"
+
+  Pipeline.session
+    should be split into: session (raw data) and sessionManager
+    However, maybe we should ONLY have the 'session' getter,
+    which returns raw-data.
+    If you need custom sessions on a per-pipline basis, use
+    inheritance... I like! it's simpler!
+
+###
 
 module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   jsonStore = new JsonStore

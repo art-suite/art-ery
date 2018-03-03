@@ -39,12 +39,15 @@ defineModule module, class MyRemote extends Pipeline
     setSessionB
     handlerClientFailure
     privateRequestOkAsSubRequest
+    returnFalse
     "
 
   @handlers
     get: ({key, data}) -> "#{data?.greeting || 'Hello'} #{key || 'World'}!"
 
     hello: ({session}) -> "Hello, #{session.username}!"
+
+    returnFalse: -> false
 
     simulateMissing: (request) -> request.missing()
 

@@ -35,6 +35,11 @@ module.exports = suite:
           log.error "START THE TEST SERVER: npm run testServer"
           throw e
 
+      test "returnFalse", ->
+        pipelines.myRemote.returnFalse()
+        .then (shouldBeFalse) ->
+          assert.eq false, shouldBeFalse
+
       test "static index.html", ->
         RestClient.get "http://localhost:8085"
         .then (v) ->
