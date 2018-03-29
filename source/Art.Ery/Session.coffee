@@ -3,9 +3,13 @@
 {
   isPlainObject, Promise, BaseObject, merge, inspect, isString, isObject, log, plainObjectsDeepEq
   isBrowser
+  interval
+  eq
+  formattedInspect
 } = require 'art-standard-lib'
 {Validator} = require 'art-validation'
 {JsonStore} = require 'art-foundation'
+{jsonStore} = JsonStore
 ###
 TODO:
   rename to SessionManager
@@ -26,7 +30,6 @@ TODO:
 ###
 
 module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
-  jsonStore = new JsonStore
   ###
   A global singleton Session is provided and used by default.
   Or multiple instances can be created and passed to the
@@ -34,32 +37,28 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
   ###
   @singletonClass()
 
-  @property "data jsonStoreKey"
-
-  constructor: (@_data = {}, @_jsonStoreKey = "Art.Ery.Session") ->
-
-    if global?.document
-      @_startPollingSession()
+  constructor: (@_data = {}, @_jsonStoreKey) ->
+    @_startPollingSession() if isBrowser
 
   _startPollingSession: ->
-    setInterval(
-      => @reloadSession()
-      2000
-    )
+    interval 5000, => @reloadSession()
 
   reloadSession: ->
     @_sessionLoadPromise = null
     @loadSession()
 
   loadSession: ->
-    @_sessionLoadPromise ||= if @jsonStoreKey
-      jsonStore.getItem @jsonStoreKey
+    @_sessionLoadPromise ?= (
+      Promise.then => jsonStore.getItem @jsonStoreKey
       .then (data) =>
-        @data = data if isPlainObject data
-    else
-      Promise.resolve()
+        unless eq data, @data
+          log "ArtErySession loaded from localStorage"
+          @data = data
+    )
 
-  @getter "sessionLoadPromise",
+  @getter "sessionLoadPromise data",
+    jsonStoreKey: -> @_jsonStoreKey ? "Art.Ery.Session"
+
     loadedDataPromise: ->
       if config.location == "server"
         throw new Error "INTERNAL ERROR: Attempted to access the global session serverside. HINT: Use 'session: {}' for no-session requests."
@@ -70,10 +69,13 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
     inspectedObjects: -> @_data
 
   @setter
-    data: (v) ->
-      @queueEvent "change", data: v unless plainObjectsDeepEq v, @_data
-      @_data = v
-      @jsonStoreKey && jsonStore.setItem @jsonStoreKey, v
+    data: (data) ->
+      if isPlainObject(data) && !plainObjectsDeepEq data, @_data
+        @queueEvent "change", {data}
+        log "ArtErySession " + formattedInspect changed:
+          old: merge @_data
+          new: data
+        jsonStore.setItem @jsonStoreKey, @_data = data
 
   reset: -> @data = {}
 
