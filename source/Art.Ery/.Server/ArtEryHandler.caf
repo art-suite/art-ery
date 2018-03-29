@@ -17,7 +17,10 @@ class ArtEryHandler extends &ArtExpressServer.PromiseHandler
       .then (session) ->
         pipeline._processRequest Request.createFromRemoteRequestProps {session: session || {}, pipeline, type, key, requestData}
         .then (response) ->
-          log.error response if response.failed
+          if response.failed
+            log.error response
+          else if config.verbose
+            log "#{response.requestString}: subrequestCount: #{response.subrequestCount}, recordsReturned: #{if response.data then response.data.length ? 1 else 0}"
           signSession session, response.responseForRemoteRequest
     else
       Promise.resolve null # missing
