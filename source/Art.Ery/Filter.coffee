@@ -136,6 +136,14 @@ defineModule module, class Filter extends require './RequestHandler'
     else
       0
 
+  locationPriorityBoost =
+    client: 2000
+    both:   1000
+    server: 0
+
+  @getter
+    priority: -> @group + locationPriorityBoost[@location]
+
   #################################
   # class instance methods
   #################################

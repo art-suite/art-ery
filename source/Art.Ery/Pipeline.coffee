@@ -296,14 +296,15 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
   # use a stable sort
   @groupFilters: (filters) ->
-    groupLevels = []
-    for {group} in filters
-      pushIfNotPresent groupLevels, group
+    priorityLevels = []
+    for {priority} in filters
+      pushIfNotPresent priorityLevels, priority
 
     sortedFilters = []
-    for groupLevel in groupLevels.sort()
-      for filter in filters when groupLevel == filter.group
+    for priorityLevels in (priorityLevels.sort (a, b) -> a - b)
+      for filter in filters when priorityLevels == filter.priority
         sortedFilters.push filter
+
     sortedFilters
 
   getBeforeFilters: (request) -> filter for filter in @beforeFilters when filter.getBeforeFilter request
