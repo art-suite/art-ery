@@ -133,5 +133,6 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   # Idealy, we'd also use the bulkGet feature
   @after
     all: (response) ->
+      return response if response.type == "delete"
       response.withTransformedRecords (record) =>
         @includeLinkedFields response, record
