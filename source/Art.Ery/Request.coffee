@@ -99,7 +99,7 @@ module.exports = class Request extends require './RequestResponseBase'
   ##############################
   # MISC
   ##############################
-  @getter "subrequestCount",
+  @getter
     request:      -> @
     shortInspect: ->
       "#{if @parentRequest then @parentRequest.shortInspect + " > " else ""}#{@pipeline.getName()}-#{@type}(#{@key || ''})"
