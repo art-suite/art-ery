@@ -136,9 +136,31 @@ defineModule module, class Filter extends require './RequestHandler'
     else
       0
 
+  ###
+    2018-04-19 SBD: I still think 'both' should be 1000, but it breaks Zo.
+
+    Why? Because the ValidationFilter sets default fields and the UserOwnedFilter
+    throws errors if the user attempts to set fields they aren't allowed to manually
+    set. Well, this means the UserOwnedFilter needs to fire BEFORE ValidationFilter.
+
+    The real problem here is ValidationFilter actually acts differently client-side vs
+    server-side. I'm beginning to think the "both" mode for a Filter actually doesn't
+    make much sense. I think we DO want to have a client-side validator which is
+    initialized with the exact same constraint as the server-side validator. However,
+    I'm beginning to think it just makes more sense if they are actually different filters.
+
+    Right now I'm overloading what "Validation" means - and overloading usually (always?)
+    creates unecessary complexity.
+
+    And guess what? Validation, and only as a pre-filter, is STILL the only example I've
+    found where a "both" filter kind-of makes sense.
+
+    If we split Validator into separate Client and Server, we can drop the whole "both"
+    concept - which probably simplifies A LOT of code! ooo!
+  ###
   locationPriorityBoost =
     client: 2000
-    both:   1000
+    both:   0
     server: 0
 
   @getter
