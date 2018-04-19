@@ -21,6 +21,7 @@ package:
     compress:           :^0.99.0
     throng:             :^4.0.0
     jsonwebtoken:       :^7.2.1
+    uuid:               :^3.2.1
 
 webpack:
   common: {}
