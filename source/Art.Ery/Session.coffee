@@ -52,7 +52,7 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
       Promise.then => jsonStore.getItem @jsonStoreKey
       .then (data) =>
         unless eq data, @data
-          log "ArtErySession loaded from localStorage"
+          # log "ArtErySession loaded from localStorage"
           @data = data
     )
 
@@ -72,9 +72,9 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
     data: (data) ->
       if isPlainObject(data) && !plainObjectsDeepEq data, @_data
         @queueEvent "change", {data}
-        log "ArtErySession " + formattedInspect changed:
-          old: merge @_data
-          new: data
+        # log "ArtErySession " + formattedInspect changed:
+        #   old: merge @_data
+        #   new: data
         jsonStore.setItem @jsonStoreKey, @_data = data
 
   reset: -> @data = {}
