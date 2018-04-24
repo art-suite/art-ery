@@ -112,22 +112,12 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
           else if requestIncludeProp
             response.cachedGet pipelineName, id
 
-        .catch (response) ->
-          switch response.status
-            when networkFailure
-              # attempt retry once
-              timeout 20 + 10 * Math.random()
-              .then attemptGetLinkedField
-
-            when missing
-              null
-
-            else
-              log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
-              null
-
-        .catch (response) -> null
         .then (value) -> linkedData[fieldName] = value if value?
+        .catch (response) ->
+          unless response.status == missing
+            log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
+          null
+
 
     Promise.all promises
     .then -> linkedData

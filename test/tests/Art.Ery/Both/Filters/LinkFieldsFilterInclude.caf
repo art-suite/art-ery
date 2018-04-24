@@ -91,3 +91,49 @@ suite: ->
             userId: :0
             message: "" How about that ArtEry!?!
             user:   id: :0 name: :George
+
+  test "included retries on networkFailure", ->
+    failureCount = 0
+    successCount = 0
+
+    class User extends Pipeline
+      history = {}
+      records =
+        0: name: :Fred
+        1: name: :George
+
+      @handler
+        get: (request) ->
+          {key} = request
+          if v = history[key]
+            successCount++
+            v
+          else
+            failureCount++
+            history[key] = records[key]
+            request.toResponse networkFailure
+
+    class PostPipeline extends SimplePipeline
+      isRecord: ({message}) -> message?
+
+      @handler
+        getSampleData: (request) ->
+          []
+            {} userId: :0, message: :Hi!
+            {} userId: :1, message: :Howdy!
+            {} userId: :0, message: :Yo!
+
+      @filter new LinkFieldsFilter fields:
+        user: "" link required include
+
+    pipelines.postPipeline.getSampleData props: include: true
+    .then (data)->
+      assert.eq
+        data
+        []
+          {} userId: :0 message: :Hi!    user: name: :Fred
+          {} userId: :1 message: :Howdy! user: name: :George
+          {} userId: :0 message: :Yo!    user: name: :Fred
+
+      assert.eq failureCount, 2 :failureCount
+      assert.eq successCount, 2 :successCount

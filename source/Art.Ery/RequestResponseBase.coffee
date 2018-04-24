@@ -1,4 +1,5 @@
 {
+  timeout
   currentSecond
   log, arrayWith
   defineModule, merge, isJsonType, isString, isPlainObject, isArray
@@ -18,7 +19,7 @@
 } = require 'art-standard-lib'
 ArtEry = require './namespace'
 ArtEryBaseObject = require './ArtEryBaseObject'
-{failure, isClientFailure, success, missing, serverFailure, clientFailure, clientFailureNotAuthorized} = require 'art-communication-status'
+{networkFailure, failure, isClientFailure, success, missing, serverFailure, clientFailure, clientFailureNotAuthorized} = require 'art-communication-status'
 {config} = require './Config'
 
 ###
@@ -217,7 +218,15 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     else
       options.key
     throw new Error "cachedSubrequest: key must be a string (#{formattedInspect {key}})" unless isString key
-    @_getPipelineTypeCache(pipelineName, cacheType)[key] ||= @subrequest pipelineName, requestType, options
+    @_getPipelineTypeCache(pipelineName, cacheType)[key] ||=
+      @subrequest pipelineName, requestType, options
+      .catch (error) =>
+        if error.status == networkFailure && requestType == "get"
+          # attempt retry once
+          timeout 20 + 10 * Math.random()
+          .then => @subrequest pipelineName, requestType, options
+
+        else throw error
 
   setGetCache: ->
     if @status == success && present(@key) && @responseData?
