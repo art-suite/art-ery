@@ -142,8 +142,8 @@ suite:
           before: foo: (request) -> request
 
       assert.eq ["client", "both"],           array f in pipelines.myPipeline.getBeforeFilters requestType: "foo", location: "client" with f.location
-      assert.eq ["both", "server"],           array f in pipelines.myPipeline.getBeforeFilters requestType: "foo", location: "server" with f.location
-      assert.eq ["client", "both", "server"], array f in pipelines.myPipeline.getBeforeFilters requestType: "foo", location: "both"   with f.location
+      assert.eq ["server", "both"],           array f in pipelines.myPipeline.getBeforeFilters requestType: "foo", location: "server" with f.location
+      assert.eq ["client", "server", "both"], array f in pipelines.myPipeline.getBeforeFilters requestType: "foo", location: "both"   with f.location
 
     test "after filters by location", ->
       class MyPipeline extends Pipeline
@@ -165,8 +165,8 @@ suite:
           after: foo: (request) -> request
 
       assert.eq ["both", "client"],           array f in pipelines.myPipeline.getAfterFilters requestType: "foo", location: "client" with f.location
-      assert.eq ["server", "both"],           array f in pipelines.myPipeline.getAfterFilters requestType: "foo", location: "server" with f.location
-      assert.eq ["server", "both", "client"], array f in pipelines.myPipeline.getAfterFilters requestType: "foo", location: "both"   with f.location
+      assert.eq ["both", "server"],           array f in pipelines.myPipeline.getAfterFilters requestType: "foo", location: "server" with f.location
+      assert.eq ["both", "server", "client"], array f in pipelines.myPipeline.getAfterFilters requestType: "foo", location: "both"   with f.location
 
 
   filterFailures: ->

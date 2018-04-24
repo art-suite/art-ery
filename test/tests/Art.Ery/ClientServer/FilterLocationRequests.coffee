@@ -15,11 +15,11 @@ module.exports = suite: ->
       assert.eq response.data.customLog, [
         "clientFilter@client"
         "bothFilter@client"
-        "bothFilter@server"
         "serverFilter@server"
+        "bothFilter@server"
         "[handler@server]"
-        "serverFilter@server"
         "bothFilter@server"
+        "serverFilter@server"
         "bothFilter@client"
         "clientFilter@client"
       ]
@@ -35,11 +35,11 @@ module.exports = suite: ->
       config.location = location
       assert.eq response.data.customLog, [
         "clientFilter@both"
-        "bothFilter@both"
         "serverFilter@both"
+        "bothFilter@both"
         "[handler@both]"
-        "serverFilter@both"
         "bothFilter@both"
+        "serverFilter@both"
         "clientFilter@both"
       ]
       assert.eq objectWithout(response.handledBy, "time"), name: "filterTest-handler"

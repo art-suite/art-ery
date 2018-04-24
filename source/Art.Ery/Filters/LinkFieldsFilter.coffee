@@ -1,9 +1,9 @@
 {
-  timeout, array, isPlainObject, formattedInspect, each, wordsArray, log, defineModule, merge, isString, shallowClone, isPlainArray, Promise
+  timeout, array, timeout, isPlainObject, formattedInspect, each, wordsArray, log, defineModule, merge, isString, shallowClone, isPlainArray, Promise
 } = require 'art-standard-lib'
 Filter = require '../Filter'
 {normalizeFieldProps} = require 'art-validation'
-{missing} = require 'art-communication-status'
+{missing,networkFailure} = require 'art-communication-status'
 
 defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
   @location "server"
@@ -105,22 +105,30 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
 
     linkedData = shallowClone data
     promises = for fieldName, {idFieldName, pipelineName, include} of @_linkFields when include && id = linkedData[idFieldName]
-      do (fieldName, idFieldName, pipelineName, include) =>
-        Promise
-        .then =>
-          if id?
-            if linkData = requestData?[fieldName] || postIncludeLinkedFieldData?[fieldName]
-              merge {id}, linkData
-            else if requestIncludeProp
-              response.cachedGet pipelineName, id
+      do (id, fieldName, idFieldName, pipelineName, include) =>
+        Promise.then attemptGetLinkedField = =>
+          if linkData = requestData?[fieldName] || postIncludeLinkedFieldData?[fieldName]
+            merge {id}, linkData
+          else if requestIncludeProp
+            response.cachedGet pipelineName, id
 
         .catch (response) ->
-          unless response.status == missing
-            log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
-          # continue anyway
-          null
-        .then (value) ->
-          linkedData[fieldName] = value if value?
+          switch response.status
+            when networkFailure
+              # attempt retry once
+              timeout 20 + 10 * Math.random()
+              .then attemptGetLinkedField
+
+            when missing
+              null
+
+            else
+              log.error "LinkFieldsFilter: error including #{fieldName}. #{idFieldName}: #{id}. pipelineName: #{pipelineName}. Error: #{response}", response.error
+              null
+
+        .catch (response) -> null
+        .then (value) -> linkedData[fieldName] = value if value?
+
     Promise.all promises
     .then -> linkedData
 

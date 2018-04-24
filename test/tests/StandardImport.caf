@@ -1,4 +1,5 @@
 &ArtStandardLib.merge
   &ArtStandardLib
   &source/ArtEry
+  &ArtTestbench
   &ArtCommunicationStatus

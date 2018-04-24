@@ -1,0 +1,93 @@
+import &StandardImport
+SimplePipeline = &SimplePipeline
+
+suite: ->
+
+  ChainedTest.setup ->
+    class User extends SimplePipeline
+
+    class PostPipeline extends SimplePipeline
+      @filter new LinkFieldsFilter fields:
+        user: "" include required link
+
+  .thenTest "with and without include: true and false", ->
+    pipelines.user.create data: name: "George"
+    .then (user) ->
+      assert.eq user, name: "George", id: :0
+      pipelines.postPipeline.create data: user: user, message: "hi there!"
+
+    .then (post) ->
+      assert.eq
+        post
+        id:       :0
+        message:  "" hi there!
+        userId:   :0
+        user:     id: :0  name: :George
+        "" create response
+
+  .thenTest "include: true" ->
+    pipelines.postPipeline.get key: :0, props: include: true
+    .then (post) ->
+      assert.eq post,
+        id:       :0
+        message:  "" hi there!
+        userId:   :0
+        user:     id: :0  name: :George
+
+        "" with include-auto
+
+  .thenTest "include: false" ->
+    pipelines.postPipeline.get key: :0, props: include: false
+    .then (post) ->
+      assert.eq
+        post
+        id:       :0
+        message:  "" hi there!
+        userId:   :0
+
+        "" without include-auto
+
+  test "included fields works on record-array-results", ->
+
+    userId1 = null
+    userId2 = null
+
+    class User extends SimplePipeline
+
+    class PostPipeline extends SimplePipeline
+      isRecord: ({message}) -> message?
+
+      @handler
+        getSampleData: (request) ->
+          []
+            {} userId: userId1, message: "" Hi!
+            {} userId: userId2, message: "" Howdy!
+            {} userId: userId1, message: "" How about that ArtEry!?!
+
+      @filter new LinkFieldsFilter fields:
+        user: "" link required include
+
+    Promise.all []
+      pipelines.user.create(data: name: "George").then (user) -> userId1 = user.id
+      pipelines.user.create(data: name: "Frank" ).then (user) -> userId2 = user.id
+
+    .then -> pipelines.postPipeline.getSampleData returnResponseObject: true, props: include: true
+    .then ({data, subrequestCount}) ->
+      assert.eq subrequestCount, 2
+      assert.eq
+        data
+        []
+          {}
+            userId:  :0
+            message: "" Hi!
+            user:    id: :0 name: :George
+
+          {}
+            userId:  :1
+            message: "" Howdy!
+            user:    id: :1 name: :Frank
+
+          {}
+            userId: :0
+            message: "" How about that ArtEry!?!
+            user:   id: :0 name: :George
