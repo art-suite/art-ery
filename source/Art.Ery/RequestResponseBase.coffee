@@ -392,6 +392,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
             response.status is not success and not clientFailure
           then a failing response is returned
 
+  TODO:
+    Refactor. 'when' should really be a Filter - just like Caffeine/CoffeeScript comprehensions.
+      Right now, if when is false, the record is still returned, just not "withed"
+      Instead, only records that pass "when" should even be returned.
   ###
   defaultWhenTest = (data, request) -> request.pipeline.isRecord data
   withTransformedRecords: (withFunction, whenFunction = defaultWhenTest) ->
