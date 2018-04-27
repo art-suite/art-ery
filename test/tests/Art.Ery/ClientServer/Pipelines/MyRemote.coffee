@@ -1,4 +1,4 @@
-{defineModule, log, merge} = require 'art-foundation'
+{timeout, defineModule, log, merge} = require 'art-foundation'
 {Pipeline, TimestampFilter, DataUpdatesFilter} = require 'art-ery'
 
 defineModule module, class MyRemote extends Pipeline
@@ -37,6 +37,7 @@ defineModule module, class MyRemote extends Pipeline
     handledByFilterRequest
     setSessionA
     setSessionB
+    slowSetSessionA
     handlerClientFailure
     privateRequestOkAsSubRequest
     returnFalse
@@ -63,6 +64,10 @@ defineModule module, class MyRemote extends Pipeline
 
     setSessionA: (request) -> request.respondWithMergedSession sessionA: true
     setSessionB: (request) -> request.respondWithMergedSession sessionB: true
+
+    slowSetSessionA: (request) ->
+      timeout 250
+      .then -> request.respondWithMergedSession sessionA: true
 
     handlerClientFailure: (request) -> request.require false, "handler allways fails"
 

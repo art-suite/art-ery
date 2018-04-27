@@ -1,4 +1,4 @@
-{log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
+{timeout, log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
 {Pipeline, pipelines, session} = Neptune.Art.Ery
 {ApplicationState} = ArtFlux = Neptune.Art.Flux
 {clientFailure, missing, serverFailure} = CommunicationStatus
@@ -23,6 +23,7 @@ module.exports = suite: ->
     .then (response) ->
       assert.eq session.data.sessionA, true
       assert.doesNotExist response.remoteResponse.session
+      assert.doesNotExist response.responseSession
 
   ###
   Two parallel requests will clober each other's sessions. It has to be this way
@@ -40,3 +41,23 @@ module.exports = suite: ->
     ])
     .then ->
       assert.neq session.data.sessionA, session.data.sessionB
+
+  test "most-recently-INITIATED request determines the session TEST-A", ->
+    slowFinished = false
+    p = pipelines.myRemote.slowSetSessionA()
+    .then -> slowFinished = true
+
+    timeout 10
+    .then -> pipelines.myRemote.setSessionB()
+    .then ->
+      # second request is done, first isn't
+      assert.eq slowFinished, false
+
+    .then -> p # wait for p
+    .then ->
+      # now both requests are done...
+      assert.eq slowFinished, true
+
+      # second request determined the session
+      assert.doesNotExist session.data.sessionA
+      assert.eq session.data.sessionB, true

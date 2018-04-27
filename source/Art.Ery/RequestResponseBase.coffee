@@ -74,8 +74,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   # Pass-throughs - to remove once we merge Request and Response
   @getter
+    requestSession:     -> @request.session
     requestProps:       -> @request.requestProps
     requestData:        -> @request.requestData
+
     isRootRequest:      -> @request.isRootRequest
     key:                -> @request.key || @responseData?.id
     pipeline:           -> @request.pipeline
@@ -415,7 +417,8 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
           if whenFunction record, @ then withFunction record, @
           else record
         .catch (error) =>
-          if response = error?.props?.response
+          if error.status == "missing" then null
+          else if response = error?.props?.response
             response
           else
             throw error

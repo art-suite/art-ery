@@ -19,6 +19,8 @@
   pushIfNotPresent
   w
   currentSecond
+  toDate
+  plainObjectsDeepEq
 } = require 'art-standard-lib'
 {normalizeFieldProps} = require 'art-validation'
 {success, missing} = require 'art-communication-status'
@@ -450,14 +452,53 @@ defineModule module, class Pipeline extends require './RequestHandler'
   _processClientRequest: (type, options = noOptions) ->
     options = key: options if isString options
 
+    requestStartTime = currentSecond()
+
     @createRequest type, options
     .then (request)  => @_processRequest request
-    .then (response) => @_processResponseSession response
+    .then (response) => @_processResponseSession response, requestStartTime
     .then (response) => response.toPromise options
 
-  _processResponseSession: (response) ->
-    {session} = response
-    @session.data = session if session
+  ###
+  mostRecentSessionUpdatedAt ensures we don't update the session out of order
+  RULE: the current session reflects the response from the most recently INITIATED request.
+  In other words, if a request stalls, takes a long time to update, and comes back with
+  a session update AFTER some other session updates from more recently-initiated requests,
+  that session-update is ignored.
+  keywords: update session
+
+  ALTERNATIVES CONSIDERED
+  - could use a server-side timestamp to ensure no out-of-order session updates
+    SUBOPTION A: order by time server RECEIVED the request
+    SUBOPTION B: order by time server COMPLETED the request
+    I decided this made less sense. It's really the order the user initiated
+    events that matters. If a user initiates a log-in or log-out request AFTER
+    some other slow request, the log-in/log-out should take precidence.
+    Extreme example: user logs in, which takes forever, then initiates a log-out,
+      if the log-in returns AFTER the log-out, it should be ignored.
+  ###
+  mostRecentSessionUpdatedAt = 0
+  _processResponseSession: (response, requestStartTime) ->
+    {responseSession} = response
+    if responseSession
+      currentSession = @session.data
+      message =
+      if requestStartTime > mostRecentSessionUpdatedAt
+        mostRecentSessionUpdatedAt = requestStartTime
+        @session.data = responseSession
+        "updated"
+      else
+        "out-of-order update blocked"
+
+      log "ArtEry.Pipeline._processResponseSession": {
+        message
+        pipeline: response.pipelineName
+        type:     response.type
+        currentSession
+        responseSession
+        changed: !plainObjectsDeepEq currentSession, responseSession
+      }
+
     response
 
   @_defineClientRequestMethod: (requestType) ->

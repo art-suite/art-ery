@@ -1,4 +1,4 @@
-{objectWithout, present, merge, isString, log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
+{toMilliseconds, objectWithout, present, merge, isString, log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
 {missing, Pipeline, pipelines, session} = Neptune.Art.Ery
 {clientFailureNotAuthorized, clientFailure} = CommunicationStatus
 
@@ -38,12 +38,22 @@ module.exports = suite:
           assert.eq session.data.username, "alice"
           assert.eq session.data.foo, "bar"
 
-      test "sessions get passed to sub-requests serverside", ->
+      test "sessions get passed to sub-requests serverside AND session is not updated by said request", ->
+        startTime = toMilliseconds()
         pipelines.auth.authenticate data: username: "Bill", password: "Bill"
         .then -> pipelines.myRemote.hello()
         .then (res) -> assert.eq res, "Hello, Bill!", "direct myRemote call"
-        .then -> pipelines.auth.hello()
-        .then (res) -> assert.eq res, "Hello, Bill!", "myRemote call via auth call"
+        .then ->
+          {updatedAt} = session
+          pipelines.auth.hello returnResponse: true
+          .tap ({data}) ->
+            assert.eq data, "Hello, Bill!", "myRemote call via auth call"
+          .tap ({responseSession}) ->
+            assert.doesNotExist responseSession
+            assert.isNumber updatedAt
+            assert.lt startTime, toMilliseconds updatedAt
+            assert.gt toMilliseconds(), toMilliseconds updatedAt
+            assert.eq updatedAt, session.updatedAt
 
       test "get with session", ->
         pipelines.auth.authenticate data: username: "Bill", password: "Bill"

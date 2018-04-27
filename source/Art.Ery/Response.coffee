@@ -44,16 +44,6 @@ IN:
     Available for inspecting what exactly went over-the-wire.
     Otherwise ignored by Response
 
-  replaceSession: false
-    If true, then the current session will be replace instead of merged
-    with the new one. If no new session is provided, the old session
-    will be reset to empty.
-
-    NOTE: Pipeline is responsible for updating the Client session
-      from the response session returned after a request.
-
-      Pipeline checks for @replaceSession to implement the above
-      semantics.
 ###
 
 
@@ -61,13 +51,13 @@ module.exports = class Response extends require './RequestResponseBase'
   constructor: (options) ->
     super
     responseValidator.validate options, context: "Art.Ery.Response options", logErrors: true
-    {@request, @status, @props = {}, @session, @remoteRequest, @remoteResponse, @replaceSession} = options
+    {@request, @status, @props = {}, @session, @remoteRequest, @remoteResponse} = options
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
     @_props.data = options.data if options.data?
 
-    @session ||= @request.session
+    # @_session ||= @request.session
 
     @_endTime = null
 
@@ -78,7 +68,7 @@ module.exports = class Response extends require './RequestResponseBase'
 
   isResponse:     true
 
-  @property "request props session replaceSession remoteResponse remoteRequest"
+  @property "request props session remoteResponse remoteRequest"
   @setter "status"
 
   @getter
@@ -92,8 +82,10 @@ module.exports = class Response extends require './RequestResponseBase'
     failed: -> @_status == failure
 
     data:               -> @_props.data
+    session:            -> @_session ? @request.session
     responseData:       -> @_props.data
     responseProps:      -> @_props
+    responseSession:    -> @_session
 
     beforeFilterLog:    -> @request.filterLog || []
     handledBy:          -> !@failed && peek @request.filterLog
@@ -132,8 +124,8 @@ module.exports = class Response extends require './RequestResponseBase'
         @request
         @status
         @props
-        @session
-        filterLog: @_filterLog
+        session:   @_session
+        filterLog:  @_filterLog
         @remoteRequest
         @remoteResponse
         @errorProps
@@ -141,7 +133,7 @@ module.exports = class Response extends require './RequestResponseBase'
     propsForResponse: -> @propsForClone
 
     plainObjectsResponse: (fields) ->
-      object fields || {@status, @props, @session, @beforeFilterLog, @afterFilterLog},
+      object fields || {@status, @props, @beforeFilterLog, @afterFilterLog, session: @_session},
         when: (v) ->
           switch
             when isPlainObject v then objectKeyCount(v) > 0
@@ -149,7 +141,11 @@ module.exports = class Response extends require './RequestResponseBase'
             else v != undefined
 
     responseForRemoteRequest: ->
-      @getPlainObjectsResponse unless config.returnProcessingInfoToClient then {@status, @props, @session}
+      @getPlainObjectsResponse unless config.returnProcessingInfoToClient then {
+        @status
+        @props
+        session: @_session
+      }
 
     # DEPRICATED
     # message:            -> @data?.message

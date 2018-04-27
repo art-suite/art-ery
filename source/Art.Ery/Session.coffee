@@ -6,6 +6,7 @@
   interval
   eq
   formattedInspect
+  toMilliseconds
 } = require 'art-standard-lib'
 {Validator} = require 'art-validation'
 {JsonStore} = require 'art-foundation'
@@ -56,7 +57,7 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
           @data = data
     )
 
-  @getter "sessionLoadPromise data",
+  @getter "sessionLoadPromise data updatedAt",
     jsonStoreKey: -> @_jsonStoreKey ? "Art.Ery.Session"
 
     loadedDataPromise: ->
@@ -70,6 +71,9 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
 
   @setter
     data: (data) ->
+      # _updatedAt is set before the if-block so that we can
+      # validate when updates are attempted in the tests.
+      @_updatedAt = toMilliseconds()
       if isPlainObject(data) && !plainObjectsDeepEq data, @_data
         @queueEvent "change", {data}
         # log "ArtErySession " + formattedInspect changed:
