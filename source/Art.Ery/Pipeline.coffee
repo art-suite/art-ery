@@ -494,6 +494,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
         message
         pipeline: response.pipelineName
         type:     response.type
+        key:      response.key
         currentSession
         responseSession
         changed: !plainObjectsDeepEq currentSession, responseSession
