@@ -17,7 +17,7 @@ defineModule module, class UserOwnedFilter extends Filter
   constructor: (options) ->
     super
     {@userUpdatableFields, @userCreatableFields, @publicFields} = options || {}
-    @group = "outter"
+    @group = "outer"
 
   @getter "userUpdatableFields userCreatableFields publicFields"
 

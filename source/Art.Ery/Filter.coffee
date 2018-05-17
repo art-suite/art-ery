@@ -111,19 +111,20 @@ defineModule module, class Filter extends require './RequestHandler'
 
   Filter sequence, based on groups:
     loggers beforeFilter
-      outter beforeFilter
+      outer beforeFilter
         middle beforeFilter
           inner beforeFilter
             handler
           inner afterFilter
         middle afterFilter
-      outter afterFilter
+      outer afterFilter
     loggers afterFilter
 
   ###
   @groupNames:
     loggers: 2
-    outter: 1
+    outer:  1
+    outter: 1 # depricated, damn spelling!
     middle: 0
     inner:  -1
 

@@ -5,7 +5,7 @@ defineModule module, class TimestampFilter extends Filter
 
   constructor: ->
     super
-    @group = "outter"
+    @group = "outer"
 
   @before
     create: (request) ->

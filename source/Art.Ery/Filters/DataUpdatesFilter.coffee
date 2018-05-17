@@ -22,7 +22,7 @@ defineModule module, class DataUpdatesFilter extends Filter
 
   constructor: ->
     super
-    @group = "outter"
+    @group = "outer"
 
   getUpdatedUpdates = (response, fields)->
     {key, type, responseData} = response

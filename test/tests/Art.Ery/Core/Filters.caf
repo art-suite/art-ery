@@ -62,7 +62,7 @@ suite:
         class MyPipeline extends Pipeline
           @handlers myAction: -> :-
 
-          @filter name: :filterA  group: :outter    after: myAction: (r) -> r.withData "" #{r.data}A
+          @filter name: :filterA  group: :outer    after: myAction: (r) -> r.withData "" #{r.data}A
           @filter name: :filterB  group: :inner     after: myAction: (r) -> r.withData "" #{r.data}B
           @filter name: :filterC  group: :middle    after: myAction: (r) -> r.withData "" #{r.data}C
           @filter name: :filterD  group: :loggers   after: myAction: (r) -> r.withData "" #{r.data}D
