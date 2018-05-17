@@ -490,15 +490,15 @@ defineModule module, class Pipeline extends require './RequestHandler'
       else
         "out-of-order update blocked"
 
-      log "ArtEry.Pipeline._processResponseSession": {
-        message
-        pipeline: response.pipelineName
-        type:     response.type
-        key:      response.key
-        currentSession
-        responseSession
-        changed: !plainObjectsDeepEq currentSession, responseSession
-      }
+      # log "ArtEry.Pipeline._processResponseSession": {
+      #   message
+      #   pipeline: response.pipelineName
+      #   type:     response.type
+      #   key:      response.key
+      #   currentSession
+      #   responseSession
+      #   changed: !plainObjectsDeepEq currentSession, responseSession
+      # }
 
     response
 
