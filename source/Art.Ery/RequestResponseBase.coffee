@@ -479,14 +479,19 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       else
         @failure {error}
 
-  success:                    (responseProps) -> @toResponse success, responseProps
-  missing:                    (responseProps) -> @toResponse missing, responseProps
-  clientFailure:              (responseProps) -> @toResponse clientFailure, responseProps
-  clientFailureNotAuthorized: (responseProps) -> @toResponse clientFailureNotAuthorized, responseProps
-  failure:                    (responseProps) -> @toResponse failure, responseProps
+  success:                    (responseProps) -> @toResponse success,                     responseProps
+  missing:                    (responseProps) -> @toResponse missing,                     responseProps
+  clientFailure:              (responseProps) -> @toResponse clientFailure,               responseProps
+  clientFailureNotAuthorized: (responseProps) -> @toResponse clientFailureNotAuthorized,  responseProps
+  failure:                    (responseProps) -> @toResponse failure,                     responseProps
   # NOTE: there is no serverFailure method because you should always use just 'failure'.
   # This is because you may be running on the client or the server. If running on the client, it isn't a serverFailure.
   # If status == "failure", the ArtEry HTTP server will convert that status to serverFailure automatically.
+
+  rejectWithMissing:                    (responseProps) -> @toResponse missing,                     responseProps, true
+  rejectWithClientFailure:              (responseProps) -> @toResponse clientFailure,               responseProps, true
+  rejectWithClientFailureNotAuthorized: (responseProps) -> @toResponse clientFailureNotAuthorized,  responseProps, true
+  rejectWithFailure:                    (responseProps) -> @toResponse failure,                     responseProps, true
 
   ##########################
   # PRIVATE
@@ -503,7 +508,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     promise.then (response) ->
     .catch -> # should never happen
   ###
-  toResponse: (status, responseProps) ->
+  toResponse: (status, responseProps, returnRejectedPromiseOnFailure = false) ->
     throw new Error "missing status" unless isString status
 
     # status = responseProps.status if isString responseProps?.status
@@ -536,6 +541,12 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         # unsupported responseProps type is an internal failure
         else
           @toResponse failure, @_toErrorResponseProps responseProps
+    .then (response) ->
+      if returnRejectedPromiseOnFailure
+        response.toPromise()
+      else
+        response
+
 
   _toErrorResponseProps: (error) ->
     log @, {responseProps},
