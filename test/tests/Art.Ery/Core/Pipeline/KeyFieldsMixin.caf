@@ -1,0 +1,17 @@
+import &StandardImport
+suite: ->
+  test :validation ->
+    class MyPipeline extends KeyFieldsMixin Pipeline
+      @primaryKey :myKey/myDate
+      @fields
+        myKey:  :trimmedString
+        myDate:
+          preprocess: (v) -> v | 0
+
+      @handlers
+        testToKeyObject: ({key}) ->
+          @toKeyObject key
+
+    pipelines.myPipeline.testToKeyObject key: "  mom  /123"
+    .then (result) ->
+      assert.eq result, myKey: "mom", myDate: 123

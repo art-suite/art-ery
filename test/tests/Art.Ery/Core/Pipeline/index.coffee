@@ -8,4 +8,5 @@ module.exports
   CustomRequests: require './CustomRequests'
   Failures:       require './Failures'      
   Handlers:       require './Handlers'      
+  KeyFieldsMixin: require './KeyFieldsMixin'
   Subrequests:    require './Subrequests'   

@@ -1,4 +1,5 @@
 {defineModule, log, present, isPlainArray, isString, isPlainObject, formattedInspect, array, object, each} = require 'art-foundation'
+{Validator} = require 'art-validation'
 
 ###
 @primaryKey and @keyFields are synonymous
@@ -48,8 +49,9 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
   # Instance API
   ###########################################
   @getter
-    keyFieldsString:  -> @class._keyFieldsString
-    keyFields:        -> @class._keyFields
+    keyFieldsString:  -> @_keyFieldsString  ?= @class._keyFieldsString
+    keyFields:        -> @_keyFields        ?= @class._keyFields
+    keyValidator:     -> @_keyValidator     ?= @class._keyValidator
 
   isRecord: (data) ->
     if isPlainObject data
@@ -64,12 +66,17 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
     .join "/"
 
   toKeyObject: (a) ->
-    {keyFields} = @
-    @validateKey if isPlainObject a
+    {keyValidator, keyFields} = @
+    keyObject = @validateKey if isPlainObject a
       object @keyFields, (v) -> a[v]
     else if isString a
       object (a.split "/"), key: (v, i) -> keyFields[i]
     else {}
+    if keyValidator
+      # validateUpdate just means key-fields are only validated if present
+      # the important thing is the preprocessor is applied
+      keyObject = keyValidator.validateUpdate keyObject, context: "#{@pipelineName}: toKeyObject validation"
+    keyObject
 
   dataWithoutKeyFields: (data) ->
     data && object data, when: (v, k) => not(k in @keyFields)
@@ -85,3 +92,10 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
   #################################
   @_keyFieldsString:  defaultKeyFieldsString = "id"
   @_keyFields:        [defaultKeyFieldsString]
+
+  @_initFields: ->
+    super
+    fields = @getFields()
+    @_keyValidator = new Validator keyFields = object @getKeyFields(),
+      when: (v) => fields[v]
+      with: (v) => fields[v]
