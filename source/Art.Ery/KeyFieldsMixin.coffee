@@ -73,9 +73,8 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
       object (a.split "/"), key: (v, i) -> keyFields[i]
     else {}
     if keyValidator
-      # validateUpdate just means key-fields are only validated if present
       # the important thing is the preprocessor is applied
-      keyObject = keyValidator.validateUpdate keyObject, context: "#{@pipelineName}: toKeyObject validation"
+      keyObject = keyValidator.preprocess keyObject
     keyObject
 
   dataWithoutKeyFields: (data) ->

@@ -1,6 +1,6 @@
 import &StandardImport
 suite: ->
-  test :validation ->
+  test :preprocess ->
     class MyPipeline extends KeyFieldsMixin Pipeline
       @primaryKey :myKey/myDate
       @fields
