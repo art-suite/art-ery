@@ -449,8 +449,15 @@ defineModule module, class Pipeline extends require './RequestHandler'
       # status != success
   ###
   noOptions = {}
-  _processClientRequest: (type, options = noOptions) ->
-    options = key: options if isString options
+  _processClientRequest: (type, optionsA = noOptions, optionsB) ->
+    if isString optionsA
+      options = key: optionsA
+      mergeInto options, optionsB if optionsB
+    else
+      options = if optionsB
+        merge optionsA, optionsB
+      else
+        optionsA
 
     requestStartTime = currentSecond()
 
@@ -504,7 +511,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
   @_defineClientRequestMethod: (requestType) ->
     @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()
-    @::[requestType] ||= (options) -> @_processClientRequest requestType, options
+    @::[requestType] ||= (optionsA, optionsB) -> @_processClientRequest requestType, optionsA, optionsB
 
   @_defineClientHandlerMethods: ->
     for name, handler of @getHandlers()
