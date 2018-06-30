@@ -64,13 +64,14 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     requestDataWithKey: -> merge @requestData, @keyObject
     keyObject:          -> @request.pipeline.toKeyObject @key
     rootRequest:        -> @parentRequest?.rootRequest || @request
+    originalRequest:    -> @_originalRequest ? @request.originalRequest
     startTime:          -> @rootRequest.creationTime
     endTime:            -> @creationTime
     wallTime:           -> @startTime - @endTime
 
     inspectedObjects: ->
       "#{@class.namespacePath}":
-        toInspectedObjects objectWithDefinedValues objectWithout @propsForClone, "context"
+        toInspectedObjects objectWithDefinedValues objectWithout @propsForClone, "context", "originalRequest"
 
   # Pass-throughs - to remove once we merge Request and Response
   @getter

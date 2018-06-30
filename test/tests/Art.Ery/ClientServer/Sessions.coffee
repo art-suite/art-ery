@@ -61,3 +61,10 @@ module.exports = suite: ->
       # second request determined the session
       assert.doesNotExist session.data.sessionA
       assert.eq session.data.sessionB, true
+
+  test "preAlterSession", ->
+    session.reset()
+    assert.doesNotExist session.data.sessionWasPreAltered
+    pipelines.myRemote.preAlterSession()
+    .then ->
+      assert.eq true, session.data.sessionWasPreAltered

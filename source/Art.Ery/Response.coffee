@@ -1,7 +1,15 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
-{currentSecond, objectWithout, arrayWithoutLast, pureMerge, Promise, BaseObject, compactFlatten, object, peek, isPlainArray, objectKeyCount, arrayWith, inspect, RequestError, isPlainObject, log, CommunicationStatus, Validator, merge, isJsonType, formattedInspect, w} = Foundation
-{success, missing, failure, serverFailure, clientFailure} = CommunicationStatus
+{
+  clone
+  currentSecond, objectWithout, arrayWithoutLast, pureMerge,
+  Promise, compactFlatten, object, peek,
+  isPlainArray, objectKeyCount, arrayWith, inspect,
+  RequestError, isPlainObject, log, CommunicationStatus,
+  merge, isJsonType, formattedInspect, w, neq
+} = require 'art-standard-lib'
+{Validator} = require 'art-validation'
+{success, missing, failure, serverFailure, clientFailure} = require 'art-communication-status'
 {config} = require './Config'
 
 responseValidator = new Validator
@@ -58,6 +66,9 @@ module.exports = class Response extends require './RequestResponseBase'
     @_props.data = options.data if options.data?
 
     # @_session ||= @request.session
+
+    @_session ?= if neq @request.session, @request.originalRequest.session
+      @request.session
 
     @_endTime = null
 

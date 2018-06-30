@@ -75,18 +75,19 @@ module.exports = class Request extends require './RequestResponseBase'
 
   constructor: (options) ->
     super
-    {@type, @pipeline, @session, @parentRequest, @originatedOnServer, @props = {}, @context = {}} = options
+    {@type, @pipeline, @session, @originalRequest, @parentRequest, @originatedOnServer, @props = {}, @context = {}} = options
     @_startTime = null
 
     key = options.key ? @_props.key
     options.key = @_props.key = @pipeline.toKeyString key if key?
     @_props.data = options.data if options.data?
+    @_originalRequest ?= @
 
     requestConstructorValidator().validate options, context: "Art.Ery.Request options", logErrors: true
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
-  @property "type pipeline session originatedOnServer parentRequest props data key context"
+  @property "originalRequest type pipeline session originatedOnServer parentRequest props data key context"
 
   @getter
     key:            -> @_props.key
@@ -115,6 +116,7 @@ module.exports = class Request extends require './RequestResponseBase'
 
     propsForClone: ->
       {
+        @originalRequest
         @pipeline
         @type
         @props

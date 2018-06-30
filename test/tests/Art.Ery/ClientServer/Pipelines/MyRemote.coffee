@@ -41,12 +41,19 @@ defineModule module, class MyRemote extends Pipeline
     handlerClientFailure
     privateRequestOkAsSubRequest
     returnFalse
+    preAlterSession
     "
+
+  @filter
+    before: preAlterSession: (request) ->
+      request.withMergedSession sessionWasPreAltered: true
 
   @handlers
     get: ({key, data}) -> "#{data?.greeting || 'Hello'} #{key || 'World'}!"
 
     hello: ({session}) -> "Hello, #{session.username}!"
+
+    preAlterSession: -> true
 
     returnFalse: -> false
 
