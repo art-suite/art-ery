@@ -8,7 +8,7 @@ module.exports = [
   session: (require './Session').singleton
   package: _package = require "art-ery/package.json"
   version: _package.version
-  config: require('./Config').config
+  config: config = require('./Config').config
 
   # for testing
   _reset: (pipelineTestFunction)->
@@ -21,4 +21,6 @@ module.exports = [
         pipeline.initialize()
 
     Promise.all promises
+
+  getArtEryRemoteServer: -> config.remoteServer
 ]

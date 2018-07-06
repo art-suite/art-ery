@@ -4,7 +4,7 @@
   formattedInspect
   array
 } = require 'art-standard-lib'
-
+ArtEry = require './namespace'
 Pipeline = require './Pipeline'
 KeyFieldsMixin = require './KeyFieldsMixin'
 {AfterEventsFilter} = require './Filters'
@@ -91,7 +91,7 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
 
   ###
   @updateAfter: (eventMap) ->
-    throw new Error "keyFields must be 'id'" unless @getKeyFieldsString() == "id"
+    # throw new Error "keyFields must be 'id'" unless @getKeyFieldsString() == "id"
     for requestType, requestTypeMap of eventMap
       for pipelineName, updateRequestPropsFunction of requestTypeMap
         AfterEventsFilter.registerPipelineListener @, pipelineName, requestType
@@ -139,16 +139,18 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
     .push afterEventFunction
 
   # OUT: updateItemPropsBykey
-  @_mergeUpdateProps: (manyUpdateItemProps) ->
+  @_mergeUpdateProps: (manyUpdateItemProps, toUpdatePipelineName) ->
+    pipeline = ArtEry.pipelines[toUpdatePipelineName]
     object (compactFlatten manyUpdateItemProps),
-      key: ({key}) -> key
+      key: ({key}) => pipeline.toKeyString key
       when: (props) -> props
       with: (props, inputKey, into) =>
         unless props.key
           log.error "key not found for one or more updateItem entries": {manyUpdateItemProps}
           throw new Error "#{@getName()}.updateAfter: key required for each updateItem param set (see log for details)"
-        if into[props.key]
-          deepMerge into[props.key], props
+        key = pipeline.toKeyString props.key
+        if into[key]
+          deepMerge into[key], props
         else
           props
 
@@ -160,9 +162,10 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
       Promise.deepAll updateRequestsByToUpdatePipeline
       .then (resolvedUpdateRequestsByToUpdatePipeline) =>
         Promise.all array resolvedUpdateRequestsByToUpdatePipeline, (updatePropsList, toUpdatePipelineName) =>
-          Promise.all array @_mergeUpdateProps(updatePropsList), (props) =>
+          Promise.all array @_mergeUpdateProps(updatePropsList, toUpdatePipelineName), (props) =>
             # log UpdateAfterMixin: "#{toUpdatePipelineName}.update": {props}
-            response.subrequest toUpdatePipelineName, "update", {props}
+            type = if props?.createOrUpdate then "createOrUpdate" else "update"
+            response.subrequest toUpdatePipelineName, type, {props}
       .then =>
         # recurse in case there are new updates
         @_applyAllUpdates response
