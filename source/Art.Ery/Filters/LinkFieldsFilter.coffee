@@ -1,4 +1,5 @@
 {
+  objectWithout
   timeout, array, timeout, isPlainObject, formattedInspect, each, wordsArray, log, defineModule, merge, isString, shallowClone, isPlainArray, Promise
 } = require 'art-standard-lib'
 Filter = require '../Filter'
@@ -70,7 +71,7 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
       with: ({idFieldName, autoCreate, pipelineName}, fieldName, __, linkedFieldData) =>
         Promise.then =>
           if linkedFieldData.id then linkedFieldData
-          else if autoCreate    then request.subrequest pipelineName, "create", data: linkedFieldData
+          else if autoCreate    then request.subrequest pipelineName, "create", props: include: false, data: linkedFieldData
           else                  throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedFieldData}"
         .then (linkedFieldData) =>
           (postIncludeLinkedFieldData||={})[fieldName] = linkedFieldData
