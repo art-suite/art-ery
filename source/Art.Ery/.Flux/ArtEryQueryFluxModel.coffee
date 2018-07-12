@@ -102,8 +102,11 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
     else
       arrayWith previousQueryData, updatedRecordData
 
-  localMergeGivenQueryKey: (queryKey, singleRecordData, wasDeleted) ->
-    queryKey && @localMerge @fluxStoreGet(queryKey)?.data, singleRecordData, wasDeleted
+  _updateFluxStoreIfExists: (queryKey, singleRecordData, wasDeleted) ->
+    if @fluxStoreGet queryKey
+      @updateFluxStore queryKey, (oldFluxRecord) =>
+        data = @localSort @localMerge oldFluxRecord.data, singleRecordData, wasDeleted
+        merge oldFluxRecord, data: data
 
   ###############################
   # FluxModel overrides
@@ -113,9 +116,7 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   dataUpdated and dataDeleted functions, respectively.
   ###
   dataUpdated: (queryKey, singleRecordData) ->
-    if mergeResult = @localMergeGivenQueryKey queryKey, singleRecordData
-      @updateFluxStore queryKey, data: @localSort mergeResult
+    @_updateFluxStoreIfExists queryKey, singleRecordData
 
   dataDeleted: (queryKey, singleRecordData) ->
-    if mergeResult = @localMergeGivenQueryKey queryKey, singleRecordData, true
-      @updateFluxStore queryKey, data: @localSort mergeResult
+    @_updateFluxStoreIfExists queryKey, singleRecordData, wasDeleted

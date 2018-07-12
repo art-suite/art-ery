@@ -1,4 +1,4 @@
-{each, formattedInspect, deepMerge, merge, defineModule, log, Validator, m, isFunction, objectHasKeys} = require 'art-foundation'
+{each, formattedInspect, isArray, deepMerge, merge, defineModule, log, Validator, m, isFunction, objectHasKeys} = require 'art-foundation'
 Filter = require '../Filter'
 
 ###
@@ -24,20 +24,25 @@ defineModule module, class DataUpdatesFilter extends Filter
     super
     @group = "outer"
 
+  addOneRecord = (response, fields, field, key, record) ->
+    fields[field] = deepMerge fields[field], "#{response.pipelineName}": "#{key}": record
+
   getUpdatedUpdates = (response, fields)->
     {key, type, responseData} = response
-    field = if response.isRootRequest && type == "get"
-      "dataUpdates"
-    else
-      switch type
-        when "create", "update" then "dataUpdates"
-        when "delete" then "dataDeletes"
+    field =
+      switch
+        when /^(create|update)/.test type then "dataUpdates"
+        when /^delete/.test          type then "dataDeletes"
 
-    if field && (responseData || key)
-      {pipelineName} = response
-      responseData ||= response.pipeline.toKeyObject?(key || responseData) || {}
-      key ||= response.pipeline.toKeyString responseData
-      fields[field] = deepMerge fields[field], "#{pipelineName}": "#{key}": responseData
+    if field
+      if isArray responseData
+        for record in responseData
+          key = response.pipeline.toKeyString record
+          addOneRecord response, fields, field, key, record
+      else if key || responseData
+        responseData ||= response.pipeline.toKeyObject?(key || responseData) || {}
+        key ||= response.pipeline.toKeyString responseData
+        addOneRecord response, fields, field, key, responseData
 
     fields
 
@@ -66,7 +71,7 @@ defineModule module, class DataUpdatesFilter extends Filter
     {models} = Neptune.Art.Flux
     for pipelineName, dataUpdatesByKey of dataUpdates when isFunction (model = models[pipelineName])?.dataUpdated
       each dataUpdatesByKey, (data, key) ->
-        # log applyFluxUpdates: dataUpdated: {model, key, data}
+        # log applyFluxUpdates: dataUpdated: {type: response.type, model, key, data: data?.id}
         model.dataUpdated key, data
 
     for pipelineName, dataDeletesByKey of dataDeletes when isFunction (model = models[pipelineName])?.dataDeleted
