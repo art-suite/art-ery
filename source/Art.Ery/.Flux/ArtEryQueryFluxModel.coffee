@@ -77,7 +77,8 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   OUT: return null if nothing changed, else return a new array
   ###
   localMerge: (previousQueryData, updatedRecordData, wasDeleted) ->
-    return null unless previousQueryData && (updatedRecordData || wasDeleted)
+    previousQueryData ?= []
+    return previousQueryData unless updatedRecordData || wasDeleted
 
     unless previousQueryData?.length > 0
       return if wasDeleted then [] else [updatedRecordData]
@@ -98,7 +99,7 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
 
     # updatedRecordData wasn't in previousQueryData
     if wasDeleted
-      null
+      previousQueryData
     else
       arrayWith previousQueryData, updatedRecordData
 
@@ -119,4 +120,4 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
     @_updateFluxStoreIfExists queryKey, singleRecordData
 
   dataDeleted: (queryKey, singleRecordData) ->
-    @_updateFluxStoreIfExists queryKey, singleRecordData, wasDeleted
+    @_updateFluxStoreIfExists queryKey, singleRecordData, true
