@@ -39,7 +39,7 @@ defineModule module, class DataUpdatesFilter extends Filter
         for record in responseData
           key = response.pipeline.toKeyString record
           addOneRecord response, fields, field, key, record
-      else if key || responseData
+      else if key || response.pipeline.isRecord responseData
         responseData ||= response.pipeline.toKeyObject?(key || responseData) || {}
         key ||= response.pipeline.toKeyString responseData
         addOneRecord response, fields, field, key, responseData
