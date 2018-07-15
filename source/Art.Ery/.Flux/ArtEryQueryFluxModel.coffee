@@ -7,6 +7,7 @@ ArtEry = require 'art-ery'
   CommunicationStatus
   select
   isString
+  isArray
   isFunction
   decapitalize
   merge
@@ -79,6 +80,7 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   localMerge: (previousQueryData, updatedRecordData, wasDeleted) ->
     previousQueryData ?= []
     return previousQueryData unless updatedRecordData || wasDeleted
+    return previousQueryData unless !previousQueryData? || isArray previousQueryData
 
     unless previousQueryData?.length > 0
       return if wasDeleted then [] else [updatedRecordData]
