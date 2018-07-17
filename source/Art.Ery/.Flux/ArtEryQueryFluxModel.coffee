@@ -86,6 +86,7 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
       return if wasDeleted then [] else [updatedRecordData]
 
     updatedRecordDataKey = @recordsModel.toKeyString updatedRecordData
+
     for currentRecordData, i in previousQueryData
       if updatedRecordDataKey == @recordsModel.toKeyString currentRecordData
         return if wasDeleted
@@ -108,8 +109,11 @@ defineModule module, class ArtEryQueryFluxModel extends FluxModel
   _updateFluxStoreIfExists: (queryKey, singleRecordData, wasDeleted) ->
     if @fluxStoreGet queryKey
       @updateFluxStore queryKey, (oldFluxRecord) =>
-        data = @localSort @localMerge oldFluxRecord.data, singleRecordData, wasDeleted
-        merge oldFluxRecord, data: data
+        if merged = @localMerge oldFluxRecord.data, singleRecordData, wasDeleted
+          merge oldFluxRecord, data: @localSort merged
+
+        else
+          oldFluxRecord
 
   ###############################
   # FluxModel overrides
