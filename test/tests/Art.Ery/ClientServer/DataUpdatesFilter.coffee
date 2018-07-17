@@ -86,12 +86,7 @@ module.exports = suite:
           key: preexistingKey
 
         .then ->
-          assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, [
-            dataUpdated:
-              model: "dataUpdatesFilterPipeline"
-              key:   "abc123"
-              data:  name: "initialAlice"
-            ]
+          assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, []
 
       test "update", ->
         pipelines.dataUpdatesFilterPipeline.update
@@ -226,18 +221,7 @@ module.exports = suite:
           pipelines.dataUpdatesFilterPipeline.get key: preexistingKey
 
         .then ({id}) ->
-          assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, [
-            dataUpdated:
-              model: "dataUpdatesFilterPipeline"
-              key:   "abc123"
-              data:  name: "alice", email: "alice@imikimi.com"
-
-            {dataUpdated:
-              model: "userByEmail"
-              key:   "alice@imikimi.com"
-              data:  name: "alice", email: "alice@imikimi.com"
-            }
-          ]
+          assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, []
 
       test "delete", ->
         testSetup "#{preexistingKey}": name: "alice", email: email = "alice@imikimi.com"
