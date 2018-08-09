@@ -1,7 +1,7 @@
 {defineModule, each, compactFlatten, log, BaseObject, decapitalize, isClass, inspect} = require "art-foundation"
 
 defineModule module, class PipelineRegistry extends BaseObject
-  @pipelines: pipelines = {}
+  @pipelines: global.artEryPipelines = pipelines = {}
 
   # returns the singleton
   @register: (PipelineClass) ->
