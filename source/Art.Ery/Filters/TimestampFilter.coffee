@@ -7,18 +7,19 @@ defineModule module, class TimestampFilter extends Filter
     super
     @group = "outer"
 
+  # NOTE: This filter is generally added BEFORE the ValidationFitler, so it won't get preprocessed.
   @before
     create: (request) ->
       request.withMergedData m
-        createdAt: toSeconds now = Date.now()
-        updatedAt: toSeconds now
+        createdAt: now = toSeconds() + .5 | 0
+        updatedAt: now
         # use existing values, if present
         request.data if request.originatedOnServer
 
 
     update: (request) ->
       request.withMergedData
-        updatedAt: toSeconds Date.now()
+        updatedAt: toSeconds() + .5 | 0
         # use existing values, if present
         request.data if request.originatedOnServer
 
