@@ -59,13 +59,13 @@ class Post extends &ArtEry.KeyFieldsMixin &ArtEry.Pipeline
     @data = {}
 
   @handlers
-    get: ({key}) -> 
+    get: ({key}) ->
       @data[key]
-    
-    create: ({data}) -> 
+
+    create: ({data}) ->
       @data[key] = merge data, id: key = randomString()
-      
-    update: ({key, data}) -> 
+
+    update: ({key, data}) ->
       @data[key] = merge @data[key], data
 ```
 
@@ -80,3 +80,7 @@ post.create data: text: "Hello world!"
 .then ({text}) ->
   console.log text  # Hello world!
 ```
+
+### When to use Props vs Data in a request?
+
+Guideline: If the field is one of the defined @fields, it probably goes in data. Else, put it in props.
