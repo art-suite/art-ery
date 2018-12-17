@@ -83,6 +83,7 @@ module.exports = class Response extends require './RequestResponseBase'
   @setter "status"
 
   @getter
+    verbose: -> @request.verbose
     status: ->
       if @failed
         switch @location
@@ -142,6 +143,8 @@ module.exports = class Response extends require './RequestResponseBase'
         @errorProps
       }
     propsForResponse: -> @propsForClone
+
+    summary: -> response: {@status, @props}
 
     plainObjectsResponse: (fields) ->
       object fields || {@status, @props, @beforeFilterLog, @afterFilterLog, session: @_session},

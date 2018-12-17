@@ -1,4 +1,4 @@
-{ErrorWithInfo, defineModule, Promise, isJsonType, log} = require 'art-standard-lib'
+{ErrorWithInfo, defineModule, Promise, isJsonType, log, neq} = require 'art-standard-lib'
 RequestResponseBase = require './RequestResponseBase'
 
 defineModule module, class RequestHandler extends require './ArtEryBaseObject'
@@ -10,9 +10,25 @@ defineModule module, class RequestHandler extends require './ArtEryBaseObject'
       NOTE: response may be failing
     .catch -> internal errors only
   ###
-  applyHandler: (request, handlerFunction) ->
+  applyHandler: (request, handlerFunction, verboseFilterName) ->
     # pass-through if no filter
     return Promise.resolve request unless handlerFunction
+
+    resultPromise = @_applyHandler request, handlerFunction
+
+    if request.verbose
+      resultPromise
+      .tap (result) ->
+        if result != request && neq request.summary, result.summary
+          log "ArtEryApplyHandlerVerbose #{verboseFilterName}":
+            before: request.summary
+            after:  result.summary
+        else
+          log "ArtEryApplyHandlerVerbose #{verboseFilterName}": "no-change"
+    else
+      resultPromise
+
+  _applyHandler: (request, handlerFunction) ->
 
     Promise.then =>
       request.addFilterLog @

@@ -75,7 +75,7 @@ module.exports = class Request extends require './RequestResponseBase'
 
   constructor: (options) ->
     super
-    {@type, @pipeline, @session, @originalRequest, @parentRequest, @originatedOnServer, @props = {}, @context = {}} = options
+    {@verbose, @type, @pipeline, @session, @originalRequest, @parentRequest, @originatedOnServer, @props = {}, @context = {}} = options
     @_startTime = null
 
     key = options.key ? @_props.key
@@ -87,7 +87,7 @@ module.exports = class Request extends require './RequestResponseBase'
 
     throw new Error "options.requestOptions is DEPRICATED - use options.props" if options.requestOptions
 
-  @property "originalRequest type pipeline session originatedOnServer parentRequest props data key context"
+  @property "verbose originalRequest type pipeline session originatedOnServer parentRequest props data key context"
 
   @getter
     key:            -> @_props.key
@@ -96,6 +96,7 @@ module.exports = class Request extends require './RequestResponseBase'
     requestProps:   -> @_props
     requestOptions: -> throw new Error "DEPRICATED: use props"
     description: -> "#{@requestString} request"
+    summary: -> request: {@props}
 
   ##############################
   # MISC
@@ -125,6 +126,7 @@ module.exports = class Request extends require './RequestResponseBase'
         @filterLog
         @originatedOnServer
         @context
+        @verbose
       }
 
     urlKeyClause: -> if present @key then "/#{@key}" else ""

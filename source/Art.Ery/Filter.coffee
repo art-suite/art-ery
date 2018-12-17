@@ -209,8 +209,8 @@ defineModule module, class Filter extends require './RequestHandler'
   getBeforeFilter: ({requestType, location}) -> @shouldFilter(location) && (@before[requestType] || @before.all)
   getAfterFilter:  ({requestType, location}) -> @shouldFilter(location) && (@after[requestType]  || @after.all)
 
-  processBefore:  (request) -> @applyHandler request, @getBeforeFilter request
-  processAfter:   (request) -> @applyHandler request, @getAfterFilter  request
+  processBefore:  (request) -> @applyHandler request, @getBeforeFilter(request), request.verbose && "#{@getName()}-beforeFilter"
+  processAfter:   (request) -> @applyHandler request, @getAfterFilter(request), request.verbose && "#{@getName()}-afterFilter"
 
   handleRequest: (request, filterChain, currentFilterChainIndex) ->
     @processBefore request
