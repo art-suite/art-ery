@@ -20,11 +20,11 @@ defineModule module, class RequestHandler extends require './ArtEryBaseObject'
       resultPromise
       .tap (result) ->
         if result != request && neq request.summary, result.summary
-          log "ArtEryApplyHandlerVerbose #{verboseFilterName}":
+          log "ArtEryApplyHandlerVerbose #{request.pipelineName}-#{request.type} #{verboseFilterName}":
             before: request.summary
             after:  result.summary
         else
-          log "ArtEryApplyHandlerVerbose #{verboseFilterName}": "no-change"
+          log "ArtEryApplyHandlerVerbose #{request.pipelineName}-#{request.type} #{verboseFilterName}": "no-change"
     else
       resultPromise
 
