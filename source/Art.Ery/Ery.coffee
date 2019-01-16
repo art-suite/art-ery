@@ -18,7 +18,7 @@ module.exports = [
   sendInitializeRequestToAllPipelines: ->
     promises = for k, pipeline of PipelineRegistry.pipelines
       if pipeline.class.getHandlers().initialize
-        pipeline.initialize()
+        pipeline.initialize originatedOnServer: true
 
     Promise.all promises
 

@@ -4,8 +4,9 @@
 module.exports = require './namespace'
 module.exports
 .addModules
-  Filters:  require './Filters' 
-  Request:  require './Request' 
-  Response: require './Response'
-  Session:  require './Session' 
+  Filters:             require './Filters'            
+  Request:             require './Request'            
+  RequestResponseBase: require './RequestResponseBase'
+  Response:            require './Response'           
+  Session:             require './Session'            
 require './Pipeline'

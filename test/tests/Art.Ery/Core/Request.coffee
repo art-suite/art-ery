@@ -277,35 +277,6 @@ module.exports = suite:
         subrequest = request.createSubRequest "myPipeline", "get"
         assert.same context, subrequest.context
 
-  require: ->
-    test "require failure returns rejected promise", ->
-      request = newRequest()
-      assert.rejects request.require false, "abracadabra"
-      .then (rejectsWith) ->
-        {status, data} = rejectsWith.info.response
-        assert.eq status, clientFailure
-        assert.ok data.message.match /abracadabra/
-
-    test "require success returns request", ->
-      request = newRequest()
-      request.require true, "abracadabra"
-      .then (resolvesWith) ->
-        assert.eq request, resolvesWith
-
-    test "requiredFields failure", ->
-      request = newRequest()
-      assert.rejects request.requiredFields bar: 0, foo: undefined
-      .then (rejectsWith) ->
-        {status, data} = rejectsWith.info.response
-        assert.eq status, clientFailure
-        assert.ok data.message.match /foo.*expected/
-
-    test "requiredFields success returns fields", ->
-      request = newRequest()
-      request.requiredFields foo: 1, bar: 2
-      .then (resolvesWith) ->
-        assert.eq resolvesWith, foo: 1, bar: 2
-
   compoundKeys: ->
     request = null
     setup ->

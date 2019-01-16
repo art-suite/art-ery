@@ -86,12 +86,13 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     type:               -> @request.type
     originatedOnServer: -> @request.originatedOnServer
     context:            -> @request.context
+    pipelineAndType:    -> "#{@pipelineName}.#{@type}"
+
     requestString: ->
-      str = "#{@pipelineName}.#{@type}"
       if @key
-        str + " #{formattedInspect @key}"
+        @pipelineAndType + " #{formattedInspect @key}"
       else
-        str
+        @pipelineAndType
 
     description: -> @requestString
 
@@ -162,6 +163,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     new ArtEry.Request merge {originatedOnServer: requestOptions?.originatedOnServer ? true}, requestOptions, {
       type
       pipeline
+      verbose: @verbose
       session: requestOptions?.session || @session
       parentRequest: @request
       @context
@@ -262,64 +264,95 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
 
   ##############################
-  # requirement helpers
   ##############################
-  ###
-  IN:
-    test: booleanish
-    message: string (optional)
-  OUT:
-    Success: promise.then (request) ->
-    Failure: promise.catch (error) ->
-      error.props.response # failing response
-      error.props.response.data.message.match message # if message res provided
+  # Request Requirement Testing
+  ##############################
+  ##############################
+  ### rejectIfErrors: success unless errors?
+    IN:   errors: null, string or array of strings
+    OUT:  Promise
 
-  Success if test is true
+      if errors?
+        Promise.reject clientFailure with message based on errors
+      else
+        Promise.resolve request
   ###
-  require: (test, message) ->
-    if test
-      Promise.resolve @
-    else
-      message = message() if isFunction message
-      @clientFailure data: message: "requirement not met: #{message || 'see stack trace'}"
+  rejectIfErrors: (errors) ->
+    if errors
+      @clientFailure compactFlatten([@pipelineAndType, 'requirement not met', errors]).join ' - '
       .then (response) -> response.toPromise()
+    else
+      Promise.resolve @
 
-  # all fields must exist
-  requiredFields: (fields, message) ->
+  ### require: Success if !!test
+    OUT: see @rejectIfErrors
+
+    EXAMPLE: request.require myLegalInputTest, "myLegalInputTest"
+  ###
+  require: (test, context) ->
+    @rejectIfErrors unless test then context ? []
+
+  ### requiredFields
+    Success if all props in fields exists (are not null or undefined)
+
+    IN: fields (object)
+    OUT-SUCCESS: fields
+
+    OUT-REJECTED: see @rejectIfErrors
+
+    EXAMPLE:
+      # CaffeineScript's Object-Restructuring makes this particularly nice
+      request.requiredFields
+        {foo, bar} = request.data # creates a new object with just foo and bar fields
+
+  ###
+  requiredFields: (fields, context) ->
+    missingFields = null
     for k, v of fields when !v?
-      return (
-        @clientFailure data: message: "requirement not met: '#{k}' expected#{if message then " #{message}" else ""}"
-        .then (response) -> response.toPromise()
-      )
-    Promise.resolve fields
+      (missingFields ?= []).push k
 
-  # returns rejecting promise if test is true
-  # see @require
-  rejectIf: (test, message) -> @require !test, message
+    @rejectIfErrors if missingFields then ["missing fields: " + missingFields.join(", "), context]
+    .then -> fields
 
-  ###
-  Success if @originatedOnServer is true
-  OUT: see require
-  ###
-  requireServerOrigin: (message) ->
-    @requireServerOriginOr true, message
+  ### rejectIf: Success if !test
+    OUT: see @rejectIfErrors
 
+    EXAMPLE: request.rejectIf !myLegalInputTest, "myLegalInputTest"
   ###
-  Success if either testResult or @originatedOnServer are true.
-  OUT: see require
-  ###
-  requireServerOriginOr: (testResult, message) ->
-    @require testResult || @originatedOnServer, ->
-      message = "to #{message}" unless message?.match /\s*to\s/
-      "originatedOnServer required #{message ? ''}"
+  rejectIf: (test, context) -> @require !test, context
 
-  ###
-  Success if either NOT testResult or @originatedOnServer are true.
-  OUT: see require
+  ############################################################
+  ############################################################
+  # Request originatedOnServer requirement testing
+  ############################################################
+  ############################################################
 
-  EXAMPLE: request.requireServerOriginIf createOk, "to use createOk"
+  ### requireServerOrigin: Success if @originatedOnServer
+    OUT: see @rejectIfErrors
+
+    EXAMPLE: request.requireServerOrigin "to use myServerOnlyFeature"
   ###
-  requireServerOriginIf: (testResult, message) -> @requireServerOriginOr !testResult, message
+  requireServerOrigin: (context) -> @requireServerOriginOr false, context
+
+  ### requireServerOriginOr: Success if testResult or @originatedOnServer
+    OUT: see @rejectIfErrors
+
+    EXAMPLE: request.requireServerOriginOr admin, "to use myAdminFeature"
+  ###
+  requireServerOriginOr: (testResult, context) ->
+    @rejectIfErrors unless testResult || @originatedOnServer
+      "originatedOnServer required " + if context?.match /\s*to\s/
+        context
+      else if context
+        "to #{context}"
+      else ''
+
+  ### requireServerOriginIf: Success if !testResult or @originatedOnServer
+    OUT: see @rejectIfErrors
+
+    EXAMPLE: request.requireServerOriginIf clientAuthorized, "to use myFeature"
+  ###
+  requireServerOriginIf: (testResult, context) -> @requireServerOriginOr !testResult, context
 
   ##################################
   # GENERATE NEW RESPONSES/REQUESTS
