@@ -144,7 +144,7 @@ module.exports = class Response extends require './RequestResponseBase'
       }
     propsForResponse: -> @propsForClone
 
-    summary: -> response: {@status, @props}
+    summary: -> response: merge {@status, @props, @errorProps}
 
     plainObjectsResponse: (fields) ->
       object fields || {@status, @props, @beforeFilterLog, @afterFilterLog, session: @_session},
