@@ -1,0 +1,67 @@
+import &StandardImport
+
+newRequest = (options) ->
+  new Request merge
+    type:     :get
+    pipeline: new Pipeline
+    session:  {}
+    options
+
+suite:
+  requireHelpers:
+    rejectIfErrors: ->
+      test "not clientFailure" ->
+        newRequest()
+        .rejectIfErrors null
+
+      test "clientFailure with string" ->
+        assert.isClientFailure
+          newRequest()
+          .rejectIfErrors "my error"
+
+      test "clientFailure with []" ->
+        assert.isClientFailure
+          newRequest()
+          .rejectIfErrors []
+
+      test "clientFailure with [string]" ->
+        assert.isClientFailure
+          newRequest()
+          .rejectIfErrors ["my error"]
+
+    requires:
+      require: ->
+        test "resolved" -> newRequest().require true
+        test "clientFailure" -> assert.isClientFailure newRequest().require false
+
+      rejectIf: ->
+        test "resolved" -> newRequest().rejectIf false
+        test "clientFailure" -> assert.isClientFailure newRequest().rejectIf true
+
+      requiredFields: ->
+        test "a: true, b: false >>> resolved" ->
+          newRequest().requiredFields a: true, b: false
+          .then (out) -> assert.eq out, a: true, b: false
+
+        test "a: null, b: false >>> clientFailure" ->
+          assert.isClientFailure newRequest().requiredFields alpha: null, beta: false
+          .then (rejectsWith) ->
+            assert.match rejectsWith.info.response.data.message, /missing.*alpha/
+
+
+    requireServerOrigins:
+      requireServerOrigin: ->
+        test "originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOrigin()
+        test "originatedOnServer: false >>> clientFailure" -> assert.isClientFailure newRequest().requireServerOrigin()
+
+      requireServerOriginIf: ->
+        test "true,   originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginIf true
+        test "false,  originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginIf false
+        test "true,   originatedOnServer: false >>> clientFailure" -> assert.isClientFailure newRequest().requireServerOriginIf true
+        test "false,  originatedOnServer: false >>> resolved" -> newRequest().requireServerOriginIf false
+
+      requireServerOriginOr: ->
+        test "true,   originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginOr true
+        test "false,  originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginOr false
+        test "true,   originatedOnServer: false >>> resolved" -> newRequest().requireServerOriginOr true
+        test "false,  originatedOnServer: false >>> clientFailure" -> assert.isClientFailure newRequest().requireServerOriginOr false
