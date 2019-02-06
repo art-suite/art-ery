@@ -11,7 +11,7 @@
   objectHasKeys
 } = Foundation = require 'art-foundation'
 ArtEry = require './namespace'
-{success, missing, validStatus} = CommunicationStatus
+{success, missing, validStatus, clientFailure, failure} = CommunicationStatus
 
 # validator must be initialized after Request and Pipeline have bene defined
 _validator = null
@@ -196,8 +196,18 @@ module.exports = class Request extends require './RequestResponseBase'
     }
 
   sendRemoteRequest: ->
-    RestClient.restJsonRequest remoteRequest = @remoteRequestProps
-    .catch ({info: {status, response}}) => merge response, {status}
+    remoteRequest = null
+    Promise.then =>
+      RestClient.restJsonRequest remoteRequest = @remoteRequestProps
+    .catch (error) =>
+      if error.info
+        {status, response} = error.info
+      else
+        {status, message} = error
+
+      status ?= failure
+
+      merge response, {status, message}
     .then (remoteResponse) =>
       @addFilterLog "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"
       .toResponse remoteResponse.status, merge remoteResponse, {remoteRequest, remoteResponse}
