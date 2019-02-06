@@ -196,9 +196,7 @@ module.exports = class Request extends require './RequestResponseBase'
     }
 
   sendRemoteRequest: ->
-    remoteRequest = null
-    Promise.then =>
-      RestClient.restJsonRequest remoteRequest = @remoteRequestProps
+    RestClient.restJsonRequest remoteRequest = @remoteRequestProps
     .catch (error) =>
       if error.info
         {status, response} = error.info
@@ -208,6 +206,7 @@ module.exports = class Request extends require './RequestResponseBase'
       status ?= failure
 
       merge response, {status, message}
+
     .then (remoteResponse) =>
       @addFilterLog "#{remoteRequest.method.toLocaleUpperCase()} #{remoteRequest.url}"
       .toResponse remoteResponse.status, merge remoteResponse, {remoteRequest, remoteResponse}
