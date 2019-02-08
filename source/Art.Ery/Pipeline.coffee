@@ -313,7 +313,9 @@ defineModule module, class Pipeline extends require './RequestHandler'
   getAfterFilters:  (request) -> filter for filter in @afterFilters  when filter.getAfterFilter request
 
   createRequest: (type, options) ->
+    log.warn "DEPRICATED - options must be an object now" unless isPlainObject options
     options = key: options if isString options
+
     Promise
     .resolve options.session || @session.loadedDataPromise
     .then (sessionData) =>
@@ -419,52 +421,46 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
   ###
   IN:
-    type: request type string
+    LEGAL SIGNATURES:
+      type, options?
+      type, key?, options?
+      type, parentRequest?, options?
+      type, parentRequest?, key?, options?
+
+    type:           request type string
+    parentRequest:  if present, this becomes a subreqest
+    key:            merged with options: merge {key}, options
     options:
-      # see: response.toPromise options
-      # (copied from toPromise)
-      returnNullIfMissing: true [default: false]
-        if status == missing
-          if returnNullIfMissing
-            promise.resolve null
-          else
-            promise.reject new RequestError
+      Passed directly to:
+        Request constructor
+        AND response.toPromise
 
-      returnResponse: true [default: false]
-      returnResponseObject: true (alias)
-        if true, the response object is returned, otherwise, just the data field is returned.
-
-      # see: new Request options
-      #...
-
-  OUT: response.toPromise options
-    (SEE Response#toPromise for valid options)
-
-    With no options, this means:
-    promise.then (response.data) ->
-      # status == success
-
-    promise.catch (errorWithInfo) ->
-      {response} = errorWithInfo.info
-      # status != success
+  OUT: SEE: response.toPromise
   ###
   noOptions = {}
-  _processClientRequest: (type, optionsA = noOptions, optionsB) ->
-    if isString optionsA
-      options = key: optionsA
-      mergeInto options, optionsB if optionsB
+  _processClientRequest: (type, a, b, c) ->
+    if a?.constructor == Request
+      parentRequest = a
+      a = b
+      b = c
+
+    options = if isString a
+      merge
+        key: a
+        b
     else
-      options = if optionsB
-        merge optionsA, optionsB
-      else
-        optionsA
+      a ? noOptions
 
-    requestStartTime = currentSecond()
+    if parentRequest
+      parentRequest.subrequest @pipelineName, type, options
 
-    @createRequest type, options
-    .then (request)  => @_processRequest request
-    .then (response) => @_processResponseSession response, requestStartTime
-    .then (response) => response.toPromise options
+    else
+      requestStartTime = currentSecond()
+
+      @createRequest type, options
+      .then (request)  => @_processRequest request
+      .then (response) => @_processResponseSession response, requestStartTime
+      .then (response) => response.toPromise options
 
   ###
   mostRecentSessionUpdatedAt ensures we don't update the session out of order
@@ -511,7 +507,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
   @_defineClientRequestMethod: (requestType) ->
     @extendClientApiMethodList requestType unless requestType in @getClientApiMethodList()
-    @::[requestType] ||= (optionsA, optionsB) -> @_processClientRequest requestType, optionsA, optionsB
+    @::[requestType] ||= (a, b, c) -> @_processClientRequest requestType, a, b, c
 
   @_defineClientHandlerMethods: ->
     for name, handler of @getHandlers()

@@ -1,6 +1,4 @@
-{log, CommunicationStatus, formattedInspect, merge, deepMerge, createWithPostCreate} = require 'art-foundation'
-{clientFailure} = CommunicationStatus
-{Request, Pipeline, KeyFieldsMixin} = Neptune.Art.Ery
+import &StandardImport
 
 newRequest = (options) ->
   new Request merge
@@ -19,7 +17,7 @@ newCompoundKeyRequest = (options) ->
     session: {}
     options
 
-module.exports = suite:
+suite:
   props: ->
     test "new Request key and data set via props:", ->
 
@@ -268,14 +266,49 @@ module.exports = suite:
         .then (response) ->
           assert.same context, response.context
 
-      test "subrequests", ->
-        createWithPostCreate class MyPipeline extends Pipeline
+      test "subrequests-form-A", ->
+        class MyPipeline extends Pipeline
           ;
 
         request = newRequest()
         {context} = request
         subrequest = request.createSubRequest "myPipeline", "get"
         assert.same context, subrequest.context
+
+  subrequests: ->
+    subrequestPipeline = null
+
+    setup ->
+      {subrequestPipeline} = class SubrequestPipeline extends Pipeline
+        @handlers
+          foo1: (request) -> subrequestPipeline.bar request, {} request.props
+          foo2: (request) -> subrequestPipeline.bar request, request.key, props: objectWithout request.props, "key"
+          foo3: (request) -> request.subrequest "subrequestPipeline", "bar", {} request.props
+          foo4: (request) -> request.subrequest "subrequestPipeline", "bar", request.key, props: objectWithout request.props, "key"
+
+          bar: (request) ->
+            merge request.props,
+              isSubrequest: !!request.parentRequest
+
+    key = "myKey"
+    props = prop1: "propValue1"
+    testData = (data) -> assert.eq data, merge props, {} key, isSubrequest: true
+
+    test "subrequests-form-1", ->
+      subrequestPipeline.foo1 key, {} props
+      .then testData
+
+    test "subrequests-form-2", ->
+      subrequestPipeline.foo1 key, {} props
+      .then testData
+
+    test "subrequests-form-3", ->
+      subrequestPipeline.foo1 key, {} props
+      .then testData
+
+    test "subrequests-form-4", ->
+      subrequestPipeline.foo1 key, {} props
+      .then testData
 
   compoundKeys: ->
     request = null
