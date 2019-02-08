@@ -452,7 +452,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
       a ? noOptions
 
     if parentRequest
-      parentRequest.subrequest @pipelineName, type, options
+      parentRequest.subrequest @, type, options
 
     else
       requestStartTime = currentSecond()
