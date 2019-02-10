@@ -34,6 +34,7 @@ Filters = require './Filters'
 PipelineQuery = require './PipelineQuery'
 
 PipelineRegistry = require './PipelineRegistry'
+RequestResponseBase = require './RequestResponseBase'
 
 ###
 TODO:
@@ -377,13 +378,16 @@ defineModule module, class Pipeline extends require './RequestHandler'
     if @location == "client" && @remoteServer
       request.sendRemoteRequest @remoteServer
 
-    else
-      @applyHandler request, @handlers[request.type], request.verbose && "#{@pipelineName}-handler"
+    else if handler = @handlers[request.type]
+      @applyHandler request, handler, request.verbose && "#{@pipelineName}-handler"
       .then (response) =>
         unless response.isResponse
-          response.failure "#{@pipelineName}.#{request.type} request was not handled"
+          request.failure "#{@pipelineName}.#{request.type} request was not handled"
         else
           response
+    else
+      request.failure "#{@pipelineName}: No handler for request type: #{formattedInspect request.type}"
+
 
   ###################
   # PRIVATE
@@ -439,7 +443,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
   ###
   noOptions = {}
   _processClientRequest: (type, a, b, c) ->
-    if a?.constructor == Request
+    if a? && a instanceof RequestResponseBase
       parentRequest = a
       a = b
       b = c
