@@ -15,6 +15,7 @@
   array
   isPromise
   compactFlatten
+  objectKeyCount
   present
 } = require 'art-standard-lib'
 ArtEry = require './namespace'
@@ -69,9 +70,27 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     endTime:            -> @creationTime
     wallTime:           -> @startTime - @endTime
 
+    requestChain: ->
+      compactFlatten [@parentRequest?.requestChain, @]
+
+    simpleInspectedObjects: ->
+      # TODO: instead of @propsForClone, let's just clone the stuff we want
+      # Also, let's compact things a bit with: "pipelineName.requestType"
+      # break out key and data from props... etc...
+
+      props = objectWithout @props, "key", "data"
+      props = null unless 0 < objectKeyCount props
+      toInspectedObjects object {
+        "#{@class.name}": @requestString
+        @originatedOnServer
+        @data
+        @status
+        props
+      }, when: (v) -> v?
+
     inspectedObjects: ->
-      "#{@class.namespacePath}":
-        toInspectedObjects objectWithDefinedValues objectWithout @propsForClone, "context", "originalRequest"
+      ArtEryRequestChain: for request in @requestChain
+        request.simpleInspectedObjects
 
   # Pass-throughs - to remove once we merge Request and Response
   @getter
