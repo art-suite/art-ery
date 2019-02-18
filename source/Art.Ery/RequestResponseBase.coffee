@@ -71,7 +71,14 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     wallTime:           -> @startTime - @endTime
 
     requestChain: ->
-      compactFlatten [@parentRequest?.requestChain, @]
+
+      compactFlatten [
+        if @isResponse
+          @request.requestChain
+        else
+          @parentRequest?.requestChain
+        @
+      ]
 
     simpleInspectedObjects: ->
       # TODO: instead of @propsForClone, let's just clone the stuff we want
@@ -86,6 +93,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
         @data
         @status
         props
+        @errorProps
       }, when: (v) -> v?
 
     inspectedObjects: ->
