@@ -456,7 +456,9 @@ defineModule module, class Pipeline extends require './RequestHandler'
       a ? noOptions
 
     if parentRequest
-      parentRequest.subrequest @, type, options
+      parentRequest.subrequest @, type,
+        if options != noOptions then options
+        else props: parentRequest.props
 
     else
       requestStartTime = currentSecond()

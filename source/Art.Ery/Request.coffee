@@ -137,6 +137,9 @@ module.exports = class Request extends require './RequestResponseBase'
   getRestRequestUrl:    (server) -> "#{server}/#{@pipeline.name}#{@urlKeyClause}"
   getNonRestRequestUrl: (server) -> "#{server}/#{@pipeline.name}-#{@type}#{@urlKeyClause}"
 
+  toPromise: ->
+    throw new Error "ArtEry.Request: toPromise can only be called on Response objects."
+
   restMap =
     get:    "get"
     create: "post"

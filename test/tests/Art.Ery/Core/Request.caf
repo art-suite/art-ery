@@ -265,37 +265,27 @@ suite:
   subrequests: ->
     subrequestPipeline = null
 
+    subrequestHandlers =
+      form1: (request) -> subrequestPipeline.bar request, {} request.props
+      form2: (request) -> subrequestPipeline.bar request, request.key, props: objectWithout request.props,             :key
+      form3: (request) -> request.subrequest :subrequestPipeline :bar {} request.props
+      form4: (request) -> request.subrequest :subrequestPipeline :bar request.key, props: objectWithout request.props, :key
+      form5: (request) -> subrequestPipeline.bar request
+
     setup ->
       {subrequestPipeline} = class SubrequestPipeline extends Pipeline
-        @handlers
-          foo1: (request) -> subrequestPipeline.bar request, {} request.props
-          foo2: (request) -> subrequestPipeline.bar request, request.key, props: objectWithout request.props, "key"
-          foo3: (request) -> request.subrequest "subrequestPipeline", "bar", {} request.props
-          foo4: (request) -> request.subrequest "subrequestPipeline", "bar", request.key, props: objectWithout request.props, "key"
-
-          bar: (request) ->
-            merge request.props,
-              isSubrequest: !!request.parentRequest
+        @handlers merge
+          subrequestHandlers
+          bar: (request) -> merge request.props, isSubrequest: !!request.parentRequest
 
     key = "myKey"
     props = prop1: "propValue1"
     testData = (data) -> assert.eq data, merge props, {} key, isSubrequest: true
 
-    test "subrequests-form-1", ->
-      subrequestPipeline.foo1 key, {} props
-      .then testData
-
-    test "subrequests-form-2", ->
-      subrequestPipeline.foo1 key, {} props
-      .then testData
-
-    test "subrequests-form-3", ->
-      subrequestPipeline.foo1 key, {} props
-      .then testData
-
-    test "subrequests-form-4", ->
-      subrequestPipeline.foo1 key, {} props
-      .then testData
+    each _, k in subrequestHandlers
+      test "subrequests-form-#{k}", ->
+        subrequestPipeline[k] key, {} props
+        .then testData
 
   compoundKeys: ->
     request = null
