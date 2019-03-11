@@ -311,13 +311,21 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     else
       Promise.resolve @
 
+  @_resolveRequireTestValue: resolveRequireTestValue = (testValue) ->
+    if isFunction testValue
+      testValue = testValue()
+
+    Promise.resolve testValue
+
   ### require: Success if !!test
     OUT: see @rejectIfErrors
 
     EXAMPLE: request.require myLegalInputTest, "myLegalInputTest"
   ###
   require: (test, context) ->
-    @rejectIfErrors unless test then context ? []
+    resolveRequireTestValue test
+    .then (test) =>
+      @rejectIfErrors unless test then context ? []
 
   ### requiredFields
     Success if all props in fields exists (are not null or undefined)
@@ -346,9 +354,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
     EXAMPLE: request.rejectIf !myLegalInputTest, "myLegalInputTest"
   ###
-  rejectIf: (test, context) ->
-    Promise.resolve test
-    .then (test) => @require !test, context
+  rejectIf: (testValue, context) ->
+    resolveRequireTestValue testValue
+    .then (testValue) => @require !testValue, context
 
   ############################################################
   ############################################################
@@ -363,30 +371,32 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   ###
   requireServerOrigin: (context) -> @requireServerOriginOr false, context
 
-  ### requireServerOriginOr: Success if testResult or @originatedOnServer
+  ### requireServerOriginOr: Success if testValue or @originatedOnServer
     OUT: see @rejectIfErrors
 
     EXAMPLE: request.requireServerOriginOr admin, "to use myAdminFeature"
   ###
-  requireServerOriginOr: (testResult, context) ->
-    Promise.resolve @originatedOnServer || testResult
-    .then (ok) =>
-      @rejectIfErrors unless ok
+  requireServerOriginOr: (testValue, context) ->
+    return Promise.resolve @ if @originatedOnServer
+    resolveRequireTestValue testValue
+    .then (testValue) =>
+      @rejectIfErrors unless testValue
         "originatedOnServer required " + if context?.match /\s*to\s/
           context
         else if context
           "to #{context}"
         else ''
 
-  ### requireServerOriginIf: Success if !testResult or @originatedOnServer
+  ### requireServerOriginIf: Success if !testValue or @originatedOnServer
     OUT: see @rejectIfErrors
 
     EXAMPLE: request.requireServerOriginIf clientAuthorized, "to use myFeature"
   ###
-  requireServerOriginIf: (testResult, context) ->
-    Promise.resolve testResult
-    .then (testResult) =>
-      @requireServerOriginOr !testResult, context
+  requireServerOriginIf: (testValue, context) ->
+    return Promise.resolve @ if @originatedOnServer
+    resolveRequireTestValue testValue
+    .then (testValue) =>
+      @requireServerOriginOr !testValue, context
 
   ##################################
   # GENERATE NEW RESPONSES/REQUESTS

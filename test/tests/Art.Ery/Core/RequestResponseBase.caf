@@ -29,6 +29,40 @@ suite:
           newRequest()
           .rejectIfErrors ["my error"]
 
+    resolveRequireTestValue: ->
+      resolveRequireTestValue = RequestResponseBase._resolveRequireTestValue
+      test "resolveRequireTestValue true" ->
+        resolveRequireTestValue true
+        .then (v) -> assert.true v
+
+      test "resolveRequireTestValue false" ->
+        resolveRequireTestValue false
+        .then (v) -> assert.false v
+
+      test "resolveRequireTestValue -> true" ->
+        resolveRequireTestValue -> true
+        .then (v) -> assert.true v
+
+      test "resolveRequireTestValue -> false" ->
+        resolveRequireTestValue -> false
+        .then (v) -> assert.false v
+
+      test "resolveRequireTestValue -> Promise.resolve true" ->
+        resolveRequireTestValue -> Promise.resolve true
+        .then (v) -> assert.true v
+
+      test "resolveRequireTestValue -> Promise.resolve false" ->
+        resolveRequireTestValue -> Promise.resolve false
+        .then (v) -> assert.false v
+
+      test "resolveRequireTestValue Promise.resolve true" ->
+        resolveRequireTestValue Promise.resolve true
+        .then (v) -> assert.true v
+
+      test "resolveRequireTestValue Promise.resolve false" ->
+        resolveRequireTestValue Promise.resolve false
+        .then (v) -> assert.false v
+
     requires:
       require: ->
         test "true - resolved" -> newRequest().require true
@@ -67,6 +101,12 @@ suite:
         test "Promise.resolve(true ),  originatedOnServer: false >>> clientFailure" -> assert.isClientFailure newRequest().requireServerOriginIf  Promise.resolve true
         test "Promise.resolve(false),  originatedOnServer: false >>> resolved" -> newRequest().requireServerOriginIf                              Promise.resolve false
 
+        test "-> not invoked, originatedOnServer: true >>> resolved" ->
+          wasInvoked = false
+          newRequest originatedOnServer: true
+          .requireServerOriginIf -> wasInvoked = true
+          .then -> assert.false wasInvoked
+
       requireServerOriginOr: ->
         test "true,   originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginOr true
         test "false,  originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginOr false
@@ -77,3 +117,9 @@ suite:
         test "Promise.resolve(false),  originatedOnServer: true >>> resolved" ->        newRequest(originatedOnServer: true).requireServerOriginIf  Promise.resolve false
         test "Promise.resolve(true ),  originatedOnServer: false >>> clientFailure" ->  assert.isClientFailure newRequest().requireServerOriginIf   Promise.resolve true
         test "Promise.resolve(false),  originatedOnServer: false >>> resolved" ->       newRequest().requireServerOriginIf                          Promise.resolve false
+
+        test "-> not invoked, originatedOnServer: true >>> resolved" ->
+          wasInvoked = false
+          newRequest originatedOnServer: true
+          .requireServerOriginOr -> wasInvoked = true
+          .then -> assert.false wasInvoked
