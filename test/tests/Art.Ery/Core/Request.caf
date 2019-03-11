@@ -99,19 +99,6 @@ suite:
           pipeline: new Pipeline
           session: {}
 
-      test "inspectedObjects new Request", ->
-        request = new Request
-          type:     "get"
-          key:      "123"
-          pipeline: new Pipeline
-          session:  {}
-
-        assert.selectedPropsEq
-          type:             "get"
-          props:            key: "123"
-          session:          {}
-          request.inspectedObjects["Neptune.Art.Ery.Request"]
-
     "invalid new Request": ->
       test "missing everything", ->
         assert.throws -> new Request

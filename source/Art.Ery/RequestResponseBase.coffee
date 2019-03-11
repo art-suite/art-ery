@@ -346,7 +346,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
     EXAMPLE: request.rejectIf !myLegalInputTest, "myLegalInputTest"
   ###
-  rejectIf: (test, context) -> @require !test, context
+  rejectIf: (test, context) ->
+    Promise.resolve test
+    .then (test) => @require !test, context
 
   ############################################################
   ############################################################
@@ -367,19 +369,24 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     EXAMPLE: request.requireServerOriginOr admin, "to use myAdminFeature"
   ###
   requireServerOriginOr: (testResult, context) ->
-    @rejectIfErrors unless testResult || @originatedOnServer
-      "originatedOnServer required " + if context?.match /\s*to\s/
-        context
-      else if context
-        "to #{context}"
-      else ''
+    Promise.resolve @originatedOnServer || testResult
+    .then (ok) =>
+      @rejectIfErrors unless ok
+        "originatedOnServer required " + if context?.match /\s*to\s/
+          context
+        else if context
+          "to #{context}"
+        else ''
 
   ### requireServerOriginIf: Success if !testResult or @originatedOnServer
     OUT: see @rejectIfErrors
 
     EXAMPLE: request.requireServerOriginIf clientAuthorized, "to use myFeature"
   ###
-  requireServerOriginIf: (testResult, context) -> @requireServerOriginOr !testResult, context
+  requireServerOriginIf: (testResult, context) ->
+    Promise.resolve testResult
+    .then (testResult) =>
+      @requireServerOriginOr !testResult, context
 
   ##################################
   # GENERATE NEW RESPONSES/REQUESTS
