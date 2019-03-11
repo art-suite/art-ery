@@ -272,20 +272,34 @@ suite:
       form4: (request) -> request.subrequest :subrequestPipeline :bar request.key, props: objectWithout request.props, :key
       form5: (request) -> subrequestPipeline.bar request
 
+    subrequestCompatibleHandlers =
+      compatibleForm1: (request) -> subrequestPipeline.bar null, {} request.props
+      compatibleForm2: (request) -> subrequestPipeline.bar null, request.key, props: objectWithout request.props,             :key
+
     setup ->
       {subrequestPipeline} = class SubrequestPipeline extends Pipeline
         @handlers merge
           subrequestHandlers
+          subrequestCompatibleHandlers
           bar: (request) -> merge request.props, isSubrequest: !!request.parentRequest
 
     key = "myKey"
     props = prop1: "propValue1"
-    testData = (data) -> assert.eq data, merge props, {} key, isSubrequest: true
 
     each _, k in subrequestHandlers
-      test "subrequests-form-#{k}", ->
+      test "subrequests #{k}", ->
         subrequestPipeline[k] key, {} props
-        .then testData
+        .then (data) -> assert.eq
+          data
+          merge props, {} key, isSubrequest: true
+
+    each _, k in subrequestCompatibleHandlers
+      test "subrequestCompatible #{k}", ->
+        subrequestPipeline[k] key, {} props
+        .then (data) ->
+          assert.eq
+            data
+            merge props, {} key, isSubrequest: false
 
   compoundKeys: ->
     request = null

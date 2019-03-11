@@ -443,6 +443,10 @@ defineModule module, class Pipeline extends require './RequestHandler'
   ###
   noOptions = {}
   _processClientRequest: (type, a, b, c) ->
+    if !a?
+      a = b
+      b = c
+
     if a? && a instanceof RequestResponseBase
       parentRequest = a
       a = b
