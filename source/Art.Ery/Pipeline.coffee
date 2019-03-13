@@ -99,8 +99,12 @@ defineModule module, class Pipeline extends require './RequestHandler'
     fluxModelMixins: []
     publicRequestTypes: {}
 
-  @publicRequestTypes: (v) ->
-    @extendPublicRequestTypes object (w v), -> true
+  @publicRequestTypes: (values...) ->
+    publicRequestTypes = {}
+    for v in values
+      for k in w v
+        publicRequestTypes[k] = true
+    @extendPublicRequestTypes publicRequestTypes
 
   ###
   @fluxModelMixin adds a mixin to fluxModelMixins
