@@ -75,7 +75,8 @@ module.exports = class Request extends require './RequestResponseBase'
 
   constructor: (options) ->
     super
-    {@verbose, @type, @pipeline, @session, @originalRequest, @parentRequest, @originatedOnServer, @props = {}, @context = {}} = options
+    {@verbose, @type, @pipeline, @session, @originalRequest, @parentRequest, @originatedOnServer, @props = {}, context} = options
+    @_context   = context
     @_startTime = null
 
     key = options.key ? @_props.key
@@ -90,6 +91,7 @@ module.exports = class Request extends require './RequestResponseBase'
   @property "verbose originalRequest type pipeline session originatedOnServer parentRequest props data key context"
 
   @getter
+    context:        -> @_context ?= {}
     key:            -> @_props.key
     data:           -> @_props.data
     requestData:    -> @_props.data
@@ -125,7 +127,7 @@ module.exports = class Request extends require './RequestResponseBase'
         @parentRequest
         @filterLog
         @originatedOnServer
-        @context
+        context: @_context
         @verbose
       }
 
