@@ -49,6 +49,8 @@ defineModule module, class LinkFieldsFilter extends require './ValidationFilter'
 
     super merge options, {fields}
 
+  @getter "linkFields"
+
   # returns a new request
   preprocessRequest: (request) ->
     # empty updates or creates are possible, and that's OK
