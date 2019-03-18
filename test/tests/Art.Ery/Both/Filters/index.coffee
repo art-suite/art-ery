@@ -7,6 +7,7 @@ module.exports
   AfterEventsFilter:       require './AfterEventsFilter'      
   CreateDatabaseFilters:   require './CreateDatabaseFilters'  
   LinkFieldsFilter:        require './LinkFieldsFilter'       
+  LinkFieldsFilter2:       require './LinkFieldsFilter2'      
   LinkFieldsFilterInclude: require './LinkFieldsFilterInclude'
   TimestampFilter:         require './TimestampFilter'        
   UniqueIdFilter:          require './UniqueIdFilter'         

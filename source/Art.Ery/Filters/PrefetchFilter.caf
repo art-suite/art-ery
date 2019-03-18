@@ -1,0 +1,17 @@
+import &StandardImport, &PipelineRegistry, &PrefetchedRecords
+
+class PrefetchFilter extends &Filter
+  @location :client
+
+  @getter :linkFields
+
+  @before
+    get: (request) ->
+      prefetchedRecords.get request.pipelineName, request.key
+      || request # let the rest of the pipeline handle it
+
+  @after
+    all: (response) ->
+      if response.props extract prefetchedRecords
+        prefetchedRecords.addPrefetchedRecords prefetchedRecords
+      response

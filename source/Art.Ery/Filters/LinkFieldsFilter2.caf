@@ -1,0 +1,163 @@
+import &StandardImport, &PipelineRegistry
+
+class LinkFieldsFilter2 extends &ValidationFilter
+  ## constructor
+    IN:
+      fields: <Object>
+        Legal ArtEryDb field structure with one or more fields with the "link" property.
+        If no fields have "link", this filter is attached, but it becomse a NOOP.
+
+        Example:
+          user:
+            # any art-validation legal field description
+            # Additional options:
+            link:
+              true OR pipelineName
+              if true, the fieldName is the same as the pipelineName
+              pipelineName should be a legal pipline-name or pipeline-alias
+
+            autoCreate:   true/false
+              if set, when request-type == "create"
+                if this field is set with an object without and id
+                  then it will FIRST create the linked-to-object
+                  then it will set the id-field with the linked-to-object
+
+              if this field is set with an object WITH an id
+                (I think this applies to both create and update request-types)
+                will automatically set the id-field to the matching id
+
+            pipelineName: string
+              override the default pipelineName
+              default: field-name (in this example: 'user')
+
+            include:  true/false DEPRICATED - use 'include'
+            prefetch: true/false
+              If true, then when returning instances of this object, it will also
+              prefetch the linked field's object, returning it
+              along a side-channel so it is available for immediate use
+              client-side.
+  constructor: (options) ->
+    super merge
+      options
+      fields: LinkFieldsFilter2._getIdFieldsFromLinkFields
+        _linkFields = LinkFieldsFilter2._normalizeLinkFields options.fields
+
+    @_linkFields = _linkFields
+
+  @getter :linkFields
+
+  @before
+    create: (request) -> @_preprocessRequest(request).then (request) => @_validate :validateCreate request
+    update: (request) -> @_preprocessRequest(request).then (request) => @_validate :validateUpdate request
+
+  # to support 'include' for query results, just alter this to be an 'after-all-requests'
+  # and have it detect is data is an array
+  # Idealy, we'd also use the bulkGet feature
+  @after
+    all: (response) ->
+      return response if response.requestProps.prefetch == false || !response.isRootRequest || response.type == :delete
+      @_prefetchRecords response, response.pipelineName, response.responseData
+      .then (prefetchedRecords) ->
+        # TODO; this is the NEW way; we need to do the backward-compatible-way
+        response.withMergedProps {} prefetchedRecords
+
+  ###############
+    PRIVATE
+  ###############
+  @_getIdFieldsFromLinkFields: (linkFields) ->
+    object fieldProps, fieldName in linkFields with-key fieldProps.idFieldName
+      props = merge fieldProps, fieldType: :trimmedString
+      delete props.idFieldName
+      normalizeFieldProps props
+
+  @_normalizeLinkFields: (linkFields) ->
+    each fieldProps, fieldName from linkFields into normalizedLinkFields = {}
+      if (normalizeFieldProps fieldProps) extract include, prefetch, required, autoCreate, link
+        log.warn "DEPRICATED: 'include'. Use 'prefetch' instead." if include
+
+        normalizedLinkFields[fieldName] = props =
+          pipelineName: if isString link then link else fieldName
+          idFieldName:  fieldName + :Id
+
+        props.autoCreate = true if autoCreate
+        props.prefetch =   true if prefetch || include
+        props.required =   true if required
+
+  _setPrefetch: (request, pipelineName, key, value) ->
+    # log _setPrefetch: {} pipelineName, key, value
+    # throw new Error "not expecting _setPrefetch!"
+    vivifyObjectPathAndSet request.context, :prefetchedRecords pipelineName, key, value
+
+  ## _preprocessRequest
+    OUT: new request
+
+    EFFECT:
+      strips out, and auto-creates any inlined, linked sub-records
+
+    NOTES:
+      * Empty updates or creates are possible, and that's OK
+        For example, add: or setDefault: values may be specified for updates.
+  _preprocessRequest: (request) ->
+    processedData = merge request.data
+    Promise.all array {idFieldName, autoCreate, pipelineName}, fieldName in @_linkFields
+      if linkedFieldData = processedData[fieldName]
+        Promise.then ->
+          if linkedFieldData.id
+            linkedFieldData
+          else
+            unless autoCreate
+              throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedFieldData}"
+
+            pipelines[pipelineName].create
+              request
+              props:
+                include:  false   # DEPRICATED - this can be removed after Transition1 is compliete; only included during the transition; in the future, the fact that this is a subrequest automatically ensures include: false
+                data:     linkedFieldData
+
+            .tap (linkedFieldData) ->
+              @_setPrefetch request, pipelineName, linkedFieldData.id, linkedFieldData
+
+        .tap ({id}) ->
+          processedData[idFieldName] = id
+          delete processedData[fieldName]
+
+    .then -> request.withData processedData
+
+  ## getLinkedFieldFilterForPipeline
+    OUT:
+      a filter with .linkFields field
+      OR: false
+  pipelinesLinkedFieldFilters = {}
+  getLinkedFieldFilterForPipeline = (pipelineName) ->
+    pipelinesLinkedFieldFilters[pipelineName] ?=
+      find filter in pipelines[pipelineName].filters when filter.linkFields
+      || false
+
+  _prefetchRecord: (request, pipelineName, key) ->
+    Promise.resolve if key?
+      request.context.prefetchedRecords?[pipelineName]?[key] ||
+        request.cachedGetWithoutInclude pipelineName, key
+        .then (record) -> @_setPrefetch request, pipelineName, key, record
+
+  _prefetchRecords: (request, pipelineName, data) ->
+    switch
+    when data is Array
+      Promise.all array record in data
+        @_prefetchRecords request, pipelineName, record
+
+    when data is Object
+      # NOTES: the Con with this is it returns the data twice, let's assume we fix that:
+      # The Pro is it avoids returning the data twice if it is linked in recursively.
+      # @_setPrefetch request, pipelineName, data.id, data
+
+      if getLinkedFieldFilterForPipeline(pipelineName) extract linkFields
+        Promise.all array {include, prefetch, idFieldName, pipelineName: _pipelineName}, k in linkFields when include || prefetch
+          @_prefetchRecord request, _pipelineName, data[idFieldName]
+
+      else Promise.resolve()
+
+    else
+      log.error {} request, pipelineName, data
+      throw new Error "expecting object or array"
+
+    .then -> request.context.prefetchedRecords

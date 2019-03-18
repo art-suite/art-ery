@@ -1,0 +1,146 @@
+import &StandardImport
+SimplePipeline = &SimplePipeline
+
+suite: ->
+
+  ChainedTest.setup ->
+    class User extends SimplePipeline
+
+    filter = null
+    class PostPipeline extends SimplePipeline
+      @filter filter = new LinkFieldsFilter2 fields:
+        user: "" prefetch required link autoCreate
+
+    assert.eq
+      filter.linkFields
+      user:
+        pipelineName: :user
+        idFieldName: :userId
+        prefetch: true
+        required: true
+        autoCreate: true
+
+    pipelines.user.create data: name: :George
+    .tap (user) -> assert.eq user, name: :George id: :0
+
+  .tapTest "create with userId", (user) ->
+    pipelines.postPipeline.create
+      returnResponse: true
+      data: userId: user.id, message: :hi
+    .then (response) ->
+      assert.eq
+        response.props
+        data:               userId: :0 message: :hi id: :0
+        prefetchedRecords:  user:   0:    name:    :George   id: :0
+
+  .tapTest "create with existing user", (user) ->
+    pipelines.postPipeline.create
+      returnResponse: true
+      data: {} user, message: :hi
+
+    .then (response) ->
+      assert.eq
+        response.props
+        data:               userId: :0    message: :hi       id: :1
+        prefetchedRecords:  user:   0:    name:    :George   id: :0
+
+  .tapTest "create with new user", (user) ->
+    pipelines.postPipeline.create
+      returnResponse: true
+      data: {}
+        user: name: :Frank
+        message: :hi
+
+    .then (response) ->
+      assert.eq
+        response.props
+        data:               userId: :1    message: :hi       id: :2
+        prefetchedRecords:  user:   1:    name:    :Frank    id: :1
+
+  .thenTest "get with auto prefetch" ->
+    pipelines.postPipeline.get
+      returnResponse: true
+      key: :0
+    .then (response) ->
+      assert.eq
+        response.props
+        data:              userId: :0   message: :hi       id: :0
+        prefetchedRecords: user:   0:   name:    :George   id: :0
+
+  .thenTest "get with prefetch: false" ->
+    pipelines.postPipeline.get
+      returnResponse: true
+      key: :0
+      props: prefetch: false
+    .then (response) ->
+      assert.eq
+        response.props
+        data:              userId: :0   message: :hi       id: :0
+
+  test "prefetch fields works on record-array-results and doesn't return more than one copy of each prefetched record", ->
+    pipelines.postPipeline.getAll returnResponse: true
+    .then (response) ->
+      assert.eq
+        response.props
+        data:
+          {} id: :0   userId: :0  message: :hi
+          {} id: :1   userId: :0  message: :hi
+          {} id: :2   userId: :1  message: :hi
+
+        prefetchedRecords:
+          user:
+            0: id: :0 name: :George
+            1: id: :1 name: :Frank
+
+  # I'm not certain it actually should - it's safe not to, it's just a prefetch...
+  # But, cachedSubrequest provides this automatically to us, so... OK
+  test "included retries on networkFailure", ->
+    failureCount = 0
+    successCount = 0
+
+    class User extends Pipeline
+      history = {}
+      records =
+        0: name: :Fred
+        1: name: :George
+
+      @handler
+        get: (request) ->
+          {key} = request
+          if v = history[key]
+            successCount++
+            v
+          else
+            failureCount++
+            history[key] = records[key]
+            request.toResponse networkFailure
+
+    class PostPipeline extends SimplePipeline
+      isRecord: ({message}) -> message?
+
+      @handler
+        getSampleData: (request) ->
+          []
+            {} userId: :0, message: :Hi!
+            {} userId: :1, message: :Howdy!
+            {} userId: :0, message: :Yo!
+
+      @filter new LinkFieldsFilter2 fields:
+        user: "" link required prefetch
+
+    pipelines.postPipeline.getSampleData returnResponse: true
+    .then (response)->
+      assert.eq
+        response.props
+        data:
+          {} userId: :0 message: :Hi!
+          {} userId: :1 message: :Howdy!
+          {} userId: :0 message: :Yo!
+
+        prefetchedRecords:
+          user:
+            0: name: :Fred
+            1: name: :George
+
+      assert.eq failureCount, 2 :failureCount
+      assert.eq successCount, 2 :successCount

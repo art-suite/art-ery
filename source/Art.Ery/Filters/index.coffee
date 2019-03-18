@@ -8,6 +8,8 @@ module.exports
   AfterEventsFilter: require './AfterEventsFilter'
   DataUpdatesFilter: require './DataUpdatesFilter'
   LinkFieldsFilter:  require './LinkFieldsFilter' 
+  LinkFieldsFilter2: require './LinkFieldsFilter2'
+  PrefetchFilter:    require './PrefetchFilter'   
   TimestampFilter:   require './TimestampFilter'  
   Tools:             require './Tools'            
   UniqueIdFilter:    require './UniqueIdFilter'   
