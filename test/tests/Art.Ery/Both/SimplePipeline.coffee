@@ -76,6 +76,10 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
     get: ({key}) ->
       @_store[key]
 
+    getAll: ->
+      for k in (Object.keys(@_store).sort())
+        @store[k]
+
     create: ({data}) ->
       data = if data.id
         data
