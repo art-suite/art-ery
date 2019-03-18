@@ -50,16 +50,21 @@ class LinkFieldsFilter2 extends &ValidationFilter
     create: (request) -> @_preprocessRequest(request).then (request) => @_validate :validateCreate request
     update: (request) -> @_preprocessRequest(request).then (request) => @_validate :validateUpdate request
 
-  # to support 'include' for query results, just alter this to be an 'after-all-requests'
-  # and have it detect is data is an array
-  # Idealy, we'd also use the bulkGet feature
   @after
     all: (response) ->
-      return response if response.requestProps.prefetch == false || !response.isRootRequest || response.type == :delete
-      @_prefetchRecords response, response.pipelineName, response.responseData
-      .then (prefetchedRecords) ->
-        # TODO; this is the NEW way; we need to do the backward-compatible-way
-        response.withMergedProps {} prefetchedRecords
+      if !response.isRootRequest ||
+          response.requestProps.prefetch == false ||
+          response.requestProps.include == false ||
+          response.type == :delete
+        # ^ include is DEPRICATED ^
+
+        response
+
+      else
+        @_prefetchRecords response, response.pipelineName, response.responseData
+        .then (prefetchedRecords) ->
+          # TODO; this is the NEW way; we need to do the backward-compatible-way
+          response.withMergedProps {} prefetchedRecords
 
   ###############
     PRIVATE
@@ -99,7 +104,7 @@ class LinkFieldsFilter2 extends &ValidationFilter
         For example, add: or setDefault: values may be specified for updates.
   _preprocessRequest: (request) ->
     processedData = merge request.data
-    Promise.all array {idFieldName, autoCreate, pipelineName}, fieldName in @_linkFields
+    Promise.all array {idFieldName, autoCreate, pipelineName}, fieldName in @linkFields
       if linkedFieldData = processedData[fieldName]
         Promise.then ->
           if linkedFieldData.id
@@ -128,7 +133,7 @@ class LinkFieldsFilter2 extends &ValidationFilter
       a filter with .linkFields field
       OR: false
   pipelinesLinkedFieldFilters = {}
-  getLinkedFieldFilterForPipeline = (pipelineName) ->
+  @getLinkedFieldFilterForPipeline: getLinkedFieldFilterForPipeline = (pipelineName) ->
     pipelinesLinkedFieldFilters[pipelineName] ?=
       find filter in pipelines[pipelineName].filters when filter.linkFields
       || false
@@ -139,6 +144,7 @@ class LinkFieldsFilter2 extends &ValidationFilter
         request.cachedGetWithoutInclude pipelineName, key
         .then (record) -> @_setPrefetch request, pipelineName, key, record
 
+  # TODO: use bulkGet if available
   _prefetchRecords: (request, pipelineName, data) ->
     switch
     when data is Array

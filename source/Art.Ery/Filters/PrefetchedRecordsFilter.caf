@@ -3,8 +3,6 @@ import &StandardImport, &PrefetchedRecordsCache
 class PrefetchedRecordsFilter extends &Filter
   @location :client
 
-  @getter :linkFields
-
   constructor: (options) ->
     super
     @expirationSeconds = options.expirationSeconds ? 5

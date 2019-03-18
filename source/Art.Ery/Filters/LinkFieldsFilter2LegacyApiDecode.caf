@@ -1,0 +1,47 @@
+
+import &StandardImport, &LinkFieldsFilter2
+
+# run this AFTER LinkFieldsFilter2 to convert prefetchedRecords to
+# The old over-the-while protocol: including linked objects inline in their parent objects.
+class LinkFieldsFilter2LegacyApiDecode extends &Filter
+
+  @after
+    all: (response) ->
+      response.withMergedProps
+        data: legacyDecode
+          response.pipelineName
+          prefetchedRecords = {}
+          response.data
+        prefetchedRecords: prefetchedRecords
+
+  legacyDecode = (pipelineName, prefetchedRecords, data) ->
+    if getLinkedFieldFilterForPipeline(pipelineName) extract linkFields
+      switch
+      when data is Array  then array record in data with  legacyDecodeB linkFields, prefetchedRecords, record
+      when data is Object then                            legacyDecodeB linkFields, prefetchedRecords, data
+      else data
+    else data
+
+  ## legacyDecodeB
+    IN:
+      linkFields: <Object> (Example)
+        user:
+          pipelineName: :user
+          idFieldName: :userId
+          prefetch: true
+          required: true
+          autoCreate: true
+
+      prefetchedRecords: <Object> (Example)
+        myPipelineName: recordId: record
+
+      record: <Object>
+  legacyDecodeB = (linkFields, prefetchedRecords, record) ->
+    object {idFieldName, pipelineName}, fieldName in linkFields when record[fieldName] into merge record
+      inlineRecord = record[fieldName]
+      vivifyObjectPathAndSet prefetchedRecords, pipelineName, inlineRecord.id, inlineRecord
+      legacyDecode
+        pipelineName
+        prefetchedRecords
+        inlineRecord
+      null
