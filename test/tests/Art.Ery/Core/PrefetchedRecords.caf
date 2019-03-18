@@ -2,7 +2,7 @@ import &StandardImport
 
 suite: ->
   test "addPrefetchedRecords, get" ->
-    prefetchedRecords = new PrefetchedRecords
+    prefetchedRecords = new PrefetchedRecordsCache
     prefetchedRecords.addPrefetchedRecords
       myPipeline: myKey: myObject = :anyObjectWillDo
       .1
@@ -14,7 +14,7 @@ suite: ->
         :myKey
 
   test "addPrefetchedRecords, addPrefetchedRecords, get" ->
-    prefetchedRecords = new PrefetchedRecords
+    prefetchedRecords = new PrefetchedRecordsCache
     prefetchedRecords.addPrefetchedRecords
       myPipeline: myKey: myObject = :anyObjectWillDo
       .1
@@ -36,7 +36,7 @@ suite: ->
         :myKey
 
   test "addPrefetchedRecords, expire, get" ->
-    prefetchedRecords = new PrefetchedRecords
+    prefetchedRecords = new PrefetchedRecordsCache
     prefetchedRecords.addPrefetchedRecords
       myPipeline: myKey: myObject = :anyObjectWillDo
       .001

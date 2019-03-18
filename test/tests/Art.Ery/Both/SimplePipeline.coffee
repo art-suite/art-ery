@@ -10,7 +10,7 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
   @suite: ->
     test "clientApiMethodList", ->
       simplePipeline = new SimplePipeline
-      assert.eq simplePipeline.clientApiMethodList, wordsArray "reset get create update delete"
+      assert.eq simplePipeline.clientApiMethodList, wordsArray "reset get getAll create update delete"
 
     test "get -> missing", ->
       simplePipeline = new SimplePipeline

@@ -1,6 +1,6 @@
 import &StandardImport
 
-class PrefetchedRecords extends BaseClass
+class PrefetchedRecordsCache extends BaseClass
   @singletonClass()
 
   constructor: ->

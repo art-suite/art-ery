@@ -11,6 +11,8 @@ suite: ->
       @filter filter = new LinkFieldsFilter2 fields:
         user: "" prefetch required link autoCreate
 
+      @filter new PrefetchedRecordsFilter expirationSeconds: .1
+
     assert.eq
       filter.linkFields
       user:
@@ -33,6 +35,11 @@ suite: ->
         data:               userId: :0 message: :hi id: :0
         prefetchedRecords:  user:   0:    name:    :George   id: :0
 
+  .tapTest "user was prefetched", (user) ->
+    assert.eq
+      prefetchedRecordsCache.get :user, user.id
+      user
+
   .tapTest "create with existing user", (user) ->
     pipelines.postPipeline.create
       returnResponse: true
@@ -54,8 +61,13 @@ suite: ->
     .then (response) ->
       assert.eq
         response.props
-        data:               userId: :1    message: :hi       id: :2
-        prefetchedRecords:  user:   1:    name:    :Frank    id: :1
+        data:                       id: :2 message: :hi     userId: :1
+        prefetchedRecords: user: 1: id: :1 name:    :Frank
+
+  .tapTest "new user was prefetched", ->
+    assert.eq
+      prefetchedRecordsCache.get :user, :1
+      id: :1 name:    :Frank
 
   .thenTest "get with auto prefetch" ->
     pipelines.postPipeline.get

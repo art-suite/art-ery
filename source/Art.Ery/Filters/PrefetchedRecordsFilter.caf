@@ -1,0 +1,21 @@
+import &StandardImport, &PrefetchedRecordsCache
+
+class PrefetchedRecordsFilter extends &Filter
+  @location :client
+
+  @getter :linkFields
+
+  constructor: (options) ->
+    super
+    @expirationSeconds = options.expirationSeconds ? 5
+
+  @before
+    get: (request) ->
+      prefetchedRecordsCache.get request.pipelineName, request.key
+      || request # let the rest of the pipeline handle it
+
+  @after
+    all: (response) ->
+      if response.props extract prefetchedRecords
+        prefetchedRecordsCache.addPrefetchedRecords prefetchedRecords, @expirationSeconds
+      response

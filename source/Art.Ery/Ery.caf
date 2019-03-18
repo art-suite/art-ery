@@ -8,6 +8,7 @@ import &StandardImport, &PipelineRegistry, &Config
     &Session.session
     &package
     &package.version
+    &PrefetchedRecordsCache.prefetchedRecordsCache
 
     sendInitializeRequestToAllPipelines: ->
       Promise.all array pipeline in pipelines when
