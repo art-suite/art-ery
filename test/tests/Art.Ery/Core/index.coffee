@@ -5,6 +5,7 @@ module.exports = require './namespace'
 module.exports
 .addModules
   Filters:             require './Filters'            
+  PrefetchedRecords:   require './PrefetchedRecords'  
   Request:             require './Request'            
   RequestResponseBase: require './RequestResponseBase'
   Response:            require './Response'           
