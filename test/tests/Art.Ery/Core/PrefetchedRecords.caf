@@ -1,0 +1,48 @@
+import &StandardImport
+
+suite: ->
+  test "addPrefetchedRecords, get" ->
+    prefetchedRecords = new PrefetchedRecords
+    prefetchedRecords.addPrefetchedRecords
+      myPipeline: myKey: myObject = :anyObjectWillDo
+      .1
+
+    assert.eq
+      myObject
+      prefetchedRecords.get
+        :myPipeline
+        :myKey
+
+  test "addPrefetchedRecords, addPrefetchedRecords, get" ->
+    prefetchedRecords = new PrefetchedRecords
+    prefetchedRecords.addPrefetchedRecords
+      myPipeline: myKey: myObject = :anyObjectWillDo
+      .1
+
+    prefetchedRecords.addPrefetchedRecords
+      myOtherPipeline: myKey: myOtherObject = :anyOtherObjectWillDo
+      .1
+
+    assert.eq
+      myObject
+      prefetchedRecords.get
+        :myPipeline
+        :myKey
+
+    assert.eq
+      myOtherObject
+      prefetchedRecords.get
+        :myOtherPipeline
+        :myKey
+
+  test "addPrefetchedRecords, expire, get" ->
+    prefetchedRecords = new PrefetchedRecords
+    prefetchedRecords.addPrefetchedRecords
+      myPipeline: myKey: myObject = :anyObjectWillDo
+      .001
+
+    timeout 10 ->
+      assert.doesNotExist
+        prefetchedRecords.get
+          :myPipeline
+          :myKey

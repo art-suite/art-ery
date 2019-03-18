@@ -1,0 +1,16 @@
+import &StandardImport
+
+class PrefetchedRecords extends BaseClass
+  @singletonClass()
+
+  constructor: ->
+    @_repository = []
+
+  get: (pipelineName, key) ->
+    find r in @_repository with r[pipelineName]?[key]
+
+  addPrefetchedRecords: (recordsByPipelineNameAndKey, expirationSeconds = 5) ->
+    throw new Error "expecting Object" unless recordsByPipelineNameAndKey is Object
+    @_repository.push recordsByPipelineNameAndKey
+    timeout expirationSeconds * 1000, ->
+      @_repository = array r in @_repository when r != recordsByPipelineNameAndKey
