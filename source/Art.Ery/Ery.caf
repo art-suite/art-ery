@@ -1,0 +1,22 @@
+import &StandardImport, &PipelineRegistry, &Config
+
+[]
+  &Filters
+  {}
+    config
+    pipelines
+    &Session.session
+    &package
+    &package.version
+
+    # for testing
+    _reset: (pipelineTestFunction)->
+      &PipelineRegistry._reset pipelineTestFunction
+      &Filters._resetFilters()
+
+    sendInitializeRequestToAllPipelines: ->
+      Promise.all array pipeline in pipelines when
+          pipeline.class.getHandlers().initialize
+        pipeline.initialize originatedOnServer: true
+
+    getArtEryRemoteServer: -> config.remoteServer
