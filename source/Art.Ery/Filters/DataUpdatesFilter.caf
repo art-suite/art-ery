@@ -13,17 +13,22 @@ import &StandardImport
 
 class DataUpdatesFilter extends &Filter
 
+  updateRequestTypeRegExp = /^(create|update)/
+  deleteRequestTypeRegExp = /^delete/
+
   # for subrequests, this will still be on the server
   # for root requests, there is work to do on both the client and server
   @location :both
   @group :outer
 
-  updateDataUpdatesContext = (response)->
-    response extract key, type, responseData, pipelineName, context
+  updateDataUpdatesContext = (response, context)->
+    response extract key, type, responseData, pipelineName
+
+    context ?= response.context
 
     if groupName = switch
-        when /^(create|update)/.test type then :dataUpdates
-        when /^delete/.test          type then :dataDeletes
+        when updateRequestTypeRegExp.test type then :dataUpdates
+        when deleteRequestTypeRegExp.test type then :dataDeletes
 
       # if groupName == :dataUpdates
       #   log updateDataUpdatesContext: {} pipelineName, type, key, responseData
@@ -48,36 +53,37 @@ class DataUpdatesFilter extends &Filter
 
   @after all: (response) ->
     if response.isRootRequest
-      if response.location != :server && Neptune.Art.Flux
-        @applyFluxUpdates response
 
       if response.location != :client
-        response.context extract dataUpdates, dataDeletes
-        # log DataUpdatesFilter1: {} dataUpdates, dataDeletes
-        response.withMergedPropsWithoutNulls {} dataUpdates, dataDeletes
-      else
-        # log DataUpdatesFilter2: {} response
-        response
+            response.withMergedPropsWithoutNulls {dataUpdates, dataDeletes} = response.context
+      else  response
+      .tap (response) -> @applyFluxUpdates response if response.location != :server && @models
+
     else
       # log DataUpdatesFilter3: {} response
       updateDataUpdatesContext response
       response
 
   applyFluxUpdates: (response) ->
-    # if we are client-side with a remote server, they will be in responseProps
-    # ELSE they will be in context...
-    response extract responseProps, context
-    context.dataUpdates = merge context.dataUpdates, responseProps.dataUpdates
-    context.dataDeletes = merge context.dataDeletes, responseProps.dataDeletes
+    response.responseProps extract dataUpdates, dataDeletes
 
-    updateDataUpdatesContext response
+    @applyFluxDataUpdates dataUpdates
+    @applyFluxDataDeletes dataDeletes
 
-    Neptune.Art.Flux extract models
+    if updateRequestTypeRegExp.test response.type
+      @applyFluxDataUpdates updateDataUpdatesContext(response, {}).dataUpdates
+    if deleteRequestTypeRegExp.test response.type
+      @applyFluxDataDeletes updateDataUpdatesContext(response, {}).dataDeletes
 
-    each dataUpdatesByKey, pipelineName in context.dataUpdates when models[pipelineName]?.dataUpdated is Function
+  @getter
+    models: -> Neptune.Art.Flux.models
+
+  applyFluxDataUpdates: (dataUpdates) ->
+    each dataUpdatesByKey, pipelineName in dataUpdates when @models[pipelineName]?.dataUpdated is Function
       each data, key in dataUpdatesByKey
-        models[pipelineName].dataUpdated key, data
+        @models[pipelineName].dataUpdated key, data
 
-    each dataDeletesByKey, pipelineName in context.dataDeletes when models[pipelineName]?.dataDeleted is Function
+  applyFluxDataDeletes: (dataDeletes) ->
+    each dataDeletesByKey, pipelineName in dataDeletes when @models[pipelineName]?.dataDeleted is Function
       each data, key in dataDeletesByKey
-        models[pipelineName].dataDeleted key, data
+        @models[pipelineName].dataDeleted key, data
