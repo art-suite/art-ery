@@ -1,3 +1,4 @@
+# CAN'T CONVERT TO CAFFEINE-SCRIPT YET - @fluxModelMixin must generate a CoffeeScript class
 {isString, defineModule, array, randomString, merge, log, formattedInspect} = require 'art-foundation'
 {Pipeline, KeyFieldsMixin, DataUpdatesFilter} = require 'art-ery'
 
@@ -34,7 +35,7 @@ defineModule module, class DataUpdatesFilterPipeline extends require './SimpleSt
       query: ({key}) -> array @db, when: (v, k) -> v.email == key
       dataToKeyString: ({email}) -> email
 
-  @publicRequestTypes "subrequestTest"
+  @publicRequestTypes "subrequestTest update delete"
 
   @handlers
     subrequestTest: (request) ->

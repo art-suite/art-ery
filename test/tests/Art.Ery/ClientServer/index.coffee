@@ -12,5 +12,6 @@ module.exports
   LinkFieldsFilter2Remote: require './LinkFieldsFilter2Remote'
   MyRemoteRequests:        require './MyRemoteRequests'       
   Sessions:                require './Sessions'               
+  StandardImport:          require './StandardImport'         
   StaticAssets:            require './StaticAssets'           
 require './Pipelines'

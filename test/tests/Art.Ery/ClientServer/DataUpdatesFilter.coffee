@@ -1,7 +1,8 @@
-{log, createWithPostCreate, RestClient, CommunicationStatus} = require 'art-foundation'
-{Pipeline, pipelines, session} = Neptune.Art.Ery
+{
+  Pipeline, pipelines, session, log, chainedTest
+  clientFailure, missing, serverFailure
+} = require './StandardImport'
 {ApplicationState} = ArtFlux = Neptune.Art.Flux
-{clientFailure, missing, serverFailure} = CommunicationStatus
 
 preexistingKey = "abc123"
 testSetup = (initialRecords) ->
@@ -11,6 +12,40 @@ testSetup = (initialRecords) ->
     assert.eq pipelines.dataUpdatesFilterPipeline.fluxLog, []
 
 module.exports = suite:
+  simpleRequests: ->
+    chainedTest -> testSetup()
+
+    .thenTest "create", ->
+      pipelines.dataUpdatesFilterPipeline.create
+        returnResponseObject: true
+        data: foo: 123
+
+      .then (response) ->
+        assert.eq response.responseProps,
+          data:
+            id:         response.key
+            foo:        123
+            createdAt:  123
+            updatedAt:  123
+
+        response.data
+
+    .thenTest "update", (record) ->
+      pipelines.dataUpdatesFilterPipeline.update
+        returnResponseObject: true
+        key: record.id
+        data: foo: 123, bar: 456
+
+      .then (response) ->
+        assert.eq response.responseProps,
+          data:
+            id: response.key
+            foo: 123
+            bar: 456
+            createdAt: 123
+            updatedAt: 321
+
+
   subrequests: ->
     setup -> testSetup()
 

@@ -45,7 +45,7 @@ class Tools
         fields extract id
         userOwned, linkFilterVersion
     else
-      log.warn "ArtEry.Filters.Tools.createDatabaseFilters DEPRICATED: you should now specify fields as: createDatabaseFilters fields: {}"
+      log.warn "ArtEry.Filters.Tools.createDatabaseFilters DEPRICATED: (Pipeline: #{PipelineClass?.name}) you should now specify fields as: createDatabaseFilters fields: {}"
       (fields = options) extract? id, userOwned
 
     if userOwned
@@ -83,6 +83,7 @@ class Tools
             all the transition code at this point.
         switch linkFilterVersion
         when :transition2A
+          # log.warn "" using transition2A for #{} PipelineClass?.name
           # USE: convert one pipeline at a time over to this and test. THEN do the same with transition2B.
           # BREAKING CHANGES: server-side subrequests won't have inline, included records
           []
@@ -91,6 +92,7 @@ class Tools
             new LinkFieldsFilter2LegacyApiEncode
 
         when :transition2B
+          # log.warn "" using transition2B for #{} PipelineClass?.name
           # USE: convert one pipeline at a time over to this and test.
           # THEN LEAVE IT - this will support old clients while providing full functionality to new clients.
           # EVENTUALLY, once we have all clients updated for a few months, switch to full v2 with no legacy support.
@@ -106,6 +108,7 @@ class Tools
             new PrefetchedRecordsFilter
 
         when 2
+          # log.warn "" using v2 for #{} PipelineClass?.name
           []
             # serverSide:
             new LinkFieldsFilter2 fields: linkFields
@@ -114,6 +117,7 @@ class Tools
             new PrefetchedRecordsFilter
 
         when null, undefined
+          # log "" control: using v1 for #{} PipelineClass?.name
           new LinkFieldsFilter fields: linkFields
 
         else throw new Error "" invalid linkFilterVersion: #{} formattedInspect linkFilterVersion

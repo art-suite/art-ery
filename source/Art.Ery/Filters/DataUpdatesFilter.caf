@@ -18,17 +18,21 @@ class DataUpdatesFilter extends &Filter
   @location :both
   @group :outer
 
-  getUpdatedUpdates = (response)->
+  updateDataUpdatesContext = (response)->
     response extract key, type, responseData, pipelineName, context
 
     if groupName = switch
         when /^(create|update)/.test type then :dataUpdates
         when /^delete/.test          type then :dataDeletes
 
+      # if groupName == :dataUpdates
+      #   log updateDataUpdatesContext: {} pipelineName, type, key, responseData
+
       switch
       when responseData is Array
         each record in responseData
           key = response.pipeline.toKeyString record
+          # log "" vivifyObjectPathAndSet(A) #{groupName}, #{pipelineName}, #{key} (#{type})
           vivifyObjectPathAndSet context, groupName, pipelineName, key, record
 
       when key, response.pipeline.isRecord responseData
@@ -37,6 +41,7 @@ class DataUpdatesFilter extends &Filter
           || {}
 
         key ?= response.pipeline.toKeyString responseData
+        # log "" vivifyObjectPathAndSet(B) #{groupName}, #{pipelineName}, #{key} (#{type})
         vivifyObjectPathAndSet context, groupName, pipelineName, key, responseData
 
     context
@@ -55,7 +60,7 @@ class DataUpdatesFilter extends &Filter
         response
     else
       # log DataUpdatesFilter3: {} response
-      getUpdatedUpdates response, response.context
+      updateDataUpdatesContext response
       response
 
   applyFluxUpdates: (response) ->
@@ -65,7 +70,7 @@ class DataUpdatesFilter extends &Filter
     context.dataUpdates = merge context.dataUpdates, responseProps.dataUpdates
     context.dataDeletes = merge context.dataDeletes, responseProps.dataDeletes
 
-    getUpdatedUpdates response
+    updateDataUpdatesContext response
 
     Neptune.Art.Flux extract models
 
