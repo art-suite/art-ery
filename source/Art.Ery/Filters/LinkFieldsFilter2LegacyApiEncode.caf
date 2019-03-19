@@ -7,7 +7,7 @@ class LinkFieldsFilter2LegacyApiEncode extends &Filter
 
   @after
     all: (response) ->
-      if response extract responseProps extract dataUpdates
+      if (response extract responseProps extract dataUpdates) && !response.requestProps.acceptLinkFieldsFilter2Encoding
         dataUpdatesToPurge = {}
 
         response.withMergedPropsWithoutNulls {}

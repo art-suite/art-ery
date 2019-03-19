@@ -1,0 +1,7 @@
+import &StandardImport
+
+class LinkFieldsFilter2Transition2BFilter extends &Filter
+  @location :client
+
+  @before
+    all: (response) -> response.withMergedProps acceptLinkFieldsFilter2Encoding: true

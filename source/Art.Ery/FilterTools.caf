@@ -85,7 +85,7 @@ class Tools
             new LinkFieldsFilter2LegacyApiEncode
 
             # clientSide:
-            new LinkFieldsFilter2LegacyApiDecode
+            new LinkFieldsFilter2Transition2BFilter
             new PrefetchedRecordsFilter
 
         when 2
