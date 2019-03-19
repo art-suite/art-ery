@@ -1,31 +1,102 @@
 import &StandardImport
 
-suite: ->
-  chainedTest ->
-    pipelines.messageRemote.create
-      data:
-        message:          :Hi
-        userRemote: name: :Frank
-      returnResponse: true
-    .then (response) ->
-      response.data extract userRemoteId, createdAt, updatedAt, id
-      assert.eq
-        response.responseProps
-        data:                                     {} id, userRemoteId,  createdAt, updatedAt, message: :Hi
-        dataUpdates: userRemote: [userRemoteId]:  {}                    createdAt, updatedAt, name:    :Frank  id: userRemoteId
+suite:
+  fullV2: ->
+    chainedTest ->
+      pipelines.messageRemote.create
+        data:
+          message:          :Hi
+          userRemote: name: :Frank
+        returnResponse: true
+      .then (response) ->
+        response.data extract userRemoteId, createdAt, updatedAt, id
+        assert.eq
+          response.responseProps
+          data:                                     {} id, userRemoteId,  createdAt, updatedAt, message: :Hi
+          dataUpdates: userRemote: [userRemoteId]:  {}                    createdAt, updatedAt, name:    :Frank  id: userRemoteId
 
-      {} userRemoteId, messageRemoteId: id
+        {} userRemoteId, messageRemoteId: id
 
-  .tapTest "get messageRemote" ({messageRemoteId, userRemoteId}) ->
-    pipelines.messageRemote.get messageRemoteId, returnResponse: true
-    .then (response) ->
-      response extract
-        data extract userRemoteId, createdAt, updatedAt, id
-        responseProps
+    .tapTest "get messageRemote" ({messageRemoteId, userRemoteId}) ->
+      pipelines.messageRemote.get messageRemoteId, returnResponse: true
+      .then (response) ->
+        response extract
+          data extract userRemoteId, createdAt, updatedAt, id
+          responseProps
 
-      assert.eq
-        responseProps
-        data:                                     {} id, userRemoteId,  createdAt, updatedAt, message: :Hi
-        dataUpdates: userRemote: [userRemoteId]:  {}                    createdAt, updatedAt, name:    :Frank  id: userRemoteId
+        assert.eq
+          responseProps
+          data:                                     {} id, userRemoteId,  createdAt, updatedAt, message: :Hi
+          dataUpdates: userRemote: [userRemoteId]:  {}                    createdAt, updatedAt, name:    :Frank  id: userRemoteId
 
-      assert.exists prefetchedRecordsCache.get :userRemote userRemoteId
+        assert.exists prefetchedRecordsCache.get :userRemote userRemoteId
+
+  transition2A: ->
+    chainedTest ->
+      pipelines.messageRemote2A.create
+        data:
+          message:            :Hi
+          userRemote2A: name: :Frank
+        returnResponse: true
+      .then (response) ->
+        response.data extract userRemote2AId, createdAt, updatedAt, id
+        assert.eq
+          response.responseProps
+          data: {}
+            id, userRemote2AId,  createdAt, updatedAt
+            message:  :Hi
+            userRemote2A: {}
+              createdAt
+              updatedAt
+              name:   :Frank
+              id:     userRemote2AId
+
+        {} userRemote2AId, messageRemote2AId: id
+
+    .tapTest "get messageRemote2A" ({messageRemote2AId, userRemote2AId}) ->
+      pipelines.messageRemote2A.get messageRemote2AId, returnResponse: true
+      .then (response) ->
+        response extract
+          data extract userRemote2AId, createdAt, updatedAt, id
+          responseProps
+
+        assert.eq
+          responseProps
+          data: {}
+            id, userRemote2AId,  createdAt, updatedAt
+            message:      :Hi
+            userRemote2A: {} createdAt, updatedAt, name: :Frank id: userRemote2AId
+
+        assert.doesNotExist prefetchedRecordsCache.get :userRemote2A userRemote2AId
+
+
+  transition2B: ->
+    # These are IDENTICAL to fullV2 except with *Remote2B* names instead of *Remote* names
+    chainedTest ->
+      pipelines.messageRemote2B.create
+        data:
+          message:            :Hi
+          userRemote2B: name: :Frank
+        returnResponse: true
+      .then (response) ->
+        response.data extract userRemote2BId, createdAt, updatedAt, id
+        assert.eq
+          response.responseProps
+          data:                                         {} id, userRemote2BId,  createdAt, updatedAt, message: :Hi
+          dataUpdates: userRemote2B: [userRemote2BId]:  {}                      createdAt, updatedAt, name:    :Frank  id: userRemote2BId
+
+        {} userRemote2BId, messageRemote2BId: id
+
+    .tapTest "get messageRemote2B" ({messageRemote2BId, userRemote2BId}) ->
+      pipelines.messageRemote2B.get messageRemote2BId, returnResponse: true
+      .then (response) ->
+        response extract
+          data extract userRemote2BId, createdAt, updatedAt, id
+          responseProps
+
+        assert.eq
+          responseProps
+          data:                                         {} id, userRemote2BId,  createdAt, updatedAt, message: :Hi
+          dataUpdates: userRemote2B: [userRemote2BId]:  {}                      createdAt, updatedAt, name:    :Frank  id: userRemote2BId
+
+        assert.exists prefetchedRecordsCache.get :userRemote2B userRemote2BId

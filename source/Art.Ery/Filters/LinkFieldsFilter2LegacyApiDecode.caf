@@ -4,6 +4,7 @@ import &StandardImport, &LinkFieldsFilter2
 # run this AFTER LinkFieldsFilter2 to convert dataUpdates to
 # The old over-the-while protocol: including linked objects inline in their parent objects.
 class LinkFieldsFilter2LegacyApiDecode extends &Filter
+  @location :client
 
   @after
     all: (response) ->
@@ -37,7 +38,7 @@ class LinkFieldsFilter2LegacyApiDecode extends &Filter
 
       record: <Object>
   legacyDecodeB = (linkFields, dataUpdates, record) ->
-    object {idFieldName, pipelineName}, fieldName in linkFields when record[fieldName] into merge record
+    mergeWithoutNulls record, object {idFieldName, pipelineName}, fieldName in linkFields when record[fieldName]
       inlineRecord = record[fieldName]
       vivifyObjectPathAndSet dataUpdates, pipelineName, inlineRecord.id, inlineRecord
       legacyDecode
