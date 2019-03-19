@@ -71,14 +71,30 @@ class Tools
 
     compactFlatten []
       if hasProperties linkFields
+        ## Transition deprication plan
+          1) let's just try transition2A and transition2B on a few pipelines first to see
+            if we missed anything.
+          2) Then, depricate v1 until no more deprication warns
+          3) Then, depricate transition2A until no more deprication warns
+          4) Then, WAIT A FEW MONTHS - for old clients in the wild to update.
+          5) Finally, depricate transition2B until no more deprication warns
+          6) If anyone else was actually using ArtEry, we'd wait here, too,
+            but we could probably just remove
+            all the transition code at this point.
         switch linkFilterVersion
         when :transition2A
+          # USE: convert one pipeline at a time over to this and test. THEN do the same with transition2B.
+          # BREAKING CHANGES: server-side subrequests won't have inline, included records
           []
             # serverSide:
             new LinkFieldsFilter2 fields: linkFields
             new LinkFieldsFilter2LegacyApiEncode
 
         when :transition2B
+          # USE: convert one pipeline at a time over to this and test.
+          # THEN LEAVE IT - this will support old clients while providing full functionality to new clients.
+          # EVENTUALLY, once we have all clients updated for a few months, switch to full v2 with no legacy support.
+          # BREAKING CHANGES: client-side records won't have inline, included records
           []
             # serverSide:
             new LinkFieldsFilter2 fields: linkFields
