@@ -48,10 +48,13 @@ class DataUpdatesFilter extends &Filter
 
       if response.location != :client
         response.context extract dataUpdates, dataDeletes
-        response.with props: merge response.responseProps, {} dataUpdates, dataDeletes
+        # log DataUpdatesFilter1: {} dataUpdates, dataDeletes
+        response.withMergedPropsWithoutNulls {} dataUpdates, dataDeletes
       else
+        # log DataUpdatesFilter2: {} response
         response
     else
+      # log DataUpdatesFilter3: {} response
       getUpdatedUpdates response, response.context
       response
 

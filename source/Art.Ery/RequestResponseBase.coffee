@@ -2,6 +2,7 @@
   timeout
   currentSecond
   log, arrayWith
+  mergeWithoutNulls
   defineModule, merge, isJsonType, isString, isPlainObject, isArray
   inspect
   inspectedObjectLiteral
@@ -425,6 +426,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   withProps:          (props)   -> Promise.resolve(props).then   (props)   => @_with {props, key: props.key, data: props.data}
   withMergedProps:    (props)   -> Promise.resolve(props).then   (props)   => @_with key: props.key, data: props.data, props: merge @props, props
+  withMergedPropsWithoutNulls:    (props)   -> Promise.resolve(props).then   (props)   => @_with key: props.key, data: props.data, props: mergeWithoutNulls @props, props
 
   withSession:        (session) -> Promise.resolve(session).then (session) => @_with {session}
   withMergedSession:  (session) -> Promise.resolve(session).then (session) => @_with session: merge @session, session

@@ -13,3 +13,4 @@ module.exports
   MyRemote:                  require './MyRemote'                 
   SimpleStore:               require './SimpleStore'              
   UserRemote:                require './UserRemote'               
+require './Transition'

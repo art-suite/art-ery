@@ -1,0 +1,11 @@
+import &StandardImport
+
+class UserRemote2A extends &SimpleStore
+  @publicRequestTypes :create :get :update
+
+  @remoteServer :http://localhost:8085
+
+  @addDatabaseFilters
+    linkFilterVersion: :transition2A
+    fields:
+      name: :trimmedString

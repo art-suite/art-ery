@@ -1,0 +1,39 @@
+import &StandardImport
+
+suite: ->
+  chainedTest ->
+    pipelines.messageRemote2A.create
+      data:
+        message:            :Hi
+        userRemote2A: name: :Frank
+      returnResponse: true
+    .then (response) ->
+      response.data extract userRemote2AId, createdAt, updatedAt, id
+      assert.eq
+        response.responseProps
+        data: {}
+          id, userRemote2AId,  createdAt, updatedAt
+          message:  :Hi
+          userRemote2A: {}
+            createdAt
+            updatedAt
+            name:   :Frank
+            id:     userRemote2AId
+
+      {} userRemote2AId, messageRemote2AId: id
+
+  .tapTest "get messageRemote2A" ({messageRemote2AId, userRemote2AId}) ->
+    pipelines.messageRemote2A.get messageRemote2AId, returnResponse: true
+    .then (response) ->
+      response extract
+        data extract userRemote2AId, createdAt, updatedAt, id
+        responseProps
+
+      assert.eq
+        responseProps
+        data: {}
+          id, userRemote2AId,  createdAt, updatedAt
+          message:      :Hi
+          userRemote2A: {} createdAt, updatedAt, name: :Frank id: userRemote2AId
+
+      assert.doesNotExist prefetchedRecordsCache.get :userRemote2A userRemote2AId

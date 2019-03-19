@@ -7,23 +7,32 @@ class LinkFieldsFilter2LegacyApiEncode extends &Filter
 
   @after
     all: (response) ->
-      if response.props extract dataUpdates
+      if response extract responseProps extract dataUpdates
+        dataUpdatesToPurge = {}
 
-        response.withMergedProps
-          data: legacyEncode
-            response.pipelineName
-            dataUpdates
-            response.data
-          dataUpdates: null
+        response.withMergedPropsWithoutNulls {}
+            # ORDER MATTERS - legacyEncodeA must complete before purgeDataUpdates
+            data: legacyEncodeA
+              response.pipelineName
+              dataUpdates
+              response.data
+              dataUpdatesToPurge
+
+            dataUpdates: response.context.dataUpdates = purgeDataUpdates dataUpdates, dataUpdatesToPurge
 
       else
         response
 
-  legacyEncode = (pipelineName, dataUpdates, data) ->
+  ## legacyEncodeA
+    IN:
+      pipelineName: <String>
+      dataUpdates:  <Object> Example: myPipelineName: recordId: record
+      record:       <Object>
+  legacyEncodeA = (pipelineName, dataUpdates, data, dataUpdatesToPurge) ->
     if getLinkedFieldFilterForPipeline(pipelineName) extract linkFields
       switch
-      when data is Array  then array record in data with  legacyEncodeB linkFields, dataUpdates, record
-      when data is Object then                            legacyEncodeB linkFields, dataUpdates, data
+      when data is Array  then array record in data with  legacyEncodeB linkFields, dataUpdates, record, dataUpdatesToPurge
+      when data is Object then                            legacyEncodeB linkFields, dataUpdates, data,   dataUpdatesToPurge
       else data
     else data
 
@@ -36,14 +45,37 @@ class LinkFieldsFilter2LegacyApiEncode extends &Filter
           prefetch: true
           required: true
           autoCreate: true
-
-      dataUpdates: <Object> (Example)
-        myPipelineName: recordId: record
-
-      record: <Object>
-  legacyEncodeB = (linkFields, dataUpdates, record) ->
+  legacyEncodeB = (linkFields, dataUpdates, record, dataUpdatesToPurge) ->
     object {idFieldName, pipelineName} in linkFields into merge record
-      legacyEncode
+      if data = dataUpdates[pipelineName]?[id = record[idFieldName]]
+        (dataUpdatesToPurge[pipelineName]?={})[id] = true
+      legacyEncodeA
         pipelineName
         dataUpdates
-        dataUpdates[pipelineName][record[idFieldName]]
+        data
+        dataUpdatesToPurge
+
+
+  ## purgeDataUpdatesA
+    We have to do this as an extra step because legacyEncodeA
+    may need to fetch the same record more than once.
+
+    OUT:
+      all of dataUpdates that are NOT in dataUpdatesToPurge
+      Empty objects are removed
+      null is returned if there is nothing left
+  purgeDataUpdates = (dataUpdates, dataUpdatesToPurge) ->
+    if hasProperties dataUpdatesToPurge
+      out = {}
+      each records, pipelineName in dataUpdates
+        unless purgeRecords = dataUpdatesToPurge[pipelineName]
+          out[pipelineName] = records
+        else
+          if objectKeyCount(records) != objectKeyCount purgeRecords
+            out[pipelineName] = object record, key in records when !purgeRecords[key]
+      hasProperties(out) && out
+      || null
+    else
+      dataUpdates
+
+

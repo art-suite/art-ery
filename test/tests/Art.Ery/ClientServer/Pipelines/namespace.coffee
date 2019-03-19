@@ -2,3 +2,4 @@
 # file: tests/Art.Ery/ClientServer/Pipelines/namespace.coffee
 
 module.exports = (require '../namespace').addNamespace('Pipelines', class Pipelines extends Neptune.PackageNamespace)
+require './Transition/namespace'

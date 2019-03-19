@@ -64,7 +64,6 @@ class LinkFieldsFilter2 extends &ValidationFilter
       else
         @_prefetchRecords response, response.pipelineName, response.responseData
         .then (dataUpdates) ->
-          # TODO; this is the NEW way; we need to do the backward-compatible-way
           response.withMergedProps {} dataUpdates
 
   ## getLinkedFieldFilterForPipeline
