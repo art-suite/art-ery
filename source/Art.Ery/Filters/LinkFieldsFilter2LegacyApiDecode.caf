@@ -1,4 +1,4 @@
-
+# DOH, we don't need this (I think). LinkFieldsFilter2Transition2BFilter does the job.
 import &StandardImport, &LinkFieldsFilter2
 
 # run this AFTER LinkFieldsFilter2 to convert dataUpdates to
