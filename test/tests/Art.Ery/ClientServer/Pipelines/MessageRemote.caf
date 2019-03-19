@@ -1,0 +1,12 @@
+import &StandardImport
+
+class MessageRemote extends &SimpleStore
+  @publicRequestTypes :create :get :update
+
+  @remoteServer :http://localhost:8085
+
+  @addDatabaseFilters
+    linkFilterVersion: 2
+    fields:
+      userRemote: :autoCreate :link :prefetch
+      message:    :trimmedString

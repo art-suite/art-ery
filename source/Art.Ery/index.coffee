@@ -8,6 +8,7 @@ module.exports
   ArtEryBaseObject:       require './ArtEryBaseObject'      
   Config:                 require './Config'                
   Filter:                 require './Filter'                
+  FilterTools:            require './FilterTools'           
   KeyFieldsMixin:         require './KeyFieldsMixin'        
   Pipeline:               require './Pipeline'              
   PipelineQuery:          require './PipelineQuery'         

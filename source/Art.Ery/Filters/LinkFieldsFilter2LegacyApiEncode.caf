@@ -1,29 +1,29 @@
 
 import &StandardImport, &LinkFieldsFilter2
 
-# run this AFTER LinkFieldsFilter2 to convert prefetchedRecords to
+# run this AFTER LinkFieldsFilter2 to convert dataUpdates to
 # The old over-the-while protocol: including linked objects inline in their parent objects.
 class LinkFieldsFilter2LegacyApiEncode extends &Filter
 
   @after
     all: (response) ->
-      if response.props extract prefetchedRecords
+      if response.props extract dataUpdates
 
         response.withMergedProps
           data: legacyEncode
             response.pipelineName
-            prefetchedRecords
+            dataUpdates
             response.data
-          prefetchedRecords: null
+          dataUpdates: null
 
       else
         response
 
-  legacyEncode = (pipelineName, prefetchedRecords, data) ->
+  legacyEncode = (pipelineName, dataUpdates, data) ->
     if getLinkedFieldFilterForPipeline(pipelineName) extract linkFields
       switch
-      when data is Array  then array record in data with  legacyEncodeB linkFields, prefetchedRecords, record
-      when data is Object then                            legacyEncodeB linkFields, prefetchedRecords, data
+      when data is Array  then array record in data with  legacyEncodeB linkFields, dataUpdates, record
+      when data is Object then                            legacyEncodeB linkFields, dataUpdates, data
       else data
     else data
 
@@ -37,13 +37,13 @@ class LinkFieldsFilter2LegacyApiEncode extends &Filter
           required: true
           autoCreate: true
 
-      prefetchedRecords: <Object> (Example)
+      dataUpdates: <Object> (Example)
         myPipelineName: recordId: record
 
       record: <Object>
-  legacyEncodeB = (linkFields, prefetchedRecords, record) ->
+  legacyEncodeB = (linkFields, dataUpdates, record) ->
     object {idFieldName, pipelineName} in linkFields into merge record
       legacyEncode
         pipelineName
-        prefetchedRecords
-        prefetchedRecords[pipelineName][record[idFieldName]]
+        dataUpdates
+        dataUpdates[pipelineName][record[idFieldName]]

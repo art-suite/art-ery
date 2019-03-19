@@ -5,7 +5,7 @@ class PrefetchedRecordsFilter extends &Filter
 
   constructor: (options) ->
     super
-    @expirationSeconds = options.expirationSeconds ? 5
+    @expirationSeconds = options?.expirationSeconds ? 1
 
   @before
     get: (request) ->
@@ -14,6 +14,6 @@ class PrefetchedRecordsFilter extends &Filter
 
   @after
     all: (response) ->
-      if response.props extract prefetchedRecords
-        prefetchedRecordsCache.addPrefetchedRecords prefetchedRecords, @expirationSeconds
+      if response.props extract dataUpdates
+        prefetchedRecordsCache.addPrefetchedRecords dataUpdates, @expirationSeconds
       response

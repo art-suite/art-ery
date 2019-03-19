@@ -1,0 +1,109 @@
+import &StandardImport, &Filters
+
+Validator extract normalizeFieldProps
+
+class Tools
+  ###
+    TODO: I want to refactor "userOwned":
+
+      Instead of:
+        userOwned: true
+
+      I want to specify the owner-field as:
+        user: "owner"
+
+      That allows the field-name to be customized, but
+      more importantly, it makes it look like all the
+      other field defs (consistency).
+
+      Last, if we treat it as any other field-declaration keyword, we can do:
+        user: "include owner"
+
+    TODO: I want a way to send other options without intermixing them with field-names.
+
+      One idea, fields must be in a fields property:
+
+        @createDatabaseFilters
+          fields:
+            ...
+          otherOptionA:
+          otherOptionB:
+          ...
+
+  ## createDatabaseFilters
+    IN:
+      options:
+        fields: {}
+        userOwned: t/f/{}
+        linkFilterVersion:
+          null, 2, :transition2A, :transition2B
+
+      PipelineClass: <Pipeline> (required)
+  @createDatabaseFilters: (options = {}, PipelineClass) ->
+    if options?.fields
+      options extract
+        fields extract id
+        userOwned, linkFilterVersion
+    else
+      log.warn "ArtEry.Filters.Tools.createDatabaseFilters DEPRICATED: you should now specify fields as: createDatabaseFilters fields: {}"
+      (fields = options) extract? id, userOwned
+
+    if userOwned
+      throw new Error "expecting object or boolean" unless userOwned is Object or userOwned is Boolean
+      fields.user = "" required link
+      fields = objectWithout fields, :userOwned
+
+    if id
+      uniqueIdProps = id
+      fields = objectWithout fields, :id
+
+    linkFields  = {}
+    otherFields = {}
+    addValidationFilter = false
+    otherFields = object v, k in fields
+      if (v = normalizeFieldProps v) extract link
+        linkFields[k]       = v
+        :object
+
+      else
+        addValidationFilter = true
+        v
+
+    compactFlatten []
+      if hasProperties linkFields
+        switch linkFilterVersion
+        when :transition2A
+          []
+            # serverSide:
+            new LinkFieldsFilter2 fields: linkFields
+            new LinkFieldsFilter2LegacyApiEncode
+
+        when :transition2B
+          []
+            # serverSide:
+            new LinkFieldsFilter2 fields: linkFields
+            new LinkFieldsFilter2LegacyApiEncode
+
+            # clientSide:
+            new LinkFieldsFilter2LegacyApiDecode
+            new PrefetchedRecordsFilter
+
+        when 2
+          []
+            # serverSide:
+            new LinkFieldsFilter2 fields: linkFields
+
+            # clientSide:
+            new PrefetchedRecordsFilter
+
+        when null, undefined
+          new LinkFieldsFilter fields: linkFields
+
+        else throw new Error "" invalid linkFilterVersion: #{} formattedInspect linkFilterVersion
+
+      new ValidationFilter fields: otherFields, exclusive: true if addValidationFilter
+      new AfterEventsFilter
+      new DataUpdatesFilter
+      new UniqueIdFilter uniqueIdProps unless present(PipelineClass?._keyFieldsString) && PipelineClass._keyFieldsString != "id"
+      new TimestampFilter
+      new UserOwnedFilter userOwned if userOwned

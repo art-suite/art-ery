@@ -2,6 +2,7 @@ import &StandardImport, &PipelineRegistry, &Config
 
 []
   &Filters
+  &FilterTools
   {}
     config
     pipelines

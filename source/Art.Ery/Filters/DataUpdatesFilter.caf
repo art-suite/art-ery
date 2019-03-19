@@ -1,0 +1,75 @@
+import &StandardImport
+
+###
+  A) Populate context.dataUpdates
+  B) if Neptune.Art.Flux is defined, and this is the root request or resposne
+     Perform 'local updates'
+  TODO:
+    Eventually we will want a way to say that some record updates should not be returned client-side.
+    First pass
+      - data has already gone through the after-pipeline, so any after-filters can removed fields
+        the current user can't see. TODO: create privacy filters
+      - if data is empty, then don't add it to updates. Nothing to add anyway. DONE
+
+class DataUpdatesFilter extends &Filter
+
+  # for subrequests, this will still be on the server
+  # for root requests, there is work to do on both the client and server
+  @location :both
+  @group :outer
+
+  getUpdatedUpdates = (response)->
+    response extract key, type, responseData, pipelineName, context
+
+    if groupName = switch
+        when /^(create|update)/.test type then :dataUpdates
+        when /^delete/.test          type then :dataDeletes
+
+      switch
+      when responseData is Array
+        each record in responseData
+          key = response.pipeline.toKeyString record
+          vivifyObjectPathAndSet context, groupName, pipelineName, key, record
+
+      when key, response.pipeline.isRecord responseData
+        responseData ?=
+          response.pipeline.toKeyObject? key || responseData
+          || {}
+
+        key ?= response.pipeline.toKeyString responseData
+        vivifyObjectPathAndSet context, groupName, pipelineName, key, responseData
+
+    context
+
+  @after all: (response) ->
+    if response.isRootRequest
+      if response.location != :server && Neptune.Art.Flux
+        @applyFluxUpdates response
+
+      if response.location != :client
+        response.context extract dataUpdates, dataDeletes
+        response.with props: merge response.responseProps, {} dataUpdates, dataDeletes
+      else
+        response
+    else
+      getUpdatedUpdates response, response.context
+      response
+
+  applyFluxUpdates: (response) ->
+    # if we are client-side with a remote server, they will be in responseProps
+    # ELSE they will be in context...
+    response extract responseProps, context
+    context.dataUpdates = merge context.dataUpdates, responseProps.dataUpdates
+    context.dataDeletes = merge context.dataDeletes, responseProps.dataDeletes
+
+    getUpdatedUpdates response
+
+    Neptune.Art.Flux extract models
+
+    each dataUpdatesByKey, pipelineName in context.dataUpdates when models[pipelineName]?.dataUpdated is Function
+      each data, key in dataUpdatesByKey
+        models[pipelineName].dataUpdated key, data
+
+    each dataDeletesByKey, pipelineName in context.dataDeletes when models[pipelineName]?.dataDeleted is Function
+      each data, key in dataDeletesByKey
+        models[pipelineName].dataDeleted key, data

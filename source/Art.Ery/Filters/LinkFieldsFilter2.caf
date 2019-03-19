@@ -1,6 +1,7 @@
 import &StandardImport, &PipelineRegistry
 
 class LinkFieldsFilter2 extends &ValidationFilter
+  @location :server
   ## constructor
     IN:
       fields: <Object>
@@ -62,9 +63,19 @@ class LinkFieldsFilter2 extends &ValidationFilter
 
       else
         @_prefetchRecords response, response.pipelineName, response.responseData
-        .then (prefetchedRecords) ->
+        .then (dataUpdates) ->
           # TODO; this is the NEW way; we need to do the backward-compatible-way
-          response.withMergedProps {} prefetchedRecords
+          response.withMergedProps {} dataUpdates
+
+  ## getLinkedFieldFilterForPipeline
+    OUT:
+      a filter with .linkFields field
+      OR: false
+  pipelinesLinkedFieldFilters = {}
+  @getLinkedFieldFilterForPipeline: getLinkedFieldFilterForPipeline = (pipelineName) ->
+    pipelinesLinkedFieldFilters[pipelineName] ?=
+      find filter in pipelines[pipelineName].filters when filter.linkFields
+      || false
 
   ###############
     PRIVATE
@@ -91,7 +102,7 @@ class LinkFieldsFilter2 extends &ValidationFilter
   _setPrefetch: (request, pipelineName, key, value) ->
     # log _setPrefetch: {} pipelineName, key, value
     # throw new Error "not expecting _setPrefetch!"
-    vivifyObjectPathAndSet request.context, :prefetchedRecords pipelineName, key, value
+    vivifyObjectPathAndSet request.context, :dataUpdates pipelineName, key, value
 
   ## _preprocessRequest
     OUT: new request
@@ -104,6 +115,7 @@ class LinkFieldsFilter2 extends &ValidationFilter
         For example, add: or setDefault: values may be specified for updates.
   _preprocessRequest: (request) ->
     processedData = merge request.data
+    preprocessRequestFailure = null
     Promise.all array {idFieldName, autoCreate, pipelineName}, fieldName in @linkFields
       if linkedFieldData = processedData[fieldName]
         Promise.then ->
@@ -111,7 +123,14 @@ class LinkFieldsFilter2 extends &ValidationFilter
             linkedFieldData
           else
             unless autoCreate
-              throw new Error "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedFieldData}"
+              preprocessRequestFailure =
+                request.rejectWithClientFailure
+                  "New record-data provided for #{fieldName}, but autoCreate is not enabled for this field. #{fieldName}: #{formattedInspect linkedFieldData}"
+
+            unless pipelines[pipelineName]
+              preprocessRequestFailure =
+                request.rejectWithClientFailure
+                  "Linked pipeline not found: #{formattedInspect {} pipelineName}"
 
             pipelines[pipelineName].create
               request
@@ -126,21 +145,13 @@ class LinkFieldsFilter2 extends &ValidationFilter
           processedData[idFieldName] = id
           delete processedData[fieldName]
 
-    .then -> request.withData processedData
-
-  ## getLinkedFieldFilterForPipeline
-    OUT:
-      a filter with .linkFields field
-      OR: false
-  pipelinesLinkedFieldFilters = {}
-  @getLinkedFieldFilterForPipeline: getLinkedFieldFilterForPipeline = (pipelineName) ->
-    pipelinesLinkedFieldFilters[pipelineName] ?=
-      find filter in pipelines[pipelineName].filters when filter.linkFields
-      || false
+    .then ->
+      preprocessRequestFailure ?
+      request.withData processedData
 
   _prefetchRecord: (request, pipelineName, key) ->
     Promise.resolve if key?
-      request.context.prefetchedRecords?[pipelineName]?[key] ||
+      request.context.dataUpdates?[pipelineName]?[key] ||
         request.cachedGetWithoutInclude pipelineName, key
         .then (record) -> @_setPrefetch request, pipelineName, key, record
 
@@ -166,4 +177,4 @@ class LinkFieldsFilter2 extends &ValidationFilter
       log.error {} request, pipelineName, data
       throw new Error "expecting object or array"
 
-    .then -> request.context.prefetchedRecords
+    .then -> request.context.dataUpdates

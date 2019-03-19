@@ -28,6 +28,7 @@
 Response = require './Response'
 Request = require './Request'
 Filter = require './Filter'
+FilterTools = require './FilterTools'
 Session = require './Session'
 {config} = require './Config'
 Filters = require './Filters'
@@ -71,7 +72,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
   @getAliases: -> @_aliases || {}
 
   @addDatabaseFilters: (options) ->
-    @filter Filters.createDatabaseFilters options, @
+    @filter FilterTools.createDatabaseFilters options, @
 
   toKeyString: (key) ->
     return key unless key?

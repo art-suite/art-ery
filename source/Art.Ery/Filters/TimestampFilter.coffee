@@ -3,9 +3,7 @@ Filter = require '../Filter'
 
 defineModule module, class TimestampFilter extends Filter
 
-  constructor: ->
-    super
-    @group = "outer"
+  @group "outer"
 
   # NOTE: This filter is generally added BEFORE the ValidationFitler, so it won't get preprocessed.
   @before

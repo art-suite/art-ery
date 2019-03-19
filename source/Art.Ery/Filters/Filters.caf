@@ -1,0 +1,3 @@
+# for testing
+_resetFilters: ->
+  &AfterEventsFilter._reset()

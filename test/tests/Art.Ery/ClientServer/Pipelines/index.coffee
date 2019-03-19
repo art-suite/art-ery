@@ -9,5 +9,7 @@ module.exports
   CompoundKeys:              require './CompoundKeys'             
   DataUpdatesFilterPipeline: require './DataUpdatesFilterPipeline'
   FilterLocation:            require './FilterLocation'           
+  MessageRemote:             require './MessageRemote'            
   MyRemote:                  require './MyRemote'                 
   SimpleStore:               require './SimpleStore'              
+  UserRemote:                require './UserRemote'               

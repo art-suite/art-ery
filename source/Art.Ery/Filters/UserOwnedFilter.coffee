@@ -3,6 +3,7 @@
 Filter = require '../Filter'
 
 defineModule module, class UserOwnedFilter extends Filter
+  @group "outer"
 
   @isOwner: isOwner = (request, data) ->
     {userId} = request.session
@@ -17,7 +18,6 @@ defineModule module, class UserOwnedFilter extends Filter
   constructor: (options) ->
     super
     {@userUpdatableFields, @userCreatableFields, @publicFields} = options || {}
-    @group = "outer"
 
   @getter "userUpdatableFields userCreatableFields publicFields"
 

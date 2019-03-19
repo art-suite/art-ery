@@ -13,7 +13,6 @@ module.exports
   LinkFieldsFilter2LegacyApiEncode: require './LinkFieldsFilter2LegacyApiEncode'
   PrefetchedRecordsFilter:          require './PrefetchedRecordsFilter'         
   TimestampFilter:                  require './TimestampFilter'                 
-  Tools:                            require './Tools'                           
   UniqueIdFilter:                   require './UniqueIdFilter'                  
   UserOwnedFilter:                  require './UserOwnedFilter'                 
   UuidFilter:                       require './UuidFilter'                      

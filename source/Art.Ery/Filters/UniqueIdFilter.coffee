@@ -7,6 +7,7 @@ Crypto = require 'crypto'
 secret = randomString()
 
 defineModule module, class UniqueIdFilter extends Filter
+  @group "outer"
 
   ###
   choosing bits:
@@ -37,7 +38,6 @@ defineModule module, class UniqueIdFilter extends Filter
     @bits = options?.bits || 70
     throw new Error "too many bits: #{@bits}. max = 256" unless @bits <= 256
     @numChars = ceil @bits / log2_62
-    @group = "outer"
 
   @uuid: uuid = -> Uuid.v4()
 

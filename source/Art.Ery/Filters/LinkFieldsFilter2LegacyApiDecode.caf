@@ -1,7 +1,7 @@
 
 import &StandardImport, &LinkFieldsFilter2
 
-# run this AFTER LinkFieldsFilter2 to convert prefetchedRecords to
+# run this AFTER LinkFieldsFilter2 to convert dataUpdates to
 # The old over-the-while protocol: including linked objects inline in their parent objects.
 class LinkFieldsFilter2LegacyApiDecode extends &Filter
 
@@ -10,15 +10,15 @@ class LinkFieldsFilter2LegacyApiDecode extends &Filter
       response.withMergedProps
         data: legacyDecode
           response.pipelineName
-          prefetchedRecords = {}
+          dataUpdates = {}
           response.data
-        prefetchedRecords: prefetchedRecords
+        dataUpdates: dataUpdates
 
-  legacyDecode = (pipelineName, prefetchedRecords, data) ->
+  legacyDecode = (pipelineName, dataUpdates, data) ->
     if getLinkedFieldFilterForPipeline(pipelineName) extract linkFields
       switch
-      when data is Array  then array record in data with  legacyDecodeB linkFields, prefetchedRecords, record
-      when data is Object then                            legacyDecodeB linkFields, prefetchedRecords, data
+      when data is Array  then array record in data with  legacyDecodeB linkFields, dataUpdates, record
+      when data is Object then                            legacyDecodeB linkFields, dataUpdates, data
       else data
     else data
 
@@ -32,16 +32,16 @@ class LinkFieldsFilter2LegacyApiDecode extends &Filter
           required: true
           autoCreate: true
 
-      prefetchedRecords: <Object> (Example)
+      dataUpdates: <Object> (Example)
         myPipelineName: recordId: record
 
       record: <Object>
-  legacyDecodeB = (linkFields, prefetchedRecords, record) ->
+  legacyDecodeB = (linkFields, dataUpdates, record) ->
     object {idFieldName, pipelineName}, fieldName in linkFields when record[fieldName] into merge record
       inlineRecord = record[fieldName]
-      vivifyObjectPathAndSet prefetchedRecords, pipelineName, inlineRecord.id, inlineRecord
+      vivifyObjectPathAndSet dataUpdates, pipelineName, inlineRecord.id, inlineRecord
       legacyDecode
         pipelineName
-        prefetchedRecords
+        dataUpdates
         inlineRecord
       null
