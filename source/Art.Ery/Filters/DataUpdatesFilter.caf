@@ -76,7 +76,7 @@ class DataUpdatesFilter extends &Filter
       @applyFluxDataDeletes updateDataUpdatesContext(response, {}).dataDeletes
 
   @getter
-    models: -> Neptune.Art.Flux.models
+    models: -> Neptune.Art.Flux?.models
 
   applyFluxDataUpdates: (dataUpdates) ->
     each dataUpdatesByKey, pipelineName in dataUpdates when @models[pipelineName]?.dataUpdated is Function
