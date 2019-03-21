@@ -1,17 +1,14 @@
-{log, createWithPostCreate, isString, Validator, merge} = require 'art-foundation'
-{clientFailureNotAuthorized} = require 'art-communication-status'
-{pipelines, session} = Neptune.Art.Ery
-{UserOwnedFilter} = Neptune.Art.Ery.Filters
+import &StandardImport, {} &SimplePipeline
 SimplePipeline = require '../SimplePipeline'
 
 userIdObject = userId: "abc123"
-wrongUserSession = userId: "wrongDude123"
+wrongUserSession = userId: "wrongUserId123"
 
-module.exports = suite:
+suite:
   basic: ->
 
     test "doesn't set any fields", ->
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter UserOwnedFilter
 
       assert.eq MyPipeline.getFields(), {}
@@ -19,14 +16,14 @@ module.exports = suite:
   create: ->
     test "create OK when userId == session.userId", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter UserOwnedFilter
 
       (new MyPipeline).create data: userIdObject
 
     test "create without userId sets it to session.userId", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter UserOwnedFilter
 
       (new MyPipeline).create data: {}
@@ -36,7 +33,7 @@ module.exports = suite:
 
     test "create FAIL when userId != session.userId", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter UserOwnedFilter
 
       assert.rejects (new MyPipeline).create data: userId: "WRONG ANSWER!"
@@ -44,21 +41,21 @@ module.exports = suite:
   userCreatableFields: ->
     test "pass", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userCreatableFields: foo: true
 
       (new MyPipeline).create data: merge userIdObject, foo: "hi"
 
     test "no data", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userCreatableFields: foo: true
 
       (new MyPipeline).create()
 
     test "fail", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userCreatableFields: foo: true
 
       assert.rejects (new MyPipeline).create data: merge userIdObject, bar: "hi"
@@ -66,7 +63,7 @@ module.exports = suite:
 
     test "addDatabaseFilters", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @addDatabaseFilters
           fields:
             foo: "string"
@@ -81,14 +78,14 @@ module.exports = suite:
 
     test "create with key is clientFailure", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userUpdatableFields: foo: true
 
       assert.clientFailure pipelines.myPipeline.create data: userIdObject, key: "foo"
 
     test "fail to create with different userId", ->
       session.data = wrongUserSession
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userUpdatableFields: foo: true
 
       assert.clientFailureNotAuthorized pipelines.myPipeline.create data: userIdObject
@@ -96,7 +93,7 @@ module.exports = suite:
   userUpdatableFields: ->
     test "success to update foo", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userUpdatableFields: foo: true
 
       pipelines.myPipeline.create data: userIdObject
@@ -106,7 +103,7 @@ module.exports = suite:
           data: foo: "hi"
 
     test "clientFailureNotAuthorized to update foo if wrong user", ->
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userUpdatableFields: foo: true
 
       pipelines.myPipeline.create data: userIdObject
@@ -118,7 +115,7 @@ module.exports = suite:
 
     test "clientFailureNotAuthorized to update bar", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userUpdatableFields: foo: true
 
       pipelines.myPipeline.create data: userIdObject
@@ -129,7 +126,7 @@ module.exports = suite:
 
     test "addDatabaseFilters", ->
       session.data = userIdObject
-      createWithPostCreate class MyPipeline extends SimplePipeline
+      class MyPipeline extends SimplePipeline
         @addDatabaseFilters
           fields:
             foo: "string"
@@ -145,3 +142,27 @@ module.exports = suite:
           assert.clientFailureNotAuthorized pipelines.myPipeline.update
             key: id
             data: bar: "hi"
+
+  requireUserCanUpdateOverride: ->
+    chainedTest ->
+      session.data = userIdObject
+      class MyPipeline extends SimplePipeline
+        @filter new UserOwnedFilter
+          requireUserCanUpdate: (request, existingRecord, updatingFields) ->
+            request.requireServerOriginOr
+              request.session.userId &&
+                request.session.userId == :magicUserId123 ||
+                request.session.userId == existingRecord.userId
+
+      pipelines.myPipeline.create data: userIdObject
+    .tapTest "success - update my own record" ({id}) ->
+      pipelines.myPipeline.update id, data: foo: "hi"
+
+    .tapTest "fail - I'm the wrong user" ({id}) ->
+      session.data = wrongUserSession
+      assert.clientFailureNotAuthorized pipelines.myPipeline.update id, data: foo: "hi"
+
+    .tapTest "success - magic user and update my own record" ({id}) ->
+      session.data = userId: :magicUserId123
+
+      pipelines.myPipeline.update id, data: foo: "hi"

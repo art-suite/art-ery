@@ -13,7 +13,7 @@ import &StandardImport
       Some other user who has limited admin access.
       Generally, these user-admins have the same level of access as
       the owner themselves, but perhaps not.
-      CUSTOMIE WITH: override options.requireUserCanUpdateRecord
+      CUSTOMIZE WITH: override options.requireUserCanUpdate
 defineModule module, class UserOwnedFilter extends &Filter
   @group :outer
 
@@ -26,7 +26,7 @@ defineModule module, class UserOwnedFilter extends &Filter
         NOTE: you can force the defaultPublicFields to be private by passing in
           said fields with (false) as the value.
 
-      requireUserCanUpdateRecord: (override) see overidden function below for signature
+      requireUserCanUpdate: (override) see overidden function below for signature
 
     <Fields>:
       true: all fields allowed
@@ -48,8 +48,8 @@ defineModule module, class UserOwnedFilter extends &Filter
     @publicFields        = options?.publicFields
 
     ## apply instance-only override
-    if override = options?.requireUserCanUpdateRecord
-      @requireUserCanUpdateRecord = override
+    if override = options?.requireUserCanUpdate
+      @requireUserCanUpdate = override
 
   @getter :userUpdatableFields :userCreatableFields :publicFields
 
@@ -63,7 +63,7 @@ defineModule module, class UserOwnedFilter extends &Filter
   #######################
     OVERRIDES
   #######################
-  ## requireUserCanUpdateRecord
+  ## requireUserCanUpdate
     IN:
       request:        <Request> the update request (type matches /^update.*$/)
       existingRecord: <Object> the current value for the record as-fetched with request.pipeline.get request.key
@@ -77,7 +77,7 @@ defineModule module, class UserOwnedFilter extends &Filter
     OUT:
       authorized:     Promise.then -> request
       not-authorized: Promise.rehect -> response-with-clientFailureNotAuthorized
-  requireUserCanUpdateRecord: (request, existingRecord, updatingFields) ->
+  requireUserCanUpdate: (request, existingRecord, updatingFields) ->
     @_requireIsOwner request, existingRecord
 
 
@@ -102,7 +102,7 @@ defineModule module, class UserOwnedFilter extends &Filter
         .then -> request.cachedGet request.pipelineName, request.key
         .then (existingRecord) ->
           @_requireUserIdDidntChange request, existingRecord
-          .then -> @requireUserCanUpdateRecord request, existingRecord, updatingFields
+          .then -> @requireUserCanUpdate request, existingRecord, updatingFields
 
       else request
 
