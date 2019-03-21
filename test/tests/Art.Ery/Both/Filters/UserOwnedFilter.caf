@@ -143,6 +143,26 @@ suite:
             key: id
             data: bar: "hi"
 
+  delete: ->
+    test "owner can delete" ->
+      session.data = userIdObject
+      class MyPipeline extends SimplePipeline
+        @filter new UserOwnedFilter userUpdatableFields: foo: true
+
+      pipelines.myPipeline.create data: userIdObject
+      .then ({id}) ->
+        pipelines.myPipeline.delete id
+
+    test "non-owner can not delete" ->
+      session.data = userIdObject
+      class MyPipeline extends SimplePipeline
+        @filter new UserOwnedFilter userUpdatableFields: foo: true
+
+      pipelines.myPipeline.create data: userIdObject
+      .then ({id}) ->
+        session.data = wrongUserSession
+        assert.clientFailureNotAuthorized pipelines.myPipeline.delete id
+
   requireUserCanUpdateOverride: ->
     chainedTest ->
       session.data = userIdObject
@@ -150,9 +170,8 @@ suite:
         @filter new UserOwnedFilter
           requireUserCanUpdate: (request, existingRecord, updatingFields) ->
             request.requireServerOriginOr
-              request.session.userId &&
-                request.session.userId == :magicUserId123 ||
-                request.session.userId == existingRecord.userId
+              request.session.userId == :magicUserId123 ||
+              request.session.userId == existingRecord.userId
 
       pipelines.myPipeline.create data: userIdObject
     .tapTest "success - update my own record" ({id}) ->
@@ -162,7 +181,32 @@ suite:
       session.data = wrongUserSession
       assert.clientFailureNotAuthorized pipelines.myPipeline.update id, data: foo: "hi"
 
-    .tapTest "success - magic user and update my own record" ({id}) ->
+    .tapTest "success - magic user can update my record" ({id}) ->
       session.data = userId: :magicUserId123
 
       pipelines.myPipeline.update id, data: foo: "hi"
+
+  requireUserCanDeleteOverride: ->
+    chainedTest ->
+      session.data = userIdObject
+      class MyPipeline extends SimplePipeline
+        @filter new UserOwnedFilter
+          requireUserCanDelete: (request, existingRecord, updatingFields) ->
+            request.requireServerOriginOr
+              request.session.userId == :magicUserId123 ||
+              request.session.userId == existingRecord.userId
+
+      pipelines.myPipeline.create data: userIdObject
+
+    .thenTest "success - can delete my own record" ({id}) ->
+      pipelines.myPipeline.delete id
+      pipelines.myPipeline.create data: userIdObject
+
+    .tapTest "fail - I'm the wrong user" ({id}) ->
+      session.data = wrongUserSession
+      assert.clientFailureNotAuthorized pipelines.myPipeline.update id, data: foo: "hi"
+
+    .tapTest "success - magic user can delete my record" ({id}) ->
+      session.data = userId: :magicUserId123
+
+      pipelines.myPipeline.delete id

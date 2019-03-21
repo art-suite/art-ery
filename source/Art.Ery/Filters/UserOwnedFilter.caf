@@ -51,6 +51,9 @@ defineModule module, class UserOwnedFilter extends &Filter
     if override = options?.requireUserCanUpdate
       @requireUserCanUpdate = override
 
+    if override = options?.requireUserCanDelete
+      @requireUserCanDelete = override
+
   @getter :userUpdatableFields :userCreatableFields :publicFields
 
   defaultPublicFields = :id :userId :createdAt :updatedAt
@@ -70,9 +73,11 @@ defineModule module, class UserOwnedFilter extends &Filter
       updatingFields: <Object> all the fields that will be modified
         NOTE: values could be REPLACE-values, ADD-values or others
           All present keys should be assumed to modify that field in some way.
-        NOTE: all updatingFields have ALREADY been validated to be @userUpdatableFields
-          meaning fields the OWNER can update.
         COMPUTED VIA: request.pipeline.getFieldsRequestWillModify request
+
+    GUARANTEES:
+      * request.session.userId? == true
+      * all updatingFields are allowed for the record's owner
 
     OUT:
       authorized:     Promise.then -> request
@@ -80,6 +85,8 @@ defineModule module, class UserOwnedFilter extends &Filter
   requireUserCanUpdate: (request, existingRecord, updatingFields) ->
     @_requireIsOwner request, existingRecord
 
+  requireUserCanDelete: (request, existingRecord) ->
+    @_requireIsOwner request, existingRecord
 
   #######################
     FILTER
@@ -90,19 +97,27 @@ defineModule module, class UserOwnedFilter extends &Filter
       update*: authorize
     all: (request) ->
       switch
-      when request.originatedOnServer then request
+      when request.originatedOnServer then _vivifyUserId request
       when /^create/.test request.type
-        request.require !request.key?, "" request.key not expected for create
+        request.requireServerOriginOr request.session.userId?
         .then -> @_requireAllDataFieldsAllowed request, @userCreatableFields
-        .then -> request.withMergedData userId: request.data?.userId || request.session.userId
+        .then -> request.require !request.key?, "" request.key not expected for create
+        .then -> _vivifyUserId request
         .then (request) -> @_requireIsOwner request, request.data
 
-      when /^(update|delete)/.test request.type
+      when /^(update)/.test request.type
+
         @_requireAllDataFieldsAllowed request, @userUpdatableFields, updatingFields = request.pipeline.getFieldsRequestWillModify request
+        .then -> request.requireServerOriginOr request.session.userId?
         .then -> request.cachedGet request.pipelineName, request.key
         .then (existingRecord) ->
           @_requireUserIdDidntChange request, existingRecord
           .then -> @requireUserCanUpdate request, existingRecord, updatingFields
+
+      when /^(delete)/.test request.type
+        request.requireServerOriginOr request.session.userId?
+        .then -> request.cachedGet request.pipelineName, request.key
+        .then (existingRecord) -> @requireUserCanDelete request, existingRecord
 
       else request
 
@@ -151,6 +166,12 @@ defineModule module, class UserOwnedFilter extends &Filter
     else throw new Error "" invalid field input: #{} formattedInspect fieldsInput
 
   prasedDefaultPublicFields = parseFields defaultPublicFields
+
+  _vivifyUserId = (request) ->
+    if /^create/i.test request.type
+      request.withMergedData userId: request.data?.userId || request.session.userId
+    else
+      request
 
   _requireAllDataFieldsAllowed: (request, allowedFields, dataFields = request.data) ->
     switch
