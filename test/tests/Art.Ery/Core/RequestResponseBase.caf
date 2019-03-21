@@ -15,17 +15,17 @@ suite:
         .rejectIfErrors null
 
       test "clientFailure with string" ->
-        assert.isClientFailure
+        assert.clientFailure
           newRequest()
           .rejectIfErrors "my error"
 
       test "clientFailure with []" ->
-        assert.isClientFailure
+        assert.clientFailure
           newRequest()
           .rejectIfErrors []
 
       test "clientFailure with [string]" ->
-        assert.isClientFailure
+        assert.clientFailure
           newRequest()
           .rejectIfErrors ["my error"]
 
@@ -67,12 +67,12 @@ suite:
       require: ->
         test "true - resolved" -> newRequest().require true
         test "Promise.resolve(true) - resolved" -> newRequest().require Promise.resolve true
-        test "clientFailure" -> assert.isClientFailure newRequest().require false
+        test "clientFailure" -> assert.clientFailure newRequest().require false
 
       rejectIf: ->
         test "false - resolved" -> newRequest().rejectIf false
         test "Promise.resolve(false) - resolved" -> newRequest().rejectIf Promise.resolve false
-        test "clientFailure" -> assert.isClientFailure newRequest().rejectIf true
+        test "clientFailure" -> assert.clientFailure newRequest().rejectIf true
 
       requiredFields: ->
         test "a: true, b: false >>> resolved" ->
@@ -80,7 +80,7 @@ suite:
           .then (out) -> assert.eq out, a: true, b: false
 
         test "a: null, b: false >>> clientFailure" ->
-          assert.isClientFailure newRequest().requiredFields alpha: null, beta: false
+          assert.clientFailure newRequest().requiredFields alpha: null, beta: false
           .then (rejectsWith) ->
             assert.match rejectsWith.info.response.data.message, /missing.*alpha/
 
@@ -88,17 +88,17 @@ suite:
     requireServerOrigins:
       requireServerOrigin: ->
         test "originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOrigin()
-        test "originatedOnServer: false >>> clientFailure" -> assert.isClientFailure newRequest().requireServerOrigin()
+        test "originatedOnServer: false >>> clientFailureNotAuthorized" -> assert.clientFailureNotAuthorized newRequest().requireServerOrigin()
 
       requireServerOriginIf: ->
         test "true,   originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginIf true
         test "false,  originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginIf false
-        test "true,   originatedOnServer: false >>> clientFailure" -> assert.isClientFailure newRequest().requireServerOriginIf true
+        test "true,   originatedOnServer: false >>> clientFailureNotAuthorized" -> assert.clientFailureNotAuthorized newRequest().requireServerOriginIf true
         test "false,  originatedOnServer: false >>> resolved" -> newRequest().requireServerOriginIf false
 
         test "Promise.resolve(true ),  originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginIf       Promise.resolve true
         test "Promise.resolve(false),  originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginIf       Promise.resolve false
-        test "Promise.resolve(true ),  originatedOnServer: false >>> clientFailure" -> assert.isClientFailure newRequest().requireServerOriginIf  Promise.resolve true
+        test "Promise.resolve(true ),  originatedOnServer: false >>> clientFailureNotAuthorized" -> assert.clientFailureNotAuthorized newRequest().requireServerOriginIf  Promise.resolve true
         test "Promise.resolve(false),  originatedOnServer: false >>> resolved" -> newRequest().requireServerOriginIf                              Promise.resolve false
 
         test "-> not invoked, originatedOnServer: true >>> resolved" ->
@@ -111,11 +111,11 @@ suite:
         test "true,   originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginOr true
         test "false,  originatedOnServer: true >>> resolved" -> newRequest(originatedOnServer: true).requireServerOriginOr false
         test "true,   originatedOnServer: false >>> resolved" -> newRequest().requireServerOriginOr true
-        test "false,  originatedOnServer: false >>> clientFailure" -> assert.isClientFailure newRequest().requireServerOriginOr false
+        test "false,  originatedOnServer: false >>> clientFailureNotAuthorized" -> assert.clientFailureNotAuthorized newRequest().requireServerOriginOr false
 
         test "Promise.resolve(true ),  originatedOnServer: true >>> resolved" ->        newRequest(originatedOnServer: true).requireServerOriginIf  Promise.resolve true
         test "Promise.resolve(false),  originatedOnServer: true >>> resolved" ->        newRequest(originatedOnServer: true).requireServerOriginIf  Promise.resolve false
-        test "Promise.resolve(true ),  originatedOnServer: false >>> clientFailure" ->  assert.isClientFailure newRequest().requireServerOriginIf   Promise.resolve true
+        test "Promise.resolve(true ),  originatedOnServer: false >>> clientFailureNotAuthorized" ->  assert.clientFailureNotAuthorized newRequest().requireServerOriginIf   Promise.resolve true
         test "Promise.resolve(false),  originatedOnServer: false >>> resolved" ->       newRequest().requireServerOriginIf                          Promise.resolve false
 
         test "-> not invoked, originatedOnServer: true >>> resolved" ->

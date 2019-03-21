@@ -79,7 +79,7 @@ module.exports = suite:
       {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
         @addDatabaseFilters
           userOwned: true
-          myField: "strings"
+          fields: myField: "strings"
 
       assert.eq (array myPipeline.filters, (v) -> v.name), w "
         LinkFieldsFilter
@@ -104,7 +104,7 @@ module.exports = suite:
     test "updatedAt preprocessor", ->
       {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
         @addDatabaseFilters
-          myField: "strings"
+          fields: myField: "strings"
 
       myPipeline.create data: myField: "foo"
       .then ({id, createdAt, updatedAt}) ->

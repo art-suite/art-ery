@@ -5,6 +5,8 @@
 SimplePipeline = require '../SimplePipeline'
 
 userIdObject = userId: "abc123"
+wrongUserSession = userId: "wrongDude123"
+
 module.exports = suite:
   basic: ->
 
@@ -66,8 +68,9 @@ module.exports = suite:
       session.data = userIdObject
       createWithPostCreate class MyPipeline extends SimplePipeline
         @addDatabaseFilters
-          foo: "string"
-          bar: "string"
+          fields:
+            foo: "string"
+            bar: "string"
           userOwned: userCreatableFields: foo: true
 
       pipelines.myPipeline.create data: merge userIdObject, foo: "hi"
@@ -75,8 +78,23 @@ module.exports = suite:
         assert.rejects pipelines.myPipeline.create data: merge userIdObject, bar: "hi"
         .then (rejectedWith) -> assert.eq rejectedWith.info.response.status, clientFailureNotAuthorized
 
+
+    test "create with key is clientFailure", ->
+      session.data = userIdObject
+      createWithPostCreate class MyPipeline extends SimplePipeline
+        @filter new UserOwnedFilter userUpdatableFields: foo: true
+
+      assert.clientFailure pipelines.myPipeline.create data: userIdObject, key: "foo"
+
+    test "fail to create with different userId", ->
+      session.data = wrongUserSession
+      createWithPostCreate class MyPipeline extends SimplePipeline
+        @filter new UserOwnedFilter userUpdatableFields: foo: true
+
+      assert.clientFailureNotAuthorized pipelines.myPipeline.create data: userIdObject
+
   userUpdatableFields: ->
-    test "pass", ->
+    test "success to update foo", ->
       session.data = userIdObject
       createWithPostCreate class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userUpdatableFields: foo: true
@@ -87,26 +105,35 @@ module.exports = suite:
           key: id
           data: foo: "hi"
 
-    test "fail", ->
+    test "clientFailureNotAuthorized to update foo if wrong user", ->
+      createWithPostCreate class MyPipeline extends SimplePipeline
+        @filter new UserOwnedFilter userUpdatableFields: foo: true
+
+      pipelines.myPipeline.create data: userIdObject
+      .then ({id}) ->
+        session.data = wrongUserSession
+        assert.clientFailureNotAuthorized pipelines.myPipeline.update
+          key: id
+          data: foo: "hi"
+
+    test "clientFailureNotAuthorized to update bar", ->
       session.data = userIdObject
       createWithPostCreate class MyPipeline extends SimplePipeline
         @filter new UserOwnedFilter userUpdatableFields: foo: true
 
       pipelines.myPipeline.create data: userIdObject
       .then ({id}) ->
-        assert.rejects pipelines.myPipeline.create
+        assert.clientFailureNotAuthorized pipelines.myPipeline.update
           key: id
           data: bar: "hi"
-        .then (rejectedWith) ->
-          {status} = rejectedWith.info.response
-          assert.eq status, clientFailureNotAuthorized
 
     test "addDatabaseFilters", ->
       session.data = userIdObject
       createWithPostCreate class MyPipeline extends SimplePipeline
         @addDatabaseFilters
-          foo: "string"
-          bar: "string"
+          fields:
+            foo: "string"
+            bar: "string"
           userOwned: userUpdatableFields: foo: true
 
       pipelines.myPipeline.create data: userIdObject
@@ -115,7 +142,6 @@ module.exports = suite:
           key: id
           data: foo: "hi"
         .then ->
-          assert.rejects pipelines.myPipeline.update
+          assert.clientFailureNotAuthorized pipelines.myPipeline.update
             key: id
             data: bar: "hi"
-          .then (rejectedWith) -> assert.eq rejectedWith.info.response.status, clientFailureNotAuthorized

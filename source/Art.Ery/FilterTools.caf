@@ -2,7 +2,7 @@ import &StandardImport, &Filters
 
 Validator extract normalizeFieldProps
 
-class Tools
+class FilterTools
   ###
     TODO: I want to refactor "userOwned":
 

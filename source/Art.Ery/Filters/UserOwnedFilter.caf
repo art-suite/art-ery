@@ -1,0 +1,173 @@
+import &StandardImport
+
+## UserOwnedFilter
+  Handles Authroization for records which have a specific owner specified by the 'userId' field.
+  There are generally these levels of authroization in most systems:
+    admin:  can do anything
+    owner:  can do almost everything
+      except: create records they don't own or transfer ownership of their records to someone else
+      OR, sometimes there are app-specific fields which are maintained by the system the
+      record-owner is not allowed to edit. These may be counts or other such aggregates.
+      CUSTOMIZE WITH: options.userUpdatableFields and options.userCreatableFields
+    user-admin:
+      Some other user who has limited admin access.
+      Generally, these user-admins have the same level of access as
+      the owner themselves, but perhaps not.
+      CUSTOMIE WITH: override options.requireUserCanUpdateRecord
+defineModule module, class UserOwnedFilter extends &Filter
+  @group :outer
+
+  ## constructor
+    IN: options:
+      TODO: we should DEPRICATE user*Fields and call them owner*Fields - it's more clear
+      userUpdatableFields: <Fields> (Default: true -- all fields allowed; userId is handled specially)
+      userCreatableFields: <Fields> (Default: true -- all fields allowed; userId is handled specially)
+      publicFields:        <Fields> (merged-over-DEFAULT: defaultPublicFields)
+        NOTE: you can force the defaultPublicFields to be private by passing in
+          said fields with (false) as the value.
+
+      requireUserCanUpdateRecord: (override) see overidden function below for signature
+
+    <Fields>:
+      true: all fields allowed
+      OR:
+      normalized-FROM:
+        singleton or or, arbitrarilly nested arrays of:
+          object: fieldName: truthish
+          string: broken into words with ArtStandardLib.w, and used as a field-name-list; values are set to (true)
+        All fieldNames that end in /Id$/ will ALSO add the field without the trailing /Id$/
+          e.g.: 'postId' will add both 'postId' and 'post'
+      noramlized-TO: <Object> fieldName: truthish
+        Only truish values are considered 'allowed'
+  constructor: (options) ->
+    super
+    # Caf should support:
+    # options extract? @userUpdatableFields ?= true, @userCreatableFields ?= true, @publicFields
+    @userUpdatableFields = options?.userUpdatableFields ? true
+    @userCreatableFields = options?.userCreatableFields ? true
+    @publicFields        = options?.publicFields
+
+    ## apply instance-only override
+    if override = options?.requireUserCanUpdateRecord
+      @requireUserCanUpdateRecord = override
+
+  @getter :userUpdatableFields :userCreatableFields :publicFields
+
+  defaultPublicFields = :id :userId :createdAt :updatedAt
+
+  @setter
+    publicFields:        (fieldString) -> @_publicFields        = expandPossiblyLinkedFields parseFields fieldString, merge prasedDefaultPublicFields
+    userUpdatableFields: (fieldString) -> @_userUpdatableFields = expandPossiblyLinkedFields parseFields fieldString
+    userCreatableFields: (fieldString) -> @_userCreatableFields = expandPossiblyLinkedFields parseFields fieldString, userId: true
+
+  #######################
+    OVERRIDES
+  #######################
+  ## requireUserCanUpdateRecord
+    IN:
+      request:        <Request> the update request (type matches /^update.*$/)
+      existingRecord: <Object> the current value for the record as-fetched with request.pipeline.get request.key
+      updatingFields: <Object> all the fields that will be modified
+        NOTE: values could be REPLACE-values, ADD-values or others
+          All present keys should be assumed to modify that field in some way.
+        NOTE: all updatingFields have ALREADY been validated to be @userUpdatableFields
+          meaning fields the OWNER can update.
+        COMPUTED VIA: request.pipeline.getFieldsRequestWillModify request
+
+    OUT:
+      authorized:     Promise.then -> request
+      not-authorized: Promise.rehect -> response-with-clientFailureNotAuthorized
+  requireUserCanUpdateRecord: (request, existingRecord, updatingFields) ->
+    @_requireIsOwner request, existingRecord
+
+
+  #######################
+    FILTER
+  #######################
+  @before
+    ## all
+      create*: authorize and auto-set userId if not set
+      update*: authorize
+    all: (request) ->
+      switch
+      when request.originatedOnServer then request
+      when /^create/.test request.type
+        request.require !request.key?, "" request.key not expected for create
+        .then -> @_requireAllDataFieldsAllowed request, @userCreatableFields
+        .then -> request.withMergedData userId: request.data?.userId || request.session.userId
+        .then (request) -> @_requireIsOwner request, request.data
+
+      when /^(update|delete)/.test request.type
+        @_requireAllDataFieldsAllowed request, @userUpdatableFields, updatingFields = request.pipeline.getFieldsRequestWillModify request
+        .then -> request.cachedGet request.pipelineName, request.key
+        .then (existingRecord) ->
+          @_requireUserIdDidntChange request, existingRecord
+          .then -> @requireUserCanUpdateRecord request, existingRecord, updatingFields
+
+      else request
+
+  @after
+    all: (response) ->
+      switch
+      when response.originatedOnServer || @publicFields == true
+        response
+      when response.data?
+        response.session extract userId
+        allowedFields = @publicFields
+
+        response.withTransformedRecords
+          when: (record) -> response.pipeline.isRecord(record) && record.userId != userId
+          with: (record) ->
+            if find  v, k in record when allowedFields[k]
+              object v, k in record when allowedFields[k]
+      else response
+
+  #######################
+    PRIVATE
+  #######################
+  tailIdRegExp = /Id$/
+  expandPossiblyLinkedFields = (fields) ->
+    return true if fields == true
+    each value, name in fields when tailIdRegExp.test name
+      [root] = name.split tailIdRegExp
+      fields[root] ?= value
+    fields
+
+  ownershipInfo = (request, data) ->
+    {userId} = request.session
+    data ||= request.data
+    formattedInspect {}
+      request.key
+      you:          userId
+      recordOwner:  data?.userId
+
+  parseFields = (fieldsInput, out = {})->
+    switch
+    when fieldsInput == true    then true
+    when !fieldsInput?          then out
+    when fieldsInput is Object  then object fieldsInput into out
+    when fieldsInput is String  then object w fieldsInput into out with true
+    when fieldsInput is Array   then each element in fieldsInput into out with parseFields element, out
+    else throw new Error "" invalid field input: #{} formattedInspect fieldsInput
+
+  prasedDefaultPublicFields = parseFields defaultPublicFields
+
+  _requireAllDataFieldsAllowed: (request, allowedFields, dataFields = request.data) ->
+    switch
+    when allowedFields == true then null
+    when allowedFields is Object
+      find v, k in dataFields when !allowedFields[k]
+         request.requireServerOrigin "to #{request.type} field: #{k}. Allowed fields: #{Object.keys(allowedFields).join ', '}"
+    else request.requireServerOrigin "" to #{request.type} when no allowed fields have been configured: #{} formattedInspect {} allowedFields
+    ? Promise.resolve request # allowedFields is true or all fields are in allowedFields
+
+  _requireUserIdDidntChange: (request, existingRecord) ->
+    request.requireServerOriginIf
+      request.data extract? userId
+      && userId != existingRecord.userId
+      "" to change a record's owner #{} ownershipInfo request
+
+  _requireIsOwner: (request, recordWithUserId, message) ->
+    request.requireServerOriginOr
+      recordWithUserId?.userId == request.session.userId
+      "" to #{request.type}. You do not own the record: #{} ownershipInfo request, recordWithUserId

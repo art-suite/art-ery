@@ -246,19 +246,23 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   _getPipelineTypeCache: (pipelineName, type) ->
     (@requestCache[pipelineName] ||= {})[type] ||= {}
 
-  cachedSubrequest: (pipelineName, cacheType, requestType, options) ->
-    key = if isString options
-      options
+  cachedSubrequest: (pipelineName, requestType, keyOrRequestProps, d) ->
+    throw new Error "DEPRICATED: 4-param cachedSubrequest" if d != undefined
+    @_cachedSubrequest pipelineName, requestType, requestType, keyOrRequestProps
+
+  _cachedSubrequest: (pipelineName, cacheType, requestType, keyOrRequestProps) ->
+    key = if isString keyOrRequestProps
+      keyOrRequestProps
     else
-      options.key
-    throw new Error "cachedSubrequest: key must be a string (#{formattedInspect {key}})" unless isString key
+      keyOrRequestProps.key
+    throw new Error "_cachedSubrequest: key must be a string (#{formattedInspect {key}})" unless isString key
     @_getPipelineTypeCache(pipelineName, cacheType)[key] ||=
-      @subrequest pipelineName, requestType, options
+      @subrequest pipelineName, requestType, keyOrRequestProps
       .catch (error) =>
         if error.status == networkFailure && requestType == "get"
           # attempt retry once
           timeout 20 + 10 * Math.random()
-          .then => @subrequest pipelineName, requestType, options
+          .then => @subrequest pipelineName, requestType, keyOrRequestProps
 
         else throw error
 
@@ -268,7 +272,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   cachedGet: cachedGet = (pipelineName, key) ->
     throw new Error "cachedGet: key must be a string (#{formattedInspect {key}})" unless isString key
-    @cachedSubrequest pipelineName, "get", "get", key
+    @cachedSubrequest pipelineName, "get", key
 
   # TODO: when we move LinkFieldsFilter's include-linking to the very-end of a client-initiated request
   #   this will become a simple alias for cacheGet, since all gets will be w/o include.
@@ -278,7 +282,11 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     @_getPipelineTypeCache(pipelineName, "get")[key] ||
 
     # if not, get w/o includes
-    @cachedSubrequest pipelineName, "get-no-include", "get", key: key, props: include: false
+    @_cachedSubrequest pipelineName,
+      "get-no-include"
+      "get"
+      key:    key
+      props:  include: false
 
   cachedPipelineGet: cachedGet # depricated(?) alias
 
@@ -309,6 +317,13 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   rejectIfErrors: (errors) ->
     if errors
       @clientFailure compactFlatten([@pipelineAndType, 'requirement not met', errors]).join ' - '
+      .then (response) -> response.toPromise()
+    else
+      Promise.resolve @
+
+  rejectNotAuthorizedIfErrors: (errors) ->
+    if errors
+      @clientFailureNotAuthorized compactFlatten([@pipelineAndType, 'requirement not met', errors]).join ' - '
       .then (response) -> response.toPromise()
     else
       Promise.resolve @
@@ -382,7 +397,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     return Promise.resolve @ if @originatedOnServer
     resolveRequireTestValue testValue
     .then (testValue) =>
-      @rejectIfErrors unless testValue
+      @rejectNotAuthorizedIfErrors unless testValue
         "originatedOnServer required " + if context?.match /\s*to\s/
           context
         else if context

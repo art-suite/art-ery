@@ -80,13 +80,17 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
       for k in (Object.keys(@_store).sort())
         @store[k]
 
-    create: ({data}) ->
+    create: (request) ->
+      {data} = request
       data = if data.id
         data
       else
         merge data, id: @nextUniqueKey
 
-      @_store[data.id] = data
+      if @_store[data.id]
+        request.clientFailure "Record already exists with id: #{data.id}"
+      else
+        @_store[data.id] = data
 
     update: ({key, data}) ->
       if previousData = @_store[key]

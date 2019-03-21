@@ -83,9 +83,19 @@ defineModule module, class Pipeline extends require './RequestHandler'
     else
       throw new Error "override toKeyString or dataToKeyString for non-string-keys like: #{formattedInspect key}"
 
-  # override if desired
-  # used by Request/Response.withTransformedRecords
+
+  ###########################
+  # Overrides
+  ###########################
+
+  ## isRecord (override as needed)
+    # used by Request/Response.withTransformedRecords
   isRecord: (data) -> data?.id
+
+  ## getFieldsRequestWillModify (override as needed)
+    # called by UserOwnedFilter.before.update for correct authorization validation
+    # overriden by Art.Ery.Aws.DynamoDb to support "add" and "setDefault" for a correct modifications-list
+  getFieldsRequestWillModify: (request) -> request.data ? {}
 
   ###########################
   # Declarative API
