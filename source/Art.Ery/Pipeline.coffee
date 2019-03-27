@@ -21,6 +21,8 @@
   currentSecond
   toDate
   plainObjectsDeepEq
+  getCodeWords
+  pluralize
 } = require 'art-standard-lib'
 {normalizeFieldProps} = require 'art-validation'
 {success, missing} = require 'art-communication-status'
@@ -253,6 +255,11 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
   @classGetter
     pipelineName: -> @_pipelineName || decapitalize @getName()
+    pluralPipelineName: ->
+      return @_pluralPipelineName if @_pluralPipelineName
+      parts = getCodeWords @getPipelineName()
+      parts.push pluralize parts.pop()
+      @_pluralPipelineName = lowerCamelCase parts
 
   getLogName: (requestType) -> "#{requestType}-handler"
   @getter "options",
@@ -418,10 +425,11 @@ defineModule module, class Pipeline extends require './RequestHandler'
   query handler-functions: (request) -> response or any other value allowed for handlers
   ###
   @_defineQueryHandlers: ->
-    for k, pipelineQuery of @getQueries()
+    handlers = @getHandlers()
+    for k, pipelineQuery of @getQueries() when !handlers[k]
       throw new Error "pipelineQuery not a PipelineQuery" unless pipelineQuery instanceof PipelineQuery
       throw new Error "pipelineQuery has no query" unless isFunction pipelineQuery.query
-      @extendHandlers k, pipelineQuery.query
+      handlers = @extendHandlers k, pipelineQuery.query
 
   _normalizeRequest: (request) ->
     if isPlainObject request
