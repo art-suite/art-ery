@@ -8,6 +8,7 @@ ArtEry = require './namespace'
 Pipeline = require './Pipeline'
 KeyFieldsMixin = require './KeyFieldsMixin'
 {AfterEventsFilter} = require './Filters'
+{missing} = require 'art-communication-status'
 
 # Note, with CafScript, all the above becomes:
 # include &ArtFoundation, &ArtEry
@@ -120,7 +121,13 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
         (response) ->
           Promise.resolve getPropsFunction response
           .then (props) ->
-            props && response.subrequest pipelineName, "delete", props
+            if props
+              response.subrequest pipelineName, "delete", props
+              .catch (error) ->
+                if error.status == missing
+                  response.success()
+                else
+                  throw error
 
   ########################
   # PRIVATE
