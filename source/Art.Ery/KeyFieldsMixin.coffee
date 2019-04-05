@@ -70,7 +70,23 @@ defineModule module, -> (superClass) -> class KeyFieldsMixin extends superClass
     keyObject = @validateKey if isPlainObject a
       object @keyFields, (v) -> a[v]
     else if isString a
-      object (a.split "/"), key: (v, i) -> keyFields[i]
+      if keyFields.length > 1
+        splitInput = a.split "/"
+        keyObject = object keyFields, (v, i) -> splitInput[i]
+        if splitInput.length != keyFields.length
+          log.warn KeyFieldsMixin_toKeyObject: {
+            message: "wrong number of /-delimited fields in key-string"
+            @pipelineName
+            input: a
+            splitInput
+            keyFields
+            usingKeyObject: keyObject
+          }
+        keyObject
+
+      else
+        "#{keyFields[0]}": a
+
     else {}
     if keyValidator
       # the important thing is the preprocessor is applied
