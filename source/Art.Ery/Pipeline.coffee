@@ -253,6 +253,17 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
   getPrefixedTableName: (tableName) => "#{@tableNamePrefix}#{tableName}"
 
+  ### cachedGet - convenient alias altenative to request.cachedGet that matches the new subrequest patterns
+    IN:
+      request: - the request this will be a subrequest-of
+      key: <String> (default: request.key)
+
+    EFFECT:
+      calls request.cachedGet. Note, cachedGet's cache is stored in request's context
+  ###
+  cachedGet: (request, key) ->
+    request.cachedGet @pipelineName, key ? request.key
+
   @classGetter
     pipelineName: -> @_pipelineName || decapitalize @getName()
     pluralPipelineName: ->
@@ -340,7 +351,12 @@ defineModule module, class Pipeline extends require './RequestHandler'
     options = key: options if isString options
 
     Promise
-    .resolve options.session || @session.loadedDataPromise
+    .then => options.session || @session.loadedDataPromise
+    .tapCatch (error) =>
+      log.error Pipeline_createRequest:
+        meessage: "Error getting session"
+        info: {@pipelineName, type, options}
+        error: error
     .then (sessionData) =>
       new Request merge options,
         type:     type
@@ -438,8 +454,8 @@ defineModule module, class Pipeline extends require './RequestHandler'
       request
 
   _processRequest: (request) ->
-    startTime = currentSecond()
-    @filterChain[0].handleRequest request, @filterChain, 0
+    request.requireServerOriginOr @getPublicRequestTypes()[request.type], "to issue non-public requests"
+    .then => @filterChain[0].handleRequest request, @filterChain, 0
     .then (response) ->
       unless response.isResponse
         log.error "not response!":response
@@ -545,6 +561,9 @@ defineModule module, class Pipeline extends require './RequestHandler'
   @_defineClientHandlerMethods: ->
     for name, handler of @getHandlers()
       @_defineClientRequestMethod name
+    for name, __ of @getPublicRequestTypes()
+      @_defineClientRequestMethod name
+    null
 
   @_initFields: ->
     @extendFields filter.fields for filter in @getFilters()
