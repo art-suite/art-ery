@@ -122,11 +122,12 @@ defineModule module, class Filter extends require './RequestHandler'
 
   ###
   @groupNames:
-    loggers: 2
-    outer:  1
-    outter: 1 # depricated, damn spelling!
-    middle: 0
-    inner:  -1
+    loggers:        3
+    authorization:  2
+    outer:          1
+    outter:         1 # depricated, damn spelling!
+    middle:         0
+    inner:          -1
 
   @extendableProperty
     group: @groupNames.middle
