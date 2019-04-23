@@ -441,18 +441,20 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
   withSession:        new instance has @session replaced by `session`
   withMergedSession:  new instance has @session merged with `session`
   ###
-  withData:           (data)    -> Promise.resolve(data).then    (data)    => @_with {data}
-  withMergedData:     (data)    -> Promise.resolve(data).then    (data)    => @_with data: merge @data, data
+  withData:                     (data)  -> Promise.resolve(data).then   (data)  => @_with {data}
+  withMergedData:               (data)  -> Promise.resolve(data).then   (data)  => @_with data: merge @data, data
 
-  withProps:          (props)   -> Promise.resolve(props).then   (props)   => @_with {props, key: props.key, data: props.data}
-  withMergedProps:    (props)   -> Promise.resolve(props).then   (props)   => @_with key: props.key, data: props.data, props: merge @props, props
-  withMergedPropsWithoutNulls:    (props)   -> Promise.resolve(props).then   (props)   => @_with key: props.key, data: props.data, props: mergeWithoutNulls @props, props
+  withProps:                    (props) -> Promise.resolve(props).then  (props) => @_with {props, key: props.key, data: props.data}
+  withMergedProps:              (props) -> Promise.resolve(props).then  (props) => @_with key: props.key, data: props.data, props: merge @props, props
+  withMergedPropsWithoutNulls:  (props) -> Promise.resolve(props).then  (props) => @_with key: props.key, data: props.data, props: mergeWithoutNulls @props, props
 
-  withSession:        (session) -> Promise.resolve(session).then (session) => @_with {session}
-  withMergedSession:  (session) -> Promise.resolve(session).then (session) => @_with session: merge @session, session
+  withMergedErrorProps:         (errorProps) -> Promise.resolve(errorProps).then (errorProps) => @_with errorProps: merge @errorProps, errorProps
 
-  respondWithSession:        (session) -> @success {session}
-  respondWithMergedSession:  (session) -> @success session: merge @session, session
+  withSession:                  (session) -> Promise.resolve(session).then  (session) => @_with {session}
+  withMergedSession:            (session) -> Promise.resolve(session).then  (session) => @_with session: merge @session, session
+
+  respondWithSession:           (session) -> @success {session}
+  respondWithMergedSession:     (session) -> @success session: merge @session, session
 
   ###
   IN:

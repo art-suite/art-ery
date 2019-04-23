@@ -13,9 +13,11 @@ suite:
       p = new MyPipeline
       assert.rejects p.create()
       .then (error) ->
+        {response} = error.props
+        assert.present response.errorProps.failedIn, :failedIn
         assert.eq filterLog, ["myFilter1", "myFilter2"]
         assert.match error.message, "internal oops"
-        assert.eq error.props.response.errorProps.source.this.name, "myFilter2"
+        assert.eq response.errorProps.source.this.name, "myFilter2"
 
     test "clientFailure", ->
       class MyPipeline extends Pipeline
@@ -27,11 +29,12 @@ suite:
       p = new MyPipeline
       assert.rejects p.create()
       .then (error) ->
-        {response} = error.info
+        {response} = error.props
+        assert.present response.errorProps.failedIn
         assert.eq ["create-handler"],         array {name} from response.beforeFilterLog with name
         assert.eq ["myFilter1", "myFilter2"], array {name} from response.afterFilterLog with name
         assert.match response.data.message, "you lose!"
-        assert.doesNotExist error.props.response.errorProps
+        assert.doesNotExist error.props.response.errorProps.source
 
   beforeFilterFailures: ->
     test "clientFailure", ->
@@ -44,7 +47,8 @@ suite:
       p = new MyPipeline
       assert.rejects p.create()
       .then (error) ->
-        {response} = error.info
+        {response} = error.props
+        assert.present response.errorProps.failedIn
         assert.eq ["myFilter3", "myFilter2"], array {name} from response.beforeFilterLog with name
         assert.eq response.afterFilterLog, []
         assert.eq response.handledBy.name, "myFilter2"
@@ -61,9 +65,11 @@ suite:
       p = new MyPipeline
       assert.rejects p.create()
       .then (error) ->
+        {response} = error.props
+        assert.present log response.errorProps.failedIn
         assert.eq filterLog, ["myFilter3", "myFilter2"]
         assert.match error.message, "internal oops"
-        assert.eq error.props.response.errorProps.source.this.name, "myFilter2"
+        assert.eq response.errorProps.source.this.name, "myFilter2"
 
   handlerFailures: ->
     test "internal error", ->
@@ -76,6 +82,8 @@ suite:
       p = new MyPipeline
       assert.rejects p.create()
       .then (error) ->
+        {response} = error.props
+        assert.present response.errorProps.failedIn
         assert.eq filterLog, ["myFilter1"]
         assert.match error.message, "internal oops"
         assert.eq error.props.response.errorProps.source.this.name, "myPipeline"

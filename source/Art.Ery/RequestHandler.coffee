@@ -10,23 +10,36 @@ defineModule module, class RequestHandler extends require './ArtEryBaseObject'
       NOTE: response may be failing
     .catch -> internal errors only
   ###
-  applyHandler: (request, handlerFunction, verboseFilterName) ->
+  applyHandler: (request, handlerFunction, context) ->
     # pass-through if no filter
     return Promise.resolve request unless handlerFunction
 
-    resultPromise = @_applyHandler request, handlerFunction
+    resultPromise = (
+      @_applyHandler request, handlerFunction
+      .then (result) =>
+        if result.isFailure && !result.errorProps?.failedIn
+          namespacePath = @getNamespacePath()
+          name = @getName()
+          result.withMergedErrorProps failedIn:
+            "#{name}-#{request.type}-#{context}":
+              request:      request.requestPath
+              location:     request.location
+        else result
+    )
 
     if request.verbose
-      resultPromise
-      .tap (result) ->
-        if result != request && neq request.summary, result.summary
-          (if result.failed && !request.failed then log.error else log) "ArtEryApplyHandlerVerbose #{request.pipelineName}-#{request.type} #{verboseFilterName}":
-            before: request.summary
-            after:  result.summary
-        else
-          log "ArtEryApplyHandlerVerbose #{request.pipelineName}-#{request.type} #{verboseFilterName}": "no-change"
-    else
-      resultPromise
+      resultPromise = (
+        resultPromise
+        .tap (result) ->
+          if result != request && neq request.summary, result.summary
+            (if result.failed && !request.failed then log.error else log) "ArtEryApplyHandlerVerbose #{request.pipelineName}-#{request.type} #{context}":
+              before: request.summary
+              after:  result.summary
+          else
+            log "ArtEryApplyHandlerVerbose #{request.pipelineName}-#{request.type} #{context}": "no-change"
+      )
+
+    resultPromise
 
   _applyHandler: (request, handlerFunction) ->
 

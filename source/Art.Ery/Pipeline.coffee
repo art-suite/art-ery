@@ -428,7 +428,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
       request.sendRemoteRequest @remoteServer
 
     else if handler = @handlers[request.type]
-      @applyHandler request, handler, request.verbose && "#{@pipelineName}-handler"
+      @applyHandler request, handler, "handler"
       .then (response) =>
         unless response.isResponse
           request.failure "#{@pipelineName}.#{request.type} request was not handled"
