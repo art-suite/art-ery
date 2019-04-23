@@ -1,23 +1,21 @@
-{log, Promise, createWithPostCreate} = require 'art-foundation'
-{pipelines, Pipeline, _reset} = Neptune.Art.Ery
+import &StandardImport
 
-module.exports = suite: ->
+suite: ->
   setup ->
     _reset()
-    createWithPostCreate class MyPipeline extends Pipeline
-
-      @handlers
+    class MyPipeline extends Pipeline
+      @publicHandlers
         get: ({key}) -> "Got #{key}?"
 
         myChanger: (request) -> "yay"
 
         triggerGachedGet: (request) ->
           {key} = request
-          promises = [
-            request.cachedGet "myPipeline", key
-            request.cachedGet "myPipeline", key
-            request.cachedGet "myPipeline", "chocolate #{key}"
-          ]
+          promises =
+            request.cachedGet :myPipeline key
+            request.cachedGet :myPipeline key
+            request.cachedGet :myPipeline "" chocolate #{key}
+
           # two cachedGet requests with the same key return the same promise
           assert.eq promises[0], promises[1]
 
@@ -29,8 +27,7 @@ module.exports = suite: ->
     pipelines.myPipeline.triggerGachedGet key: "milk", returnResponseObject: true
     .then ({data, subrequestCount}) ->
       assert.eq subrequestCount, 2
-      assert.eq data, [
+      assert.eq data, []
         "Got milk?"
         "Got milk?"
         "Got chocolate milk?"
-      ]

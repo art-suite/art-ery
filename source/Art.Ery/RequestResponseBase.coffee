@@ -103,6 +103,10 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
 
   # Pass-throughs - to remove once we merge Request and Response
   @getter
+    isSuccessful:       -> true
+    isFailure:          -> @notSuccessful
+    notSuccessful:      -> false
+
     requestSession:     -> @request.session
     requestProps:       -> @request.requestProps
     requestData:        -> @request.requestData
@@ -111,6 +115,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     key:                -> @request.key || @responseData?.id
     pipeline:           -> @request.pipeline
     parentRequest:      -> @request.parentRequest
+    isSubrequest:       -> !!@request.parentRequest
     type:               -> @request.type
     originatedOnServer: -> @request.originatedOnServer
     context:            -> @request.context
@@ -134,7 +139,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       localInto
 
     requestPath: ->
-      "<#{(r.toStringCore() for r in @requestPathArray).join ' >> '}>"
+      (r.requestString for r in @requestPathArray).join ' >> '
 
   toStringCore: ->
     "ArtEry.#{if @isResponse then 'Response' else 'Request'} #{@pipelineName}.#{@type}#{if @key then " key: #{@key}" else ''}"

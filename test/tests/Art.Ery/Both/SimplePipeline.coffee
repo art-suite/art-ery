@@ -68,6 +68,8 @@ module.exports = createWithPostCreate class SimplePipeline extends Pipeline
       @_nextUniqueKey++ while @_store[@_nextUniqueKey]
       (@_nextUniqueKey++).toString()
 
+  @publicRequestTypes "reset get getAll create update delete"
+
   @handlers
     reset: ({data}) ->
       @_store = data || {}

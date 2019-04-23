@@ -1,0 +1,33 @@
+import &StandardImport, Neptune.Art.Ery.Flux, {} &SimplePipeline
+
+# {Pipeline} = Neptune.Art.Ery
+{Flux} = Neptune.Art
+
+suite: ->
+  setup ->
+    Flux._reset()
+
+    class Post extends Pipeline
+      @query postsByUserId: (request) ->
+        []
+          userId: request.key, message: "Hi!"
+          userId: request.key, message: "Really?"
+
+      @publicRequestTypes :postsByUserId
+
+      @filter after: all: (response) ->
+        response.withData
+          array record in response.data
+            merge record, message: "#{record.message} :)"
+
+    ArtEryFluxModel.defineModelsForAllPipelines()
+
+  test "query model defined", ->
+    assert.instanceOf Flux.models.postsByUserId, ArtEryQueryFluxModel
+
+  test "query loadData goes through pipeline", ->
+    Flux.models.postsByUserId.loadData "abc123"
+    .then (res) ->
+      assert.eq res, []
+        userId: "abc123", message: "Hi! :)"
+        userId: "abc123", message: "Really? :)"

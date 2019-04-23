@@ -1,7 +1,7 @@
 {log, createWithPostCreate, RestClient, CommunicationStatus, objectKeyCount} = require 'art-foundation'
 {Pipeline, pipelines, session} = Neptune.Art.Ery
 {ApplicationState} = ArtFlux = Neptune.Art.Flux
-{clientFailure, missing, serverFailure} = CommunicationStatus
+{clientFailure, missing, serverFailure, clientFailureNotAuthorized} = CommunicationStatus
 
 module.exports = suite:
   responseStatuses: ->
@@ -95,12 +95,12 @@ module.exports = suite:
       test "myPrivateRequestType", ->
         assert.rejects pipelines.myRemote.myPrivateRequestType()
         .then (rejectsWith) ->
-          assert.eq rejectsWith.info.response.status, missing
+          assert.eq rejectsWith.info.response.status, clientFailureNotAuthorized
 
       test "non-existant request type", ->
-        request = pipelines.myRemote.createRequest "nonExistantRequestType", {}
-        pipelines.myRemote._processRequest request
-        .then (response) -> assert.eq response.status, missing
+        pipelines.myRemote.createRequest "nonExistantRequestType", {}
+        .then (request)  -> pipelines.myRemote._processRequest request
+        .then (response) -> assert.eq response.status, clientFailure
 
     "custom props": ->
 

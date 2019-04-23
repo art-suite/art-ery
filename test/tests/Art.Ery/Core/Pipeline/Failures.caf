@@ -5,7 +5,7 @@ suite:
     test "internal error", ->
       filterLog = []
       class MyPipeline extends Pipeline
-        @handlers create: (request) -> foo: 1, bar: 2
+        @publicHandlers create: (request) -> foo: 1, bar: 2
         @filter name: "myFilter1", after: create: (response) -> filterLog.push "myFilter1"; response
         @filter name: "myFilter2", after: create: (response) -> filterLog.push "myFilter2"; throw new Error "internal oops"
         @filter name: "myFilter3", after: create: (response) -> filterLog.push "myFilter3"; response
@@ -14,12 +14,12 @@ suite:
       assert.rejects p.create()
       .then (error) ->
         assert.eq filterLog, ["myFilter1", "myFilter2"]
-        assert.eq error.message, "internal oops"
+        assert.match error.message, "internal oops"
         assert.eq error.props.response.errorProps.source.this.name, "myFilter2"
 
     test "clientFailure", ->
       class MyPipeline extends Pipeline
-        @handlers create: (request) -> foo: 1, bar: 2
+        @publicHandlers create: (request) -> foo: 1, bar: 2
         @filter name: "myFilter1", after: create: (response) -> response
         @filter name: "myFilter2", after: create: (response) -> response.clientFailure "you lose!"
         @filter name: "myFilter3", after: create: (response) -> response
@@ -30,13 +30,13 @@ suite:
         {response} = error.info
         assert.eq ["create-handler"],         array {name} from response.beforeFilterLog with name
         assert.eq ["myFilter1", "myFilter2"], array {name} from response.afterFilterLog with name
-        assert.eq response.data.message, "you lose!"
+        assert.match response.data.message, "you lose!"
         assert.doesNotExist error.props.response.errorProps
 
   beforeFilterFailures: ->
     test "clientFailure", ->
       class MyPipeline extends Pipeline
-        @handlers create: (request) -> foo: 1, bar: 2
+        @publicHandlers create: (request) -> foo: 1, bar: 2
         @filter name: "myFilter1", before: create: (response) -> response
         @filter name: "myFilter2", before: create: (response) -> response.clientFailure "you lose!"
         @filter name: "myFilter3", before: create: (response) -> response
@@ -53,7 +53,7 @@ suite:
     test "internal error", ->
       filterLog = []
       class MyPipeline extends Pipeline
-        @handlers create: (request) -> foo: 1, bar: 2
+        @publicHandlers create: (request) -> foo: 1, bar: 2
         @filter name: "myFilter1", before: create: (response) -> filterLog.push "myFilter1"; response
         @filter name: "myFilter2", before: create: (response) -> filterLog.push "myFilter2"; throw new Error "internal oops"
         @filter name: "myFilter3", before: create: (response) -> filterLog.push "myFilter3"; response
@@ -62,14 +62,14 @@ suite:
       assert.rejects p.create()
       .then (error) ->
         assert.eq filterLog, ["myFilter3", "myFilter2"]
-        assert.eq error.message, "internal oops"
+        assert.match error.message, "internal oops"
         assert.eq error.props.response.errorProps.source.this.name, "myFilter2"
 
   handlerFailures: ->
     test "internal error", ->
       filterLog = []
       class MyPipeline extends Pipeline
-        @handlers create: (request) -> throw new Error "internal oops"
+        @publicHandlers create: (request) -> throw new Error "internal oops"
         @filter name: "myFilter1", before:  create: (response) -> filterLog.push "myFilter1"; response
         @filter name: "myFilter2", after:   create: (response) -> filterLog.push "myFilter2"; response
 
@@ -77,5 +77,5 @@ suite:
       assert.rejects p.create()
       .then (error) ->
         assert.eq filterLog, ["myFilter1"]
-        assert.eq error.message, "internal oops"
+        assert.match error.message, "internal oops"
         assert.eq error.props.response.errorProps.source.this.name, "myPipeline"

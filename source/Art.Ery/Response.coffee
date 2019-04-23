@@ -1,6 +1,7 @@
 Foundation = require 'art-foundation'
 Request = require './Request'
 {
+  objectHasKeys
   clone
   currentSecond, objectWithout, arrayWithoutLast, pureMerge,
   Promise, compactFlatten, object, peek,
@@ -210,15 +211,33 @@ module.exports = class Response extends require './RequestResponseBase'
     else Promise.reject @_getRejectionError()
 
   _getRejectionError: ->
+    {data} = @responseProps
+    props = objectWithout @responseProps, "key", "data"
+    props = undefined unless objectHasKeys props
+
     @_preparedRejectionError ||= new RequestError {
-      sourceLib: "ArtEry " + @pipelineName
-      @requestData
+      message: """
+        \n
+        #{@pipelineName}.#{@type}
+          #{
+          formattedInspect @requestProps
+          .replace "\n", "\n  "
+        }
+
+        #{
+          formattedInspect merge null,
+            data
+            props
+            @errorProps
+        }
+        """
       @type
-      @key
       @status
-      @data
+      @requestData
+      @responseData
+      sourceLib: "ArtEry"
       response: @
-      message:  @errorProps?.exception?.message
+      # message:  @errorProps?.exception?.message
       stack:    @errorProps?.exception?.stack
     }
 

@@ -1,11 +1,10 @@
-{log, createWithPostCreate} = require 'art-foundation'
-{missing, Pipeline} = Neptune.Art.Ery
+import &StandardImport
 
-module.exports = suite: ->
+suite: ->
 
   test "basic", ->
-    createWithPostCreate class MyPipeline extends Pipeline
-      @handlers foo: (request) -> foo: 1, bar: 2
+    class MyPipeline extends Pipeline
+      @publicHandlers foo: (request) -> foo: 1, bar: 2
 
     p = new MyPipeline
     assert.eq p.filters.length, 0
@@ -14,23 +13,25 @@ module.exports = suite: ->
       assert.eq data, foo: 1, bar: 2
 
   test "return string", ->
-    createWithPostCreate class MyPipeline extends Pipeline
-      @handlers foo: (request) -> "my string"
+    class MyPipeline extends Pipeline
+      @publicHandlers foo: (request) -> "my string"
 
     (new MyPipeline)
     .foo().then (data) -> assert.eq data, "my string"
 
   test "return false", ->
-    createWithPostCreate class MyPipeline extends Pipeline
-      @handlers foo: -> false
+    class MyPipeline extends Pipeline
+      @publicHandlers foo: -> false
 
     (new MyPipeline)
     .foo().then (data) -> assert.eq data, false
 
   test "query handlers", ->
-    createWithPostCreate class Post extends Pipeline
+    class Post extends Pipeline
       @query postByUserId: (request) ->
         [request.key, 1, 2, 3]
+
+      @publicRequestTypes "postByUserId"
 
     assert.eq Post.post.clientApiMethodList, ["postByUserId"]
     Post.post.postByUserId key: "foo"

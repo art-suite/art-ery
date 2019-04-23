@@ -31,7 +31,7 @@ suite: ->
             key:  data.userId
             data: lastCommentId: data.id
 
-      @handlers
+      @publicHandlers
         postComment: (request) ->
           {key} = request
           Promise.all []

@@ -1,11 +1,12 @@
-Foundation = require 'art-foundation'
+{
+  toPlainObjects, Validator, toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus
+  success, isFailure
+} = require './StandardImport'
+{normalizeFields} = Validator
+
 Request = require './Request'
 Response = require './Response'
 {config} = require './Config'
-
-{toPlainObjects, Validator, toInspectedObjects, getInspectedObjects, defineModule, BaseObject, Promise, log, isPlainObject, mergeInto, merge, shallowClone, CommunicationStatus} = Foundation
-{success} = CommunicationStatus
-{normalizeFields} = Validator
 
 ###
 TODO
@@ -210,8 +211,23 @@ defineModule module, class Filter extends require './RequestHandler'
   getBeforeFilter: ({requestType, location}) -> @shouldFilter(location) && (@before[requestType] || @before.all)
   getAfterFilter:  ({requestType, location}) -> @shouldFilter(location) && (@after[requestType]  || @after.all)
 
-  processBefore:  (request) -> @applyHandler request, @getBeforeFilter(request), request.verbose && "#{@getName()}-beforeFilter"
-  processAfter:   (request) -> @applyHandler request, @getAfterFilter(request), request.verbose && "#{@getName()}-afterFilter"
+  processBefore:  (request) -> @trackErrors true,   @applyHandler request, @getBeforeFilter(request), request.verbose && "#{@getName()}-beforeFilter"
+  processAfter:   (request) -> @trackErrors false,  @applyHandler request, @getAfterFilter(request), request.verbose && "#{@getName()}-afterFilter"
+
+  trackErrors: (isBeforeFilter, requestPromise) ->
+    requestPromise
+    .then (request) =>
+      if request.isFailure && !request.responseProps?.failedIn
+        namespacePath = @getNamespacePath()
+        request.withMergedProps failedIn:
+          "#{if isBeforeFilter then "beforeFilter" else "afterFilter"}":
+            request:      request.requestPath
+            filter:
+              if namespacePath.match @name
+                namespacePath
+              else @name
+            location:     request.location
+      else request
 
   handleRequest: (request, filterChain, currentFilterChainIndex) ->
     @processBefore request

@@ -255,7 +255,6 @@ suite:
 
       test "subrequests-form-A", ->
         class MyPipeline extends Pipeline
-          ;
 
         request = newRequest()
         {context} = request
@@ -278,10 +277,11 @@ suite:
 
     setup ->
       {subrequestPipeline} = class SubrequestPipeline extends Pipeline
-        @handlers merge
+        @handlers handlers = merge
           subrequestHandlers
           subrequestCompatibleHandlers
           bar: (request) -> merge request.props, isSubrequest: !!request.parentRequest
+        @publicRequestTypes log "HOWHOW", Object.keys handlers
 
     key = "myKey"
     props = prop1: "propValue1"

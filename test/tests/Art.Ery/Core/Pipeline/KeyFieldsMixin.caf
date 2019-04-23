@@ -8,6 +8,9 @@ suite: ->
         myDate:
           preprocess: (v) -> v | 0
 
+
+      @publicRequestTypes :testToKeyObject
+
       @handlers
         testToKeyObject: ({key}) ->
           @toKeyObject key

@@ -5,6 +5,7 @@ suite:
     test :before ->
       class MyPipeline extends Pipeline
         @handlers helloWorld: ({data}) -> "Hello #{data}."
+        @publicRequestTypes :helloWorld
 
         @filter
           before: helloWorld: (request) ->
@@ -17,6 +18,7 @@ suite:
     test :all ->
       class MyPipeline extends Pipeline
         @handlers helloWorld: ({data}) -> "Hello #{data}."
+        @publicRequestTypes :helloWorld
 
         @filter
           before: all: (request) ->
@@ -30,6 +32,7 @@ suite:
     test :after ->
       class MyPipeline extends Pipeline
         @handlers helloWorld: ({data}) -> "Hello #{data}."
+        @publicRequestTypes :helloWorld
 
         @filter
           after: helloWorld: (request) ->
@@ -44,6 +47,7 @@ suite:
       test :two ->
         class MyPipeline extends Pipeline
           @handlers helloWorld: ({data}) -> "Hello #{data}."
+          @publicRequestTypes :helloWorld
 
           @filter
             before: helloWorld: (r) -> r.withData r.data + :A
@@ -61,6 +65,7 @@ suite:
       test :grouped ->
         class MyPipeline extends Pipeline
           @handlers myAction: -> :-
+          @publicRequestTypes :myAction
 
           @filter name: :filterA  group: :outer    after: myAction: (r) -> r.withData "" #{r.data}A
           @filter name: :filterB  group: :inner     after: myAction: (r) -> r.withData "" #{r.data}B
@@ -74,6 +79,7 @@ suite:
       test :ungrouped ->
         class MyPipeline extends Pipeline
           @handlers myAction: -> :-
+          @publicRequestTypes :myAction
 
           @filter name: :filterA  after: myAction: (r) -> r.withData "" #{r.data}A
           @filter name: :filterB  after: myAction: (r) -> r.withData "" #{r.data}B
@@ -88,6 +94,8 @@ suite:
     test "query handlers with after-all filter" ->
       class Post extends Pipeline
         @query postByUserId: (request) -> [] request.key, 1, 2, 3
+        @publicRequestTypes :postByUserId
+
         @filter
           after: all: (response) ->
             response.withData array a from response.data with "#{a} #{a}"
@@ -101,6 +109,7 @@ suite:
     test "basic", ->
       class MyPipeline extends Pipeline
         @handlers foo: (request) -> merge request.data, myHandlerRan: true
+        @publicRequestTypes :foo
 
         @filter
           name: "MyBeforeFooFilter"
@@ -125,6 +134,7 @@ suite:
     test "before filters by location", ->
       class MyPipeline extends Pipeline
         @handlers foo: (request) -> merge request.data, myHandlerRan: true
+        @publicRequestTypes :foo
 
         @filter
           location: "client"
@@ -148,6 +158,7 @@ suite:
     test "after filters by location", ->
       class MyPipeline extends Pipeline
         @handlers foo: (request) -> merge request.data, myHandlerRan: true
+        @publicRequestTypes :foo
 
         @filter
           location: "client"
@@ -173,6 +184,7 @@ suite:
     test :basic ->
       class MyPipeline extends Pipeline
         @handlers foo: (request) -> throw new Error "simulated error on foo request"
+        @publicRequestTypes :foo
 
         @filter
           name: :FilterWithoutFilterFailures
@@ -207,10 +219,12 @@ suite:
       instance = new MyFilter
 
       class MyPipeline1 extends Pipeline
+        @publicRequestTypes :foo
         @handlers foo: (request) -> foo1ed: true
         @filter instance
 
       class MyPipeline2 extends Pipeline
+        @publicRequestTypes :foo
         @handlers foo: (request) -> foo2ed: true
         @filter instance
 

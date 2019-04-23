@@ -34,6 +34,7 @@ defineModule module, class MyRemote extends Pipeline
     simulateClientFailure
     simulatePropsInput
     simulatePropsOutput
+    simulateMissing
     handledByFilterRequest
     setSessionA
     setSessionB

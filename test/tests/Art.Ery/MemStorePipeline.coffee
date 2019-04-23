@@ -13,7 +13,7 @@ defineModule module, class MemStorePipeline extends KeyFieldsMixin Pipeline
   @filter UniqueIdFilter
   @filter AfterEventsFilter
 
-  @handlers
+  @publicHandlers
     get: ({key}) -> @_store[key]
     create: (request) -> @_store[request.data.id] = request.data
     update: ({data, key}) -> @_store[key] = merge @_store[key], data, updateCount: (@_store[key]?.updateCount || 0) + 1

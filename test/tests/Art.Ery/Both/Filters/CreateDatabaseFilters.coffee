@@ -9,7 +9,7 @@ module.exports = suite:
 
     test "fields are set correctly", ->
       {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
-        @filter createDatabaseFilters
+        @filter createDatabaseFilters fields:
           user:   "required link"
           foo:    link: true, required: true
           bar:    link: "user"
@@ -39,7 +39,7 @@ module.exports = suite:
 
     test "create", ->
       createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
-        @filter createDatabaseFilters
+        @filter createDatabaseFilters fields:
           user: required: link: "user"
           message: "present trimmedString"
 
@@ -57,7 +57,8 @@ module.exports = suite:
     test "userOwned only field", ->
       {myPipeline} = createWithPostCreate class MyPipeline extends SimplePipelineWithKeys
         @filter createDatabaseFilters
-          userOwned: true
+          fields:     {}
+          userOwned:  true
 
       assert.eq Object.keys(myPipeline.fields).sort(), w "
         createdAt

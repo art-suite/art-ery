@@ -1,18 +1,16 @@
-{log, createWithPostCreate, isString, Validator} = require 'art-foundation'
-{Pipeline} = Neptune.Art.Ery
-{AfterEventsFilter} = Neptune.Art.Ery.Filters
-SimplePipeline = require '../SimplePipeline'
+import &StandardImport, {} &SimplePipeline
 
-module.exports = suite: ->
+suite: ->
   test "does not define fields", ->
-    createWithPostCreate class MyPipeline extends Pipeline
+    class MyPipeline extends Pipeline
       @filter AfterEventsFilter
 
     assert.eq MyPipeline.getFields(), {}
 
   test "AfterEventsFilter.on", ->
-    {myPipeline} = createWithPostCreate class MyPipeline extends Pipeline
+    {myPipeline} = class MyPipeline extends Pipeline
       @filter AfterEventsFilter
+      @publicRequestTypes :myRequest
       @handler
         myRequest: -> "hello"
 
@@ -25,8 +23,9 @@ module.exports = suite: ->
 
   test "AfterEventsFilter.registerPipelineListener", ->
     new Promise (resolve) ->
-      {myPipeline} = createWithPostCreate class MyPipeline extends Pipeline
+      {myPipeline} = class MyPipeline extends Pipeline
         @filter AfterEventsFilter
+        @publicRequestTypes :myRequest
         @handler
           myRequest: -> "hello"
 

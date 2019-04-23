@@ -129,6 +129,7 @@ suite: ->
 
     class PostPipeline extends SimplePipeline
       isRecord: ({message}) -> message?
+      @publicRequestTypes :getSampleData
 
       @handler
         getSampleData: (request) ->

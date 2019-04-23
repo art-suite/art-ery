@@ -28,7 +28,7 @@ defineModule module, class ValidationFilter extends Filter
 
   _validate: (method, request) ->
     Promise.then =>
-      context = "#{request.pipeline.getClass().getName()} Pipeline #{@class.getName()}"
+      context = request.requestString
       validatedData = @_validator[method] request.data, {context}
       data = validatedData if request.location != "client"
 
@@ -47,4 +47,3 @@ defineModule module, class ValidationFilter extends Filter
 
     .catch ({message, info}) ->
       request.clientFailure data: merge {message}, info
-

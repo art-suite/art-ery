@@ -162,7 +162,6 @@ defineModule module, -> (superClass) -> class UpdateAfterMixin extends superClas
           props
 
   @_applyAllUpdates: (response) ->
-    # log UpdateAfterMixin: _applyAllUpdates: response.requestPath
     {updateRequestsByToUpdatePipeline} = response.context
     response.context.updateRequestsByToUpdatePipeline = null
     if updateRequestsByToUpdatePipeline

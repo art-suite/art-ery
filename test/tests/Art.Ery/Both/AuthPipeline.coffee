@@ -49,7 +49,7 @@ defineModule module, class AuthPipeline extends Pipeline
     return "password not present" unless isPresentString password
     return "username and password don't match" unless username == password
 
-  @handlers
+  @publicHandlers
     authenticate: (request) ->
       {data} = request
       if message = authenticationFailed data

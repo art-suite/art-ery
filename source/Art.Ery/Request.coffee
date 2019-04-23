@@ -111,11 +111,9 @@ module.exports = class Request extends require './RequestResponseBase'
     # Also implemented in Response
     beforeFilterLog:  -> @filterLog || []
     afterFilterLog:   -> []
-    isSuccessful:     -> true
-    notSuccessful:    -> false
     isRequest:        -> true
     isRootRequest:    -> !@parentRequest
-    requestPipelineAndType: -> "#{@pipeline.name}-#{@type}"
+    requestPipelineAndType: -> log.warn "DEPRICATED - use pipelineAndType"; "#{@pipeline.name}-#{@type}"
 
     propsForClone: ->
       {

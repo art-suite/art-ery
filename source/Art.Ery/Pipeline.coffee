@@ -27,6 +27,8 @@
 {normalizeFieldProps} = require 'art-validation'
 {success, missing} = require 'art-communication-status'
 
+{prefetchedRecordsCache} = require './PrefetchedRecordsCache'
+
 Response = require './Response'
 Request = require './Request'
 Filter = require './Filter'
@@ -76,6 +78,9 @@ defineModule module, class Pipeline extends require './RequestHandler'
   @addDatabaseFilters: (options) ->
     @filter FilterTools.createDatabaseFilters options, @
 
+  getPrefetchedRecord: (key) ->
+    prefetchedRecordsCache.get @pipelineName, key
+
   toKeyString: (key) ->
     return key unless key?
     if isString key
@@ -114,10 +119,16 @@ defineModule module, class Pipeline extends require './RequestHandler'
 
   @publicRequestTypes: (values...) ->
     publicRequestTypes = {}
-    for v in values
+    for v in compactFlatten values
       for k in w v
         publicRequestTypes[k] = true
     @extendPublicRequestTypes publicRequestTypes
+
+  # delcare handlers and publicRequestTypes as one
+  @publicHandlers: (maps...) ->
+    for map in maps
+      @handlers map
+      @publicRequestTypes Object.keys map
 
   ###
   @fluxModelMixin adds a mixin to fluxModelMixins
@@ -454,13 +465,18 @@ defineModule module, class Pipeline extends require './RequestHandler'
       request
 
   _processRequest: (request) ->
-    request.requireServerOriginOr @getPublicRequestTypes()[request.type], "to issue non-public requests"
-    .then => @filterChain[0].handleRequest request, @filterChain, 0
-    .then (response) ->
-      unless response.isResponse
-        log.error "not response!":response
+    unless @handlers[request.type]
+      Promise.then => request.clientFailure data:
+        message: "'#{request.type}' is not a invalid request type"
+        validRequestTypes: Object.keys @handlers
+    else
+      request.requireServerOriginOr @getPublicRequestTypes()[request.type], "to issue non-public requests"
+      .then => @filterChain[0].handleRequest request, @filterChain, 0
+      .then (response) ->
+        unless response.isResponse
+          log.error "not response!":response
 
-      response
+        response
 
   ###
   IN:
