@@ -1,4 +1,4 @@
-{ErrorWithInfo, defineModule, Promise, isJsonType, log, neq} = require 'art-standard-lib'
+{isFailure, missing, ErrorWithInfo, defineModule, Promise, isJsonType, log, neq} = require './StandardImport'
 RequestResponseBase = require './RequestResponseBase'
 
 defineModule module, class RequestHandler extends require './ArtEryBaseObject'
@@ -16,15 +16,14 @@ defineModule module, class RequestHandler extends require './ArtEryBaseObject'
 
     resultPromise = (
       @_applyHandler request, handlerFunction
-      .then (result) =>
-        if result.isFailure && !result.errorProps?.failedIn
-          namespacePath = @getNamespacePath()
-          name = @getName()
-          result.withMergedErrorProps failedIn:
-            "#{name}-#{request.type}-#{context}":
-              request:      request.requestPath
-              location:     request.location
-        else result
+      .then (response) =>
+        if response?.isFailure && !response.errorProps?.failedIn
+          response.withMergedErrorProps failedIn: {
+            context
+            handler: @
+            response
+          }
+        else response
     )
 
     if request.verbose

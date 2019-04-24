@@ -365,7 +365,7 @@ defineModule module, class Pipeline extends require './RequestHandler'
     .then => options.session || @session.loadedDataPromise
     .tapCatch (error) =>
       log.error Pipeline_createRequest:
-        meessage: "Error getting session"
+        message: "Error getting session"
         info: {@pipelineName, type, options}
         error: error
     .then (sessionData) =>
@@ -465,12 +465,15 @@ defineModule module, class Pipeline extends require './RequestHandler'
       request
 
   _processRequest: (request) ->
-    unless @handlers[request.type]
+    haveHandler = !!@handlers[request.type]
+    isPublicRequestType = !!@getPublicRequestTypes()[request.type]
+
+    unless haveHandler || isPublicRequestType
       Promise.then => request.clientFailure data:
-        message: "'#{request.type}' is not a invalid request type"
+        message: "'#{request.type}' is an invalid request type"
         validRequestTypes: Object.keys @handlers
     else
-      request.requireServerOriginOr @getPublicRequestTypes()[request.type], "to issue non-public requests"
+      request.requireServerOriginOr isPublicRequestType, "to issue non-public requests"
       .then => @filterChain[0].handleRequest request, @filterChain, 0
       .then (response) ->
         unless response.isResponse

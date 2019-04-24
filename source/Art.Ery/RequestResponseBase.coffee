@@ -98,7 +98,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       }, when: (v) -> v?
 
     inspectedObjects: ->
-      ArtEryRequestChain: for request in @requestChain
+      "Art.Ery.#{@class.name}": for request in @requestChain
         request.simpleInspectedObjects
 
   # Pass-throughs - to remove once we merge Request and Response

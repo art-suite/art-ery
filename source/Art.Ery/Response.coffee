@@ -1,5 +1,3 @@
-Foundation = require 'art-foundation'
-Request = require './Request'
 {
   objectHasKeys
   clone
@@ -8,10 +6,16 @@ Request = require './Request'
   isPlainArray, objectKeyCount, arrayWith, inspect,
   RequestError, isPlainObject, log, CommunicationStatus,
   merge, isJsonType, formattedInspect, w, neq
-} = require 'art-standard-lib'
-{Validator} = require 'art-validation'
-{success, missing, failure, serverFailure, clientFailure} = require 'art-communication-status'
+  getEnv
+  success, missing, failure, serverFailure, clientFailure
+  Validator
+} = require './StandardImport'
+
+Request = require './Request'
 {config} = require './Config'
+
+{dev} = getEnv()
+namespace = require './namespace'
 
 responseValidator = new Validator
   request:  w "required", instanceof: Request
@@ -92,7 +96,7 @@ module.exports = class Response extends require './RequestResponseBase'
           when "client" then return clientFailure
       @_status
 
-    failed: -> @_status == failure
+    failed:             -> @_status == failure
 
     data:               -> @_props.data
     session:            -> @_session ? @request.session
@@ -211,35 +215,38 @@ module.exports = class Response extends require './RequestResponseBase'
     else Promise.reject @_getRejectionError()
 
   _getRejectionError: ->
-    {data} = @responseProps
-    props = objectWithout @responseProps, "key", "data"
-    props = undefined unless objectHasKeys props
+    @_preparedRejectionError ||= if true
+      messageA =
+        @responseData?.message ? @responseProps?.message ? @errorProps?.exception?.message
 
-    @_preparedRejectionError ||= new RequestError {
-      message: """
-        \n
-        #{@pipelineName}.#{@type}
-          #{
-          formattedInspect @requestProps
-          .replace "\n", "\n  "
-        }
+      messageB =
+        if failedIn = @errorProps?.failedIn
+          """
+          #{failedIn.response.requestString}
 
-        #{
-          formattedInspect merge null,
-            data
-            props
-            @errorProps
-        }
-        """
-      @type
-      @status
-      @requestData
-      @responseData
-      sourceLib: "ArtEry"
-      response: @
-      # message:  @errorProps?.exception?.message
-      stack:    @errorProps?.exception?.stack
-    }
+          failedIn:
+            #{failedIn.context}: #{failedIn.handler.name}
+            location: #{failedIn.response.location}
+          """
+        else
+          @requestString
+
+      message = if messageA
+        messageA + "\n" + messageB
+      else
+        messageB
+
+      new RequestError {
+        message
+
+        @type
+        @status
+        @requestData
+        @responseData
+        sourceLib:  "ArtEry"
+        response:   @
+        stack:      @errorProps?.exception?.stack
+      }
 
   ###
   EFFECT:
