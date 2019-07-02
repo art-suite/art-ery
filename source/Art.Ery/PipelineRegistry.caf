@@ -1,20 +1,22 @@
-{defineModule, each, compactFlatten, log, BaseObject, decapitalize, isClass, inspect} = require "art-foundation"
+import &StandardImport
 
-defineModule module, class PipelineRegistry extends BaseObject
+class PipelineRegistry extends &ArtEvents/ExtendableEventedMixin BaseObject
   @pipelines: global.artEryPipelines = pipelines = {}
 
   # returns the singleton
   @register: (PipelineClass) ->
     {singleton, _aliases} = PipelineClass
 
-    _aliases && for alias in _aliases
+    _aliases && each alias in _aliases
       pipelines[alias] = singleton
 
-    pipelines[singleton.name] = singleton
+    pipeline = pipelines[name = singleton.name] = singleton
+
+    @handleEvent "register", {name, pipeline}
+    singleton
 
   # used for testing
   @_reset: (testFunction = -> true) ->
-    each (Object.keys pipelines), (key) ->
+    each key in Object.keys pipelines
       if testFunction pipelines[key]
         delete pipelines[key]
-
