@@ -1,2 +1,6 @@
+ArtEryFluxModel = require './ArtEryFluxModel'
+
+ArtEryFluxModel.bindWithArtEry()
+
 module.exports =
-  defineArtEryPipelineFluxModels: require("./ArtEryFluxModel").defineModelsForAllPipelines
+  defineArtEryPipelineFluxModels: ArtEryFluxModel.defineModelsForAllPipelines

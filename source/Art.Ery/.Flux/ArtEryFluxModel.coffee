@@ -28,8 +28,9 @@ ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
   isPlainObject
 } = Neptune.Art.Foundation
 
-{missing, success, pending} = CommunicationStatus
+PipelineRegistry = require '../PipelineRegistry'
 
+{missing, success, pending} = CommunicationStatus
 
 defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxModel
   @abstractClass()
@@ -68,6 +69,14 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
   @defineModelsForAllPipelines: =>
     for name, pipeline of ArtEry.pipelines when name == pipeline.getName()
       @createModel pipeline
+
+  @bindWithArtEry: =>
+    PipelineRegistry.on
+      register: ({name, pipeline}) =>
+        @createModel pipeline
+
+    @defineModelsForAllPipelines()
+
 
   @pipeline: (@_pipeline) -> @_pipeline
   @getter "pipeline"
@@ -170,4 +179,3 @@ defineModule module, class ArtEryFluxModel extends ArtEry.KeyFieldsMixin FluxMod
     abstractPrototype = @_pipeline.class.getAbstractPrototype()
     for k, v of @_pipeline when !@[k] && !abstractPrototype[k] && isFunction v
       @[k] = fastBind v, @_pipeline
-

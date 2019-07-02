@@ -42,12 +42,33 @@ PipelineRegistry = require './PipelineRegistry'
 RequestResponseBase = require './RequestResponseBase'
 
 ###
-TODO:
-  Factor out all flux-related stuff into:
-  class FluxReadyPipeline extends Pipeline
+TODO: (July2019)
+  Factor out all ArtFlux-related stuff
+    ArtEry should be independent of ArtFlux or any other client-side state-management-system.
 
-  DONT put it in Flux/
-    WHY? Server-side, we won't include Flux/
+    Remaining:
+
+      fluxModelMixins -
+        This lets you customize what time of Object is created
+        for your models. ArtEry shouldn't know anything about creating models, though...
+
+        However, I DO want a way to declare this info in the Pipeline declaration
+        to reduce redundency.
+
+      query:
+        Another declaration passed directly to ArtFlux
+
+      aliases:
+        Another declaration passed directly to ArtFlux
+
+    Perhaps we need a subclass: PipelineWithFluxModel?
+
+  Namespaced-Registry
+
+    I still don't quite know how I want to do this, but I want BOTH ArtFlux (ArtModels?)
+    and ArtEry (ArtPipelines?) to have namespaced registries so you can merge as many
+    packages as you want based on ArtSuite without name-conflicts in their registries.
+
 ###
 defineModule module, class Pipeline extends require './RequestHandler'
 
@@ -63,7 +84,6 @@ defineModule module, class Pipeline extends require './RequestHandler'
     @_defineQueryHandlers()
     @_defineClientHandlerMethods()
     @_initFields()
-    Neptune.Art.Ery.Flux?.ArtEryFluxModel.createModel @getSingleton()
     super
 
   @instantiateFilter: instantiateFilter = (filter) ->
