@@ -16,6 +16,13 @@ import &StandardImport, &PipelineRegistry, &Config
           pipeline.class.getHandlers().initialize
         pipeline.initialize originatedOnServer: true
 
+    initForTesting: ->
+      &ArtEry
+      Promise
+      .then ->
+        unless &ArtEry.config.remoteServer
+          &ArtEry.sendInitializeRequestToAllPipelines()
+
     getArtEryRemoteServer: -> config.remoteServer
 
     # for testing
