@@ -80,10 +80,10 @@ defineModule module, class Pipeline extends require './RequestHandler'
   @abstractClass()
 
   @postCreateConcreteClass: ({hotReloaded}) ->
-    @register() unless hotReloaded
     @_defineQueryHandlers()
     @_defineClientHandlerMethods()
     @_initFields()
+    @register() unless hotReloaded
     super
 
   @instantiateFilter: instantiateFilter = (filter) ->
