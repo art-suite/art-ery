@@ -12,8 +12,10 @@ The basic idea of ArtEry is to develop your business-logic client-side with eith
 Benefits:
 
 * Fastest possible development (testing, debugging, build cycle)
-* Security and performance
+* Straightforward and powerful Security
+* Performance
 * Eliminate code duplication
+* Together with ArtEryServer, generate a full REST API automatically
 
 ### Fastest Possible Development
 
