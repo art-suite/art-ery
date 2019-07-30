@@ -7,12 +7,12 @@ ArtEry conceptually allows you to develop, test and debug applications 100% as c
 
 ## Why ArtEry?
 
-The basic idea of ArtEry is to develop your business-logic client-side with either a dumb-local or dumb-cloud back-end. Then, for production, let the framework manage deploying some of your code to the cloud and some to the client-app, as needed. The framework gives you full control over what code runs cloud-side, client-side or on both.
+The basic idea of ArtEry is to develop your entire app in one runtime, client-side. Then, for production, ArtEry manages deploying some of your code to the cloud and some to the client-app. ArtEry gives you full control over what code runs cloud-side, client-side or both.
 
 Benefits:
 
 * Fastest possible development (testing, debugging, build cycle)
-* Straightforward and powerful Security
+* Security
 * Performance
 * Eliminate code duplication
 * Together with ArtEryServer, generate a full REST API automatically
@@ -31,7 +31,7 @@ The key observation is code is easier to develop, test and debug when it's **all
 
 ### Security and Performance
 
-But, there are some things that can't be done safely client-side:
+There are some things that can't be done safely client-side:
 
 * Authentication
 * Authorization
@@ -39,13 +39,19 @@ But, there are some things that can't be done safely client-side:
 * TimeStamps
 * Update Counts
 
-And some requests are more efficient to process in the cloud:
+Pipeline filters make it easy to apply any security rules you need.
+
+### Performance
+
+Some requests are more efficient to process in the cloud:
 
 * requests with require multiple cloud-side requests
   * client-to-cloud requests typically cost much more than cloud-to-cloud request
 * requests which consume a bunch of data, reduce it, and output much less data
   * cloud-to-client data-transfer typically costs much more than cloud-to-cloud
 * requests with a lot of computation
+
+Adding custom handler-types for complex requests make this easy to do. A robust "sub-request" system makes synthesizing complex requests easy in a scalable, performant way.
 
 ### Eliminate Code Duplication
 
@@ -88,6 +94,8 @@ pipelines.post.create data: text: "Hello world!"
 * Declare one or more `pipelines` with `handlers` and `filters`
 * Make client-side `requests` to those pipelines
 * The pipeline takes care of routing the request wherever it needs to go.
+
+All requests are handled with promises in a (nearly) pure-functional way. Each filter and handler returns a NEW request or response, passing the information down the pipeline. Since each step of the pipeline is handled as a promise, you can get maximum scalable performance out of node.js.
 
 ### Pipelines
 
@@ -163,3 +171,7 @@ class MyFilter extends Filter
   * You can put anything in props.data and almost anything in props itself.
   * Recommendation: If the field is one of the defined @fields, it goes in data. Else, put it in props.
   * Why? To make filters as re-usable as possible, they need to make assumptions about your request-props and response-props.
+
+* What do you mean by "Nearly" pure-functional?
+
+  * To facilitate more complex sub-request patterns, each root-request has a mutable `context` object for shared state across all sub-requests. This is useful for functionality such as caching sub-requests. Keeping all context attached to the root request rather than somewhere else ensures we can have any number of request in flight simultaneously. In general, only advanced filter-developers should touch the context object. Almost everything you'll ever need to do can be done in a pure-functional way with normal filters and handlers.
