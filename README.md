@@ -1,11 +1,11 @@
-## ArtEry - 100% Client-Side Cloud-Code Development
+## ArtEry - Client Development > Cloud Deployment
 
-ArtEry conceptually allows you to write apps 100% as client-code, but with the security and performance of cloud-code. It is a pipelined business-logic framework for cloud-backed data.
+ArtEry conceptually allows you to develop, test and debug applications 100% as client-code, but with the security and performance of cloud-code. When you deploy to production, it's trivial to control which code goes in the Client, Server or Both.
 
 * developing, testing and maintaining server-side code is 10x harder than client-side code
 * so... don't write a single line of server-side code
 
-#### Client Development > Cloud Deployment
+## How ArtEry Works
 
 The basic idea of ArtEry is to develop your business-logic client-side with either a dumb-local or dumb-cloud back-end. Then, for production, let the framework manage deploying some of your code to the cloud and some to the client-app, as needed. The framework gives you full control over what code runs cloud-side, client-side or on both.
 
