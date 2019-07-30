@@ -1,11 +1,11 @@
-## ArtEry - Client Development > Cloud Deployment
+# ArtEry - Client Development > Cloud Deployment
 
 ArtEry conceptually allows you to develop, test and debug applications 100% as client-code, but with the security and performance of cloud-code. When you deploy to production, it's trivial to control which code goes in the Client, Server or Both.
 
 * developing, testing and maintaining server-side code is 10x harder than client-side code
 * so... don't write a single line of server-side code
 
-## How ArtEry Works
+## Why ArtEry?
 
 The basic idea of ArtEry is to develop your business-logic client-side with either a dumb-local or dumb-cloud back-end. Then, for production, let the framework manage deploying some of your code to the cloud and some to the client-app, as needed. The framework gives you full control over what code runs cloud-side, client-side or on both.
 
@@ -15,7 +15,7 @@ Benefits:
 * Security and performance
 * Eliminate code duplication
 
-#### Fastest Possible Development
+### Fastest Possible Development
 
 Client-code has many advantages over cloud-code:
 
@@ -27,7 +27,7 @@ In short, it's *much* faster to develop.
 
 The key observation is code is easier to develop, test and debug when it's **all in one runtime**. Stack traces span your full stack. You can hot-reload your full stack for rapid development.
 
-#### Security and Performance
+### Security and Performance
 
 But, there are some things that can't be done safely client-side:
 
@@ -45,11 +45,11 @@ And some requests are more efficient to process in the cloud:
   * cloud-to-client data-transfer typically costs much more than cloud-to-cloud
 * requests with a lot of computation
 
-#### Eliminate Code Duplication
+### Eliminate Code Duplication
 
 Some code should run both on the cloud and client. Specifically, validation should happen client-side for the fastest possible response to client actions, /but it needs to be verified in the cloud for security. ArtEry makes it trivial to re-use code across your full stack.
 
-### Custom Pipeline Example
+## Example
 
 ```coffeescript
 # language: CaffeineScript
@@ -81,9 +81,13 @@ pipelines.post.create data: text: "Hello world!"
 .then ({text}) -> console.log text  # Hello world!
 ```
 
-### Concepts
+## How it Works
 
-#### Pipelines
+* Declare one or more `pipelines` with `handlers` and `filters`
+* Make client-side `requests` to those pipelines
+* The pipeline takes care of routing the request wherever it needs to go.
+
+### Pipelines
 
 Pipelines are the main structural unit for ArtEry. A pipeline consists of:
 
@@ -93,7 +97,7 @@ Pipelines are the main structural unit for ArtEry. A pipeline consists of:
 
 A pipeline is a named grouping of request-types and filters. When designing an API for a database-backed backend, it's usually best to have one pipeline per table in your database.
 
-#### Handlers
+### Handlers
 
 Handlers are just functions:
 
@@ -101,7 +105,7 @@ Handlers are just functions:
 (<Request>) -> <[optional Promise] Response, null, plain-Object, or other response-compatible-data-types>
 ```
 
-#### Requests and Responses
+### Requests and Responses
 
 At their most simple, requests and responses both look like this:
 
@@ -121,7 +125,7 @@ key:  -> @props.key
 data: -> @props.data
 ```
 
-#### Filters
+### Filters
 
 At their simplest, functions are almost exactly the same as handlers:
 
@@ -149,7 +153,7 @@ class MyFilter extends Filter
     create: (request) -> ...
 ```
 
-### FAQ
+## FAQ
 
 * Should I put my request-fields in `request.props` or `request.data`?
 
