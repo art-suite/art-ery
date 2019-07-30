@@ -156,11 +156,8 @@ class MyFilter extends Filter
 
   @location :client # :server or :both
 
-  @before
-    create: (request) -> ...
-
-  @after
-    create: (request) -> ...
+  @before create: (request) -> ...
+  @after  create: (request) -> ...
 ```
 
 ## FAQ
