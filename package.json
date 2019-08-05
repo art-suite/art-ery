@@ -1,9 +1,9 @@
 {
-  "author": "Shane Brinkman-Davis Delamore, Imikimi LLC",
+  "author": "Shane Brinkman-Davis Delamore, Imikimi LLC\"",
   "dependencies": {
     "art-build-configurator": "*",
-    "art-events": "git://github.com/imikimi/art-events.git",
-    "art-express-server": "git://github.com/imikimi/art-express-server.git",
+    "art-events": "*",
+    "art-express-server": "*",
     "art-flux": "git://github.com/imikimi/art-flux.git",
     "compress": "^0.99.0",
     "express": "^4.14.0",
@@ -16,9 +16,9 @@
   "name": "art-ery",
   "scripts": {
     "build": "webpack --progress",
-    "start": "webpack-dev-server --hot --inline --progress",
+    "start": "webpack-dev-server --hot --inline --progress --env.devServer",
     "test": "nn -s;mocha -u tdd",
-    "testInBrowser": "webpack-dev-server --progress",
+    "testInBrowser": "webpack-dev-server --progress --env.devServer",
     "testServer": "caf ./TestServer.caf"
   },
   "version": "1.108.1"

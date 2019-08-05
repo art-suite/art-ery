@@ -14,9 +14,9 @@ package:
       security and performance of cloud-code.
 
   dependencies:
-    art-events:         :git://github.com/imikimi/art-events.git
+    art-events:         :*
+    art-express-server: :*
     art-flux:           :git://github.com/imikimi/art-flux.git
-    art-express-server: :git://github.com/imikimi/art-express-server.git
     express:            :^4.14.0
     compress:           :^0.99.0
     throng:             :^4.0.0
