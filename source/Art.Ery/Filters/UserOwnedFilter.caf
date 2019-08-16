@@ -99,7 +99,7 @@ defineModule module, class UserOwnedFilter extends &Filter
       return _vivifyUserId request if request.originatedOnServer
       switch request.type
       when :create
-        request.requireServerOriginOr request.session.userId?
+        request.requireServerOriginOr request.session.userId?, "" create without authenticated user
         .then -> @_requireAllDataFieldsAllowed request, @userCreatableFields
         .then -> request.require !request.key?, "" request.key not expected for create
         .then -> _vivifyUserId request
