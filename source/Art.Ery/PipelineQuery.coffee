@@ -21,7 +21,15 @@ defineModule module, class PipelineQuery extends BaseObject
   constructor: (@queryName, @options) ->
     @options = query: @options if isFunction @options
     @[k] = v for k, v of @options
-    throw new Error "query handler-function with at least one argument required. options: #{formattedInspect options}" unless isFunction(@query) && @query.length > 0
+    unless isFunction(@query) && @query.length > 0
+      throw new Error """
+          PipelineQuery: query handler-function must have at least one argument:
+
+          handler:        #{isFunction(@query) && @query.getName()}
+          handler.length: #{@query?.length}
+
+          #{formattedInspect {@queryName, @options}}"
+        """
 
   @getter name: -> @queryName
 
