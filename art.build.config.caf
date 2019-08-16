@@ -17,11 +17,11 @@ package:
     art-events:         :*
     art-express-server: :*
     art-flux:           :git://github.com/imikimi/art-flux.git
-    express:            :^4.14.0
+    express:            :^4.17.1
     compress:           :^0.99.0
     throng:             :^4.0.0
-    jsonwebtoken:       :^7.2.1
-    uuid:               :^3.3.0
+    jsonwebtoken:       :^8.5.1
+    uuid:               :^3.3.2
 
 webpack:
   common: {}
