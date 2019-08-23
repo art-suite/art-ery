@@ -1,20 +1,41 @@
 import &StandardImport
-suite: ->
-  test :preprocess ->
-    class MyPipeline extends KeyFieldsMixin Pipeline
-      @primaryKey :myKey/myDate
-      @fields
-        myKey:  :trimmedString
-        myDate:
-          preprocess: (v) -> v | 0
+suite:
+  regression: ->
+    test :preprocess ->
+      class MyPipeline extends KeyFieldsMixin Pipeline
+        @primaryKey :myKey/myDate
+        @fields
+          myKey:  :trimmedString
+          myDate:
+            preprocess: (v) -> v | 0
 
 
-      @publicRequestTypes :testToKeyObject
+        @publicRequestTypes :testToKeyObject
 
-      @handlers
-        testToKeyObject: ({key}) ->
-          @toKeyObject key
+        @handlers
+          testToKeyObject: ({key}) ->
+            @toKeyObject key
 
-    pipelines.myPipeline.testToKeyObject key: "  mom  /123"
-    .then (result) ->
-      assert.eq result, myKey: "mom", myDate: 123
+      pipelines.myPipeline.testToKeyObject key: "  mom  /123"
+      .then (result) ->
+        assert.eq result, myKey: "mom", myDate: 123
+
+  primaryKey: ->
+    test :simpleString ->
+      class MyPipeline extends KeyFieldsMixin Pipeline
+        @publicRequestTypes :testToKeyObject :get
+
+        @primaryKey :myKey
+        @fields myKey: :trimmedString
+
+        @handlers
+          testToKeyObject: ({key}) ->
+            @toKeyObject key
+
+          get: ({key}) ->
+            {} key
+
+      pipelines.myPipeline.testToKeyObject key: "  mom  /123"
+      .then (result) -> assert.eq result, myKey: "mom  /123"
+      .then -> pipelines.myPipeline.get "test-key"
+      .then (result) -> assert.eq result, key: "test-key"
