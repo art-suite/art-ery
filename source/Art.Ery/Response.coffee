@@ -96,7 +96,7 @@ module.exports = class Response extends require './RequestResponseBase'
           when "client" then return clientFailure
       @_status
 
-    failed:             -> @_status == failure
+    failed:             -> @_status == failure || @_status == serverFailure
 
     data:               -> @_props.data
     session:            -> @_session ? @request.session
@@ -226,6 +226,7 @@ module.exports = class Response extends require './RequestResponseBase'
 
           failedIn:
             #{failedIn.context}: #{failedIn.handler.name}
+            request: #{failedIn.response.pipelineName}.#{failedIn.response.type}#{if key = failedIn.response.requestProps.key then ' ' + formattedInspect key else ''}
             location: #{failedIn.response.location}
           """
         else

@@ -58,6 +58,8 @@ defineModule module, class RequestHandler extends require './ArtEryBaseObject'
     , (error) =>
       if error.props?.response?.isResponse
         error.props.response
+      else if isFailure status = error.info?.status
+        request.toResponse status, error: error.info
       else
         request.failure errorProps:
           exception: error
