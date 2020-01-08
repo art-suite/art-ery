@@ -276,7 +276,9 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       @_getPipelineTypeCache(@pipelineName, "get")[@key] = Promise.then => @responseData
 
   cachedGet: cachedGet = (pipelineName, key) ->
-    throw new Error "cachedGet: key must be a string (#{formattedInspect {key}})" unless isString key
+    if isPlainObject key
+      key = ArtEry.pipelines[pipelineName].dataToKeyString key
+    throw new Error "cachedGet: key must be a string OR object when pipeline supports dataToKeyString (#{formattedInspect {key}})" unless isString key
     @cachedSubrequest pipelineName, "get", key
 
   # TODO: when we move LinkFieldsFilter's include-linking to the very-end of a client-initiated request
@@ -319,16 +321,21 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
       else
         Promise.resolve request
   ###
+  createRequirementNotMetRequestProps = (pipelineAndType, errors) ->
+    data:
+      details: compactFlatten([pipelineAndType, 'requirement not met', errors]).join ' - '
+      message: compactFlatten([errors]).join ' - '
+
   rejectIfErrors: (errors) ->
     if errors
-      @clientFailure compactFlatten([@pipelineAndType, 'requirement not met', errors]).join ' - '
+      @clientFailure createRequirementNotMetRequestProps @pipelineAndType, errors
       .then (response) -> response.toPromise()
     else
       Promise.resolve @
 
   rejectNotAuthorizedIfErrors: (errors) ->
     if errors
-      @clientFailureNotAuthorized compactFlatten([@pipelineAndType, 'requirement not met', errors]).join ' - '
+      @clientFailureNotAuthorized createRequirementNotMetRequestProps @pipelineAndType, errors
       .then (response) -> response.toPromise()
     else
       Promise.resolve @
