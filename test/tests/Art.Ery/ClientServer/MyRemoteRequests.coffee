@@ -24,6 +24,9 @@ module.exports = suite:
     test "remoteServer", ->
       assert.eq pipelines.myRemote.remoteServer, "http://localhost:8085"
 
+    test "requestHost", ->
+      assert.resolved.eq pipelines.myRemote.requestHost(), "localhost"
+
   remote:
     basic: ->
       test "/api", ->

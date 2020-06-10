@@ -16,12 +16,15 @@ package:
   dependencies:
     art-events:         :*
     art-express-server: :*
-    art-flux:           :*
     express:            :^4.17.1
     compress:           :^0.99.0
     throng:             :^4.0.0
     jsonwebtoken:       :^8.5.1
     uuid:               :^3.3.2
+
+  devDependencies:
+    art-ery:            :file:.
+    art-flux:           :git@github.com:art-suite/art-flux.git
 
 webpack:
   common: {}

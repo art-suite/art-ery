@@ -1,7 +1,7 @@
 throw new Error "Neptune.Art.Flux not loaded. Please pre-require Flux or Flux/web_worker." unless Neptune.Art.Flux
 {FluxModel, models} = Neptune.Art.Flux
 
-ArtEry = require 'art-ery'
+ArtEry = require '../'
 ArtEryQueryFluxModel = require './ArtEryQueryFluxModel'
 
 {

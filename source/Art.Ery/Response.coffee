@@ -70,8 +70,6 @@ module.exports = class Response extends require './RequestResponseBase'
 
     @_props.data = options.data if options.data?
 
-    # @_session ||= @request.session
-
     @_session ?= if neq @request.session, @request.originalRequest.session
       @request.session
 
@@ -90,7 +88,7 @@ module.exports = class Response extends require './RequestResponseBase'
   @getter
     verbose: -> @request.verbose
     status: ->
-      if @failed
+      if @_status == failure
         switch @location
           when "server" then return serverFailure
           when "client" then return clientFailure

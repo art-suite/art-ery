@@ -70,6 +70,19 @@ suite:
           session:  {}
           pipeline: new Pipeline
 
+    test "remoteRequest prop", ->
+      r = new Request {}
+        type: :get
+        pipeline: new Pipeline
+        session:  {}
+        remoteRequest = :myRemoteRequest
+      assert.eq r.remoteRequest, remoteRequest
+      r.withData :foo
+      .then (r2) ->
+        assert.neq r, r2
+        assert.eq r2.data, :foo
+        assert.eq r2.remoteRequest, remoteRequest
+
   validation:
     "valid new Request": ->
       test "type: 'get'", ->

@@ -640,7 +640,7 @@ defineModule module, class RequestResponseBase extends ArtEryBaseObject
     .then (responseProps = {}) =>
       switch
         when responseProps instanceof RequestResponseBase
-          log.warn "toResponse is instanceof RequestResponseBase - is this EVER used???"
+          log.warn "DEPRICATED: toResponse is instanceof RequestResponseBase"
           # if used, shouldn't this still transform Request objects into Response objects?
           responseProps
 

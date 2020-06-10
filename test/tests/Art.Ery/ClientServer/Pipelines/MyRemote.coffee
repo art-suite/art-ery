@@ -43,6 +43,7 @@ defineModule module, class MyRemote extends Pipeline
     privateRequestOkAsSubRequest
     returnFalse
     preAlterSession
+    requestHost
     "
 
   @filter
@@ -63,6 +64,8 @@ defineModule module, class MyRemote extends Pipeline
     simulateServerFailure: -> throw new Error "Boom!"
 
     simulateClientFailure: (request) -> request.clientFailure()
+
+    requestHost: (request) -> request.remoteRequest.hostname
 
     simulatePropsInput: (request) -> request.props
 

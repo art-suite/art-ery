@@ -1,5 +1,5 @@
 
-import &ArtSuite/Node
+import &StandardImport
 
 newRequest = (options)->
   new Request merge
