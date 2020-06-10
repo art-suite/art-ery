@@ -1,5 +1,8 @@
 {timeout, defineModule, log, merge} = require 'art-foundation'
-{Pipeline, TimestampFilter, DataUpdatesFilter} = require 'art-ery'
+{Pipeline, TimestampFilter, DataUpdatesFilter, Server} = require 'art-ery'
+{signSession} = Server if Server?
+
+
 
 defineModule module, class MyRemote extends Pipeline
 
@@ -44,6 +47,9 @@ defineModule module, class MyRemote extends Pipeline
     returnFalse
     preAlterSession
     requestHost
+    manuallySignSession
+    setSessionData
+    getSessionData
     "
 
   @filter
@@ -75,6 +81,13 @@ defineModule module, class MyRemote extends Pipeline
 
     setSessionA: (request) -> request.respondWithMergedSession sessionA: true
     setSessionB: (request) -> request.respondWithMergedSession sessionB: true
+
+    manuallySignSession: (request) ->
+      signSession request.session
+      .then (signature) -> {signature}
+
+    setSessionData: (request) -> request.respondWithSession request.data
+    getSessionData: ({session}) -> session
 
     slowSetSessionA: (request) ->
       timeout 250

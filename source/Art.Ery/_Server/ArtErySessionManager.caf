@@ -31,15 +31,18 @@ class ArtErySessionManager
       *) Use an ArtEry filter to do this. I'll probably write one and include it in ArtEry.Filters soon.
         BUT it won't be tied to a specific backend; you'll still have to do that part yourself.
 
-  @signSession: (oldSession, responseData) =>
+  @prepareSignedSessionForResponse: (oldSession, responseData) =>
     if @_shouldReturnNewSignedSession oldSession, newSession = responseData.session || oldSession
-      PromiseJsonWebToken.sign
-        objectWithout newSession, :exp :iat
-        config.server.privateSessionKey
-        expiresIn: "30 days"
+      @signSession newSession
       .then (signature) -> merge responseData, session: merge newSession, {signature}
     else
       objectWithout responseData, :session
+
+  @signSession: (session) ->
+    PromiseJsonWebToken.sign
+      objectWithout session, :exp :iat
+      config.server.privateSessionKey
+      expiresIn: "30 days"
 
   @iatAgeInDays: iatAgeInDays = (iat) ->
     Date.now() / 1000 - iat

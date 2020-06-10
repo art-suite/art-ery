@@ -1,9 +1,6 @@
-{log, createWithPostCreate, RestClient, CommunicationStatus, objectKeyCount} = require 'art-foundation'
-{Pipeline, pipelines, session} = Neptune.Art.Ery
-{ApplicationState} = ArtFlux = Neptune.Art.Flux
-{clientFailure, missing, serverFailure, clientFailureNotAuthorized} = CommunicationStatus
+import &StandardImport
 
-module.exports = suite:
+suite:
   responseStatuses: ->
     test "simulateMissing", ->
       assert.rejects pipelines.myRemote.simulateMissing()
@@ -17,6 +14,7 @@ module.exports = suite:
       assert.rejects pipelines.myRemote.simulateServerFailure()
       .then ({info:{response}}) -> assert.eq response.status, serverFailure
 
+
   pipelines: ->
     test "restPath", ->
       assert.eq pipelines.myRemote.restPath, "/api/myRemote"
@@ -27,10 +25,37 @@ module.exports = suite:
     test "requestHost", ->
       assert.resolved.eq pipelines.myRemote.requestHost(), "localhost"
 
+  manuallySignSession: ->
+    chainedTest "set session and manually sign it", ->
+      pipelines.myRemote.setSessionData data: id: id = randomString()
+      .then -> pipelines.myRemote.manuallySignSession returnResponseObject: true
+      .then (response) ->
+        {signature} = response.data
+        assert.present signature
+        assert.eq response.session.id, id
+        {} signature, id
+
+    .tapTest
+      "validate the session is set" ({id}) ->
+          pipelines.myRemote.getSessionData()
+          .then (body) -> assert.eq body.id, id
+
+      "reset the session, validate not set" ->
+        session.reset()
+        pipelines.myRemote.getSessionData()
+          .then (body) ->
+            assert.notPresent body.id
+
+      "replace the session via signature, validate we restored it" ({signature, id}) ->
+        session.data = {signature}
+        pipelines.myRemote.getSessionData()
+        .then (body) -> assert.eq body.id, id
+
+
   remote:
     basic: ->
       test "/api", ->
-        RestClient.get "http://localhost:8085/api"
+        &ArtRestClient.get "http://localhost:8085/api"
         .then (v) ->
           assert.isString v
           assert.match v, /Art.Ery.*api/i
@@ -44,7 +69,7 @@ module.exports = suite:
           assert.eq false, shouldBeFalse
 
       test "static index.html", ->
-        RestClient.get "http://localhost:8085"
+        &ArtRestClient.get "http://localhost:8085"
         .then (v) ->
           assert.isString v
           assert.match v, "a href"

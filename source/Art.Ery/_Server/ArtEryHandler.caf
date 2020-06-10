@@ -25,7 +25,7 @@ class ArtEryHandler extends &ArtExpressServer.PromiseHandler
             log.error response
           else if config.verbose
             log "#{response.requestString}: subrequestCount: #{response.subrequestCount}, recordsReturned: #{if response.data then response.data.length ? 1 else 0}"
-          signSession session, response.responseForRemoteRequest
+          prepareSignedSessionForResponse session, response.responseForRemoteRequest
 
     else
       Promise.resolve null # missing
