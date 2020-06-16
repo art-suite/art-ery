@@ -172,3 +172,7 @@ class MyFilter extends Filter
 * What do you mean by "Nearly" pure-functional?
 
   * To facilitate more complex sub-request patterns, each root-request has a mutable `context` object for shared state across all sub-requests. This is useful for functionality such as caching sub-requests. Keeping all context attached to the root request rather than somewhere else ensures we can have any number of request in flight simultaneously. In general, only advanced filter-developers should touch the context object. Almost everything you'll ever need to do can be done in a pure-functional way with normal filters and handlers.
+
+# TODO
+
+Use the `Authorization: Bearer` HTTP header to pass a session on `GET` requests. https://stackoverflow.com/questions/33265812/best-http-authorization-header-type-for-jwt

@@ -8,6 +8,12 @@ defineModule module, class Config extends Configurable
     # "client", "server", or "both" - 'both' is the serverless mode for development & testing
     location: "both"
 
+    # if true, sessions will be saved in the browser's localStorage
+    #   and shared across windows for the same URL.
+    # If false, sessions will be lost when the web-page is closed.
+    #   Each window will have is own session regardless of URL.
+    saveSessions: true
+
     apiRoot: "api"
 
     ###

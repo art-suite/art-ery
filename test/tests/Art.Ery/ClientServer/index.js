@@ -9,6 +9,7 @@
   CompoundKeys:            require('./CompoundKeys'),
   DataUpdatesFilter:       require('./DataUpdatesFilter'),
   FilterLocationRequests:  require('./FilterLocationRequests'),
+  KeyFieldsMixin:          require('./KeyFieldsMixin'),
   LinkFieldsFilter2Remote: require('./LinkFieldsFilter2Remote'),
   MyRemoteRequests:        require('./MyRemoteRequests'),
   Sessions:                require('./Sessions'),

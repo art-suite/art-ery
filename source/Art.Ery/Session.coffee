@@ -49,13 +49,15 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
     @loadSession()
 
   loadSession: ->
-    @_sessionLoadPromise ?= (
+    @_sessionLoadPromise ?= if config.saveSessions
       Promise.then => jsonStore.getItem @jsonStoreKey
       .then (data) =>
         unless eq data, @data
           # log "ArtErySession loaded from localStorage"
           @data = data
-    )
+
+    else
+      Promise.then => @data
 
   @getter "sessionLoadPromise data updatedAt",
     jsonStoreKey: -> @_jsonStoreKey ? "Art.Ery.Session"
@@ -74,7 +76,7 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
       # _updatedAt is set before the if-block so that we can
       # validate when updates are attempted in the tests.
       @_updatedAt = toMilliseconds()
-      if isPlainObject(data) && !plainObjectsDeepEq data, @_data
+      if config.saveSessions && isPlainObject(data) && !plainObjectsDeepEq data, @_data
         @queueEvent "change", {data}
         # log "ArtErySession " + formattedInspect changed:
         #   old: merge @_data
