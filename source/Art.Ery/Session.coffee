@@ -76,12 +76,13 @@ module.exports = class Session extends EventedMixin require './ArtEryBaseObject'
       # _updatedAt is set before the if-block so that we can
       # validate when updates are attempted in the tests.
       @_updatedAt = toMilliseconds()
-      if config.saveSessions && isPlainObject(data) && !plainObjectsDeepEq data, @_data
+      if isPlainObject(data) && !plainObjectsDeepEq data, @_data
         @queueEvent "change", {data}
         # log "ArtErySession " + formattedInspect changed:
         #   old: merge @_data
         #   new: data
-        jsonStore.setItem @jsonStoreKey, @_data = data
+        jsonStore.setItem @jsonStoreKey, data if config.saveSessions
+        @_data = data
 
   reset: -> @data = {}
 
